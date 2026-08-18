@@ -1,0 +1,78 @@
+{% extends 'todo/base.html' %}
+{% load static %}
+
+{% block title %}Manage Tasks - TaskMitra{% endblock title %}
+
+{% block styles %}
+    {# Link the page-specific stylesheet #}
+    <link rel="stylesheet" href="{% static 'todo/css/my-tasks.css' %}?v=4">
+{% endblock styles %}
+
+{% block content %}
+<!-- Filter and Sort Bar -->
+<div class="filter-bar">
+    <div class="filter-options">
+        <div class="filter-group">
+            <label for="sort-by"><i class="fas fa-sort"></i> Sort By:</label>
+            <select id="sort-by">
+                <option value="date-created">Date Created</option>
+                <option value="due-date">Due Date</option>
+                <option value="priority">Priority</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filter-status"><i class="fas fa-filter"></i> Status:</label>
+            <select id="filter-status">
+                <option value="all">All Statuses</option>
+                <option value="backlog">Backlog</option>
+                <option value="not-started">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Done</option>
+                <option value="on-hold">On Hold</option>
+                <option value="canceled">Canceled</option>
+            </select>
+        </div>
+    </div>
+    <button class="invite-btn" type="button" aria-label="Add new task" onclick="openAddTaskModal()">
+        <i class="fas fa-plus" aria-hidden="true"></i> Add Task
+    </button>
+</div>
+
+<!-- Grid for All Task Cards -->
+<div id="my-tasks-grid">
+    {% for task in tasks %}
+    <article 
+        class="my-task-card priority-{{ task.priority }} status-{{ task.status }}" 
+        tabindex="0" 
+        role="button" 
+        aria-label="View details for {{ task.title }}"
+        data-task-id="{{ task.id }}"
+        onclick="openEditTaskModal({{ task.id }})">
+        
+        <div class="card-content">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                <h3 class="card-title" style="margin: 0;">{{ task.title }}</h3>
+                <span class="priority {{ task.priority }}" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px;">{{ task.priority|upper }}</span>
+            </div>
+            {% if task.description %}
+            <p class="card-description">{{ task.description|truncatewords:15 }}</p>
+            {% endif %}
+        </div>
+        <div class="card-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+            {% if task.category %}
+            <span class="project-badge" style="background-color: {{ task.category.color }}25; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}50; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                <i class="fas fa-folder"></i> {{ task.category.name }}
+            </span>
+            {% endif %}
+            <span class="status {{ task.status }}" style="font-size: 0.75rem; font-weight: 600;">{{ task.get_status_display }}</span>
+        </div>
+    </article>
+    {% empty %}
+    <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+        <div class="empty-icon"><i class="fas fa-tasks"></i></div>
+        <h4>You have no tasks!</h4>
+        <p>Click "Add Task" to create your first task and get organized.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock content %}

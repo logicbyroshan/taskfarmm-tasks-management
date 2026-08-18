@@ -4,49 +4,57 @@ TASK CATEGORIES PAGE STYLES
 ==============================================
 */
 
-/* Grid container for the category cards */
+.category-header-top {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
 #category-cards-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
-    margin-top: 20px;
+    gap: 18px;
 }
 
-/* Individual category card styling */
 .category-card {
-    background-color: var(--secondary-bg);
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: var(--radius-lg);
     padding: 20px;
-    border-top: 5px solid var(--category-color, var(--accent-color)); /* Use CSS variable for color */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    border-top: 4px solid var(--category-color, var(--accent-color));
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    gap: 16px;
+    transition: var(--transition);
 }
 
 .category-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(255, 255, 255, 0.04);
 }
 
-/* Header section of the card */
 .category-header {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 14px;
 }
 
 .category-icon {
-    font-size: 1.8em;
+    font-size: 1.25rem;
     color: var(--category-color, var(--accent-color));
-    background-color: rgba(255, 255, 255, 0.05);
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    width: 46px;
+    height: 46px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .category-info {
@@ -54,108 +62,53 @@ TASK CATEGORIES PAGE STYLES
 }
 
 .category-name {
-    margin: 0;
-    font-size: 1.2em;
+    margin: 0 0 2px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--highlight-color);
 }
 
 .category-task-count {
-    font-size: 0.9em;
-    color: #999;
+    font-size: 0.8rem;
+    color: var(--text-muted);
 }
 
-/* Progress section of the card */
-.category-progress p {
-    margin: 0 0 8px 0;
-    font-size: 0.85em;
-    color: #ccc;
+/* Standardization of Progress Bar Component */
+.category-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.category-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 .progress-bar-container {
-    background-color: var(--border-color);
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-full);
     height: 10px;
     width: 100%;
     position: relative;
     overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .progress-bar {
-    background-color: var(--category-color, var(--accent-color));
+    background: var(--category-color, var(--accent-color));
     height: 100%;
-    border-radius: 20px;
+    border-radius: var(--radius-full);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
 }
 
 .progress-label {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.7em;
-    font-weight: bold;
+    font-size: 0.8rem;
+    font-weight: 700;
     color: var(--highlight-color);
-}
-
-/* 
-==============================================
-ADD/EDIT CATEGORY MODAL
-==============================================
-*/
-
-/* Additional customizations for category modal (inherits from style.css .task-modal) */
-
-#category-modal .form-group {
-    margin-bottom: 20px;
-}
-
-#category-modal .form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-#category-modal .form-group label i {
-    margin-right: 8px;
-    color: var(--accent-color);
-}
-
-#category-modal input[type="text"] {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background-color: var(--primary-bg);
-    color: var(--text-color);
-    font-size: 1em;
-    transition: border-color 0.3s ease;
-}
-
-#category-modal input[type="text"]:focus {
-    outline: none;
-    border-color: var(--accent-color);
-}
-
-#category-modal input[type="color"] {
-    width: 100%;
-    height: 45px;
-    padding: 5px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background-color: var(--primary-bg);
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-}
-
-#category-modal input[type="color"]:focus {
-    outline: none;
-    border-color: var(--accent-color);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    #category-cards-container {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
 }

@@ -8,20 +8,27 @@
     <!-- This title will be overridden by child templates -->
     <title>{% block title %}TaskMitra{% endblock title %}</title>
     
-    <meta name="description" content="TaskMitra - A modern, mobile-friendly todo app for managing your daily tasks efficiently">
+    <meta name="description" content="TaskMitra - A modern, mobile-friendly task & project manager">
     <meta name="author" content="TaskMitra">
     
     <!-- Theme colors for mobile browsers -->
-    <meta name="theme-color" content="#2e86de">
-    <meta name="msapplication-TileColor" content="#2e86de">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="msapplication-TileColor" content="#3b82f6">
     
-    <!-- PWA settings -->
-    <link rel="apple-touch-icon" href="{% static 'todo/logo.png' %}">
+    <!-- Favicon & PWA settings -->
+    <link rel="icon" type="image/png" href="{% static 'todo/images/logo.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'todo/images/logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'todo/images/logo.png' %}">
     <link rel="manifest" href="{% static 'todo/manifest.json' %}">
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- CSS Links -->
-    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=4">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <!-- Block for any page-specific CSS -->
@@ -40,23 +47,12 @@
             <div class="navbar-right">
                 <div class="search-bar" role="search">
                     <label for="search-input" class="sr-only">Search tasks</label>
-                    <input type="text" id="search-input" placeholder="Search your task here..." aria-label="Search tasks">
+                    <input type="text" id="search-input" placeholder="Search tasks or projects..." aria-label="Search tasks">
                     <i class="fas fa-search" aria-hidden="true"></i>
                 </div>
                 <div class="date-day" role="status" aria-live="polite">
-                    <!-- This could be dynamic with JavaScript or a context processor -->
-                    <span>20/06/2023</span>
+                    <span>Tuesday 18/08/2026</span>
                 </div>
-                {% if user.is_authenticated %}
-                <div class="navbar-profile">
-                    <div class="profile-pic">
-                        {{ user.username|slice:":1"|upper }}
-                    </div>
-                    <div class="profile-info">
-                        <span class="profile-name">{{ user.get_full_name|default:user.username }}</span>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </header>
 
@@ -106,7 +102,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="{{ task_create_form.category.id_for_label }}">
-                            <i class="fas fa-folder"></i> Category
+                            <i class="fas fa-folder"></i> Project
                         </label>
                         {{ task_create_form.category }}
                     </div>
@@ -179,11 +175,11 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="edit-category">
-                        <i class="fas fa-folder"></i> Category
+                        <i class="fas fa-folder"></i> Project
                     </label>
                     <select id="edit-category" name="category">
                         <option value="">---------</option>
-                        {% for category in user.category_set.all %}
+                        {% for category in user.categories.all %}
                         <option value="{{ category.id }}">{{ category.name }}</option>
                         {% endfor %}
                     </select>
@@ -195,7 +191,7 @@
                     </label>
                     <select id="edit-priority" name="priority">
                         <option value="low">Low</option>
-                        <option value="medium">Medium</option>
+                        <option value="moderate">Moderate</option>
                         <option value="high">High</option>
                     </select>
                 </div>
@@ -205,9 +201,12 @@
                         <i class="fas fa-tasks"></i> Status
                     </label>
                     <select id="edit-status" name="status">
-                        <option value="not_started">Not Started</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
+                        <option value="backlog">Backlog</option>
+                        <option value="not-started">To Do</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Done</option>
+                        <option value="on-hold">On Hold</option>
+                        <option value="canceled">Canceled</option>
                     </select>
                 </div>
                 
@@ -233,6 +232,31 @@
 </div>
 {% endif %}
 
+    <!-- Vanta.js Animated Blue Dots Background CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.dots.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.VANTA && window.VANTA.DOTS) {
+                window.VANTA.DOTS({
+                    el: "body",
+                    mouseControls: true,
+                    touchControls: true,
+                    gyroControls: false,
+                    minHeight: 200.00,
+                    minWidth: 200.00,
+                    scale: 1.00,
+                    scaleMobile: 1.00,
+                    color: 0x3b82f6,
+                    color2: 0x60a5fa,
+                    backgroundColor: 0x09090b,
+                    size: 3.00,
+                    spacing: 35.00,
+                    showLines: false
+                });
+            }
+        });
+    </script>
     <script src="{% static 'todo/js/script.js' %}"></script>
     {% block scripts %}{% endblock scripts %}
 </body>

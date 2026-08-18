@@ -8,7 +8,9 @@ urlpatterns = [
     
     # Page Views
     path('my-tasks/', views.my_tasks, name='my_tasks'),
+    path('projects/', views.task_categories, name='manage_projects'),
     path('categories/', views.task_categories, name='task_categories'),
+    path('kanban/', views.manage_kanban, name='manage_kanban'),
     path('settings/', views.settings_page, name='settings'),
     
     # Task CRUD
@@ -17,7 +19,8 @@ urlpatterns = [
     path('task/<int:pk>/update/', views.task_update, name='task_update'),
     path('task/<int:pk>/delete/', views.task_delete, name='task_delete'),
     
-    # Category CRUD
+    # Project / Category CRUD
+    path('projects/create/', views.category_create, name='project_create'),
     path('category/create/', views.category_create, name='category_create'),
     path('category/<int:pk>/update/', views.category_update, name='category_update'),
     path('category/<int:pk>/delete/', views.category_delete, name='category_delete'),

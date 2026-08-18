@@ -25,16 +25,15 @@
         </div>
         
         <div class="task-list-container">
-            <div id="tasks-container" role="list" aria-label="Task list">
+            <div id="tasks-container" role="list" aria-label="Task list" style="display: flex; flex-direction: column; gap: 14px;">
                 {% for task in recent_tasks %}
                 <article class="task-card" role="listitem">
                     <div class="task-header">
-                        <!-- The checkbox can be part of a form to quickly complete a task -->
-                        <form action="{% url 'task_update' task.id %}" method="post" class="d-inline">
+                        <!-- AJAX checkbox to complete task without page reload or URL navigation -->
+                        <div class="d-inline">
                             {% csrf_token %}
-                            <input type="hidden" name="status" value="completed">
-                            <input type="checkbox" name="task{{ task.id }}" id="task{{ task.id }}" onchange="this.form.submit()">
-                        </form>
+                            <input type="checkbox" name="task{{ task.id }}" id="task{{ task.id }}" onchange="toggleTaskComplete({{ task.id }}, this)">
+                        </div>
                         <label for="task{{ task.id }}">{{ task.title }}</label>
                         <button type="button" class="task-menu-btn" aria-label="Edit task" onclick="openEditTaskModal({{ task.id }})">
                             <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
@@ -43,17 +42,25 @@
                     {% if task.description %}
                     <p id="task{{ task.id }}-desc">{{ task.description|truncatewords:20 }}</p>
                     {% endif %}
-                    <div class="task-footer" id="task{{ task.id }}-meta">
-                        <span class="priority {{ task.priority }}" role="status">Priority: {{ task.get_priority_display }}</span>
-                        <span class="status {{ task.status|slugify }}" role="status">Status: {{ task.get_status_display }}</span>
+                    <div class="task-footer" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        {% if task.category %}
+                        <span class="project-badge" style="background-color: {{ task.category.color }}25; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}50; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 0.775rem;" role="status">
+                            <i class="fas fa-folder" aria-hidden="true"></i> Project: {{ task.category.name }}
+                        </span>
+                        {% else %}
+                        <span class="project-badge" style="background-color: #27272a; color: #a1a1aa; border: 1px solid #3f3f46; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 0.775rem;" role="status">
+                            <i class="fas fa-folder" aria-hidden="true"></i> General
+                        </span>
+                        {% endif %}
+                        <span class="priority {{ task.priority }}" role="status">Priority: {{ task.get_priority_display|upper }}</span>
+                        <span class="status {{ task.status }}" role="status">Status: {{ task.get_status_display|upper }}</span>
                         <span class="created-on">Created: {{ task.created_at|date:"d/m/Y" }}</span>
                     </div>
                 </article>
                 {% empty %}
                 <div class="empty-state">
-                    <div class="empty-icon"><i class="fas fa-check-square"></i></div>
-                    <h4>All clear!</h4>
-                    <p>You have no pending tasks. Add a new one to get started.</p>
+                    <i class="far fa-check-circle empty-icon"></i>
+                    <p>No recent pending tasks! All caught up.</p>
                 </div>
                 {% endfor %}
             </div>
@@ -62,21 +69,33 @@
 
     <!-- Right Sidebar Content -->
     <div class="right-content">
-        <!-- Task Status Overview -->
+        <!-- Task Status Overview (2x3 Grid for 6 Statuses) -->
         <section class="task-status-cards" aria-labelledby="status-heading">
             <h3 id="status-heading">Task Status</h3>
-            <div class="status-card">
+            <div class="status-grid-2x3">
                 <div class="status-item" role="status">
-                    <span class="status-label">Not Started</span>
-                    <span class="status-count not-started" aria-label="{{ not_started_count }} not started tasks">{{ not_started_count }}</span>
+                    <span class="status-label">Backlog</span>
+                    <span class="status-count backlog">{{ backlog_count }}</span>
+                </div>
+                <div class="status-item" role="status">
+                    <span class="status-label">To Do</span>
+                    <span class="status-count to-do">{{ to_do_count }}</span>
                 </div>
                 <div class="status-item" role="status">
                     <span class="status-label">In Progress</span>
-                    <span class="status-count in-progress" aria-label="{{ in_progress_count }} in progress tasks">{{ in_progress_count }}</span>
+                    <span class="status-count in-progress">{{ in_progress_count }}</span>
                 </div>
                 <div class="status-item" role="status">
-                    <span class="status-label">Completed</span>
-                    <span class="status-count completed" aria-label="{{ completed_count }} completed tasks">{{ completed_count }}</span>
+                    <span class="status-label">Done</span>
+                    <span class="status-count done">{{ done_count }}</span>
+                </div>
+                <div class="status-item" role="status">
+                    <span class="status-label">On Hold</span>
+                    <span class="status-count on-hold">{{ on_hold_count }}</span>
+                </div>
+                <div class="status-item" role="status">
+                    <span class="status-label">Canceled</span>
+                    <span class="status-count canceled">{{ canceled_count }}</span>
                 </div>
             </div>
         </section>
@@ -106,4 +125,34 @@
 {% endblock content %}
 
 {% block scripts %}
+<script>
+    function toggleTaskComplete(taskId, checkboxElem) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        const csrfToken = csrfInput ? csrfInput.value : '';
+        const formData = new FormData();
+        formData.append('status', checkboxElem.checked ? 'completed' : 'not-started');
+
+        fetch(`/task/${taskId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const card = checkboxElem.closest('.task-card');
+                if (card) {
+                    card.style.opacity = '0.3';
+                    card.style.transform = 'scale(0.98)';
+                    card.style.transition = 'all 0.3s ease';
+                    setTimeout(() => { card.remove(); }, 300);
+                }
+            }
+        })
+        .catch(err => console.error('Error toggling task:', err));
+    }
+</script>
 {% endblock scripts %}

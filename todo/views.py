@@ -28,10 +28,13 @@ def dashboard(request):
     """
     tasks = Task.objects.filter(user=request.user)
 
-    # Calculate counts for the "Task Status" overview card
-    completed_count = tasks.filter(status='completed').count()
+    # Calculate counts for all 6 task statuses in 2x3 overview grid
+    backlog_count = tasks.filter(status='backlog').count()
+    to_do_count = tasks.filter(status='not-started').count()
     in_progress_count = tasks.filter(status='in-progress').count()
-    not_started_count = tasks.filter(status='not-started').count()
+    done_count = tasks.filter(status='completed').count()
+    on_hold_count = tasks.filter(status='on-hold').count()
+    canceled_count = tasks.filter(status='canceled').count()
 
     # Get the 5 most recent tasks that are not yet completed
     recent_tasks = tasks.exclude(status='completed').order_by('-created_at')[:5]
@@ -40,9 +43,12 @@ def dashboard(request):
     recently_completed_tasks = tasks.filter(status='completed').order_by('-completed_at')[:3]
 
     context = {
-        'completed_count': completed_count,
+        'backlog_count': backlog_count,
+        'to_do_count': to_do_count,
         'in_progress_count': in_progress_count,
-        'not_started_count': not_started_count,
+        'done_count': done_count,
+        'on_hold_count': on_hold_count,
+        'canceled_count': canceled_count,
         'recent_tasks': recent_tasks,
         'recently_completed_tasks': recently_completed_tasks,
         'active_page': 'dashboard',
@@ -53,30 +59,27 @@ def dashboard(request):
 @login_required
 def my_tasks(request):
     """
-    Displays a grid of all tasks belonging to the current user.
-    This view provides a comprehensive list for managing all tasks.
+    Displays a grid of all tasks belonging to the current user (Manage Tasks view).
     """
     tasks = Task.objects.filter(user=request.user).order_by('-created_at')
     context = {
         'tasks': tasks,
         'active_page': 'my_tasks',
     }
-    return render(request, 'todo/my-tasks.html', context)
+    return render(request, 'todo/manage-tasks.html', context)
 
 
 @login_required
 def task_categories(request):
     """
-    Displays all categories created by the user.
-    It calculates and shows the total task count and completion percentage for each category.
-    Also provides a form for creating a new category (used in a modal).
+    Displays all projects created by the user (Manage Projects view).
+    Calculates total task count and completion percentage for each project.
     """
     categories = Category.objects.filter(user=request.user).annotate(
         task_count=Count('tasks'),
         completed_count=Count('tasks', filter=Q(tasks__status='completed'))
     )
 
-    # Calculate progress percentage in the view for clarity
     for category in categories:
         if category.task_count > 0:
             category.progress = int((category.completed_count / category.task_count) * 100)
@@ -89,7 +92,48 @@ def task_categories(request):
         'form': form,
         'active_page': 'task_categories',
     }
-    return render(request, 'todo/task-categories.html', context)
+    return render(request, 'todo/manage-projects.html', context)
+
+
+@login_required
+def manage_kanban(request):
+    """
+    Displays a Kanban board page with 6 columns matching Dashboard status overview:
+    Backlog, To Do, In Progress, Done, On Hold, Canceled.
+    Supports filtering by specific Project.
+    """
+    all_projects = Category.objects.filter(user=request.user)
+    tasks = Task.objects.filter(user=request.user)
+    
+    project_id = request.GET.get('project')
+    selected_project = None
+    if project_id:
+        try:
+            selected_project = all_projects.get(pk=project_id)
+            tasks = tasks.filter(category=selected_project)
+        except (Category.DoesNotExist, ValueError):
+            project_id = None
+
+    backlog_tasks = tasks.filter(status='backlog').order_by('-created_at')
+    to_do_tasks = tasks.filter(status='not-started').order_by('-created_at')
+    in_progress_tasks = tasks.filter(status='in-progress').order_by('-created_at')
+    done_tasks = tasks.filter(status='completed').order_by('-created_at')
+    on_hold_tasks = tasks.filter(status='on-hold').order_by('-created_at')
+    canceled_tasks = tasks.filter(status='canceled').order_by('-created_at')
+
+    context = {
+        'all_projects': all_projects,
+        'selected_project': selected_project,
+        'selected_project_id': int(project_id) if project_id else None,
+        'backlog_tasks': backlog_tasks,
+        'to_do_tasks': to_do_tasks,
+        'in_progress_tasks': in_progress_tasks,
+        'done_tasks': done_tasks,
+        'on_hold_tasks': on_hold_tasks,
+        'canceled_tasks': canceled_tasks,
+        'active_page': 'manage_kanban',
+    }
+    return render(request, 'todo/kanban.html', context)
 
 
 @login_required
@@ -158,19 +202,33 @@ def task_create(request):
 @login_required
 def task_update(request, pk):
     """
-    Handles updating an existing task via AJAX POST request.
-    Returns a JSON response indicating success or failure.
+    Handles updating an existing task via POST request.
+    Supports quick status updates as well as full form updates.
     """
     task = get_object_or_404(Task, pk=pk, user=request.user)
     
     if request.method == 'POST':
+        new_status = request.POST.get('status')
+        # If only status is passed (e.g. from Kanban move buttons or task checkboxes)
+        if new_status and 'title' not in request.POST:
+            if new_status in Task.Status.values:
+                task.status = new_status
+                task.save()
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': True, 'message': 'Task status updated!'})
+                return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+
+        # Full form update
         form = TaskForm(request.POST, instance=task, user=request.user)
         if form.is_valid():
             form.save()
-            return JsonResponse({'success': True, 'message': 'Task updated successfully!'})
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': 'Task updated successfully!'})
+            return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
         else:
-            # If the form is invalid, return the errors as JSON
-            return JsonResponse({'success': False, 'errors': form.errors})
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors})
+            return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
     
     # If it's a GET request, return task data as JSON for populating the edit form
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -184,7 +242,6 @@ def task_update(request, pk):
         }
         return JsonResponse({'success': True, 'task': task_data})
     
-    # Fallback for non-AJAX GET requests
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 

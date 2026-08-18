@@ -25,9 +25,12 @@ class Task(models.Model):
         LOW = 'low', 'Low'
 
     class Status(models.TextChoices):
-        NOT_STARTED = 'not-started', 'Not Started'
+        BACKLOG = 'backlog', 'Backlog'
+        TO_DO = 'not-started', 'To Do'
         IN_PROGRESS = 'in-progress', 'In Progress'
-        COMPLETED = 'completed', 'Completed'
+        DONE = 'completed', 'Done'
+        ON_HOLD = 'on-hold', 'On Hold'
+        CANCELED = 'canceled', 'Canceled'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
@@ -43,7 +46,7 @@ class Task(models.Model):
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.NOT_STARTED
+        default=Status.TO_DO
     )
     
     due_date = models.DateField(blank=True, null=True)
@@ -54,10 +57,10 @@ class Task(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        # Automatically set completed_at when status is changed to completed
-        if self.status == self.Status.COMPLETED and not self.completed_at:
+        # Automatically set completed_at when status is changed to completed/done
+        if self.status == self.Status.DONE and not self.completed_at:
             self.completed_at = timezone.now()
-        elif self.status != self.Status.COMPLETED:
+        elif self.status != self.Status.DONE:
             self.completed_at = None
         super().save(*args, **kwargs)
 

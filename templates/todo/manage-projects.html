@@ -4,7 +4,6 @@
 {% block title %}Manage Projects - TaskMitra{% endblock title %}
 
 {% block styles %}
-    {# Link the page-specific stylesheet #}
     <link rel="stylesheet" href="{% static 'todo/css/task-categories.css' %}?v=4">
 {% endblock styles %}
 
@@ -64,7 +63,7 @@
             <h3><i class="fas fa-folder-plus"></i> Add New Project</h3>
             <button id="category-modal-close-btn" class="close-modal" aria-label="Close">&times;</button>
         </div>
-        <form id="category-form" method="post" action="{% url 'category_create' %}">
+        <form id="category-form" method="post" action="{% url 'project_create' %}">
             {% csrf_token %}
             <div class="modal-body">
                 <div class="form-group">

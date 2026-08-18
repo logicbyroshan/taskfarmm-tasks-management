@@ -1,0 +1,368 @@
+{% extends 'todo/base.html' %}
+{% load static %}
+
+{% block title %}Manage Kanban - TaskMitra{% endblock title %}
+
+{% block content %}
+<div class="kanban-header">
+    <div class="kanban-title">
+        <h2>
+            <i class="fas fa-columns" style="color: var(--accent-color); margin-right: 10px;"></i>
+            {% if selected_project %}
+                Kanban: <span style="color: {{ selected_project.color }};">{{ selected_project.name }}</span>
+            {% else %}
+                Manage Kanban (All Projects)
+            {% endif %}
+        </h2>
+        <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.875rem;">Drag and drop cards across columns or use status controls.</p>
+    </div>
+
+    <div class="kanban-actions" style="display: flex; align-items: center; gap: 14px;">
+        <!-- Project Switcher Dropdown -->
+        <div class="project-filter-box" style="display: flex; align-items: center; gap: 8px;">
+            <label for="kanban-project-select" style="font-size: 0.825rem; font-weight: 600; color: var(--text-muted);"><i class="fas fa-folder"></i> Project:</label>
+            <select id="kanban-project-select" onchange="switchKanbanProject(this.value)" style="height: 38px; min-width: 170px;">
+                <option value="" {% if not selected_project_id %}selected{% endif %}>📁 All Projects</option>
+                {% for project in all_projects %}
+                <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>
+                    📁 {{ project.name }} ({{ project.task_count }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button class="invite-btn" type="button" aria-label="Add new task" onclick="openAddTaskModal()">
+            <i class="fas fa-plus" aria-hidden="true"></i> Add Task
+        </button>
+    </div>
+</div>
+
+<div class="kanban-board-6col">
+    <!-- 1. Backlog Column -->
+    <div class="kanban-column" id="column-backlog" data-status="backlog">
+        <div class="column-header">
+            <div class="column-title">
+                <span class="status-dot backlog"></span>
+                <h3>Backlog</h3>
+                <span class="task-count" id="count-backlog">{{ backlog_tasks.count }}</span>
+            </div>
+            <button class="icon-btn" onclick="openAddTaskModalWithStatus('backlog')" title="Add task to Backlog"><i class="fas fa-plus"></i></button>
+        </div>
+        
+        <div class="kanban-cards-container" data-status="backlog" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'backlog')">
+            {% for task in backlog_tasks %}
+            <article class="kanban-card" data-task-id="{{ task.id }}" draggable="true" ondragstart="handleDragStart(event)" onclick="openEditTaskModal({{ task.id }})">
+                <div class="kanban-card-top">
+                    <span class="priority {{ task.priority }}">{{ task.priority|upper }}</span>
+                    <button type="button" class="task-menu-btn" onclick="event.stopPropagation(); openEditTaskModal({{ task.id }});">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+                <h4 class="kanban-card-title">{{ task.title }}</h4>
+                {% if task.description %}
+                <p class="kanban-card-desc">{{ task.description|truncatewords:10 }}</p>
+                {% endif %}
+                <div class="kanban-card-footer">
+                    {% if task.category %}
+                    <span class="kanban-category-badge" style="background: {{ task.category.color }}20; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}40;">
+                        <i class="fas fa-folder"></i> {{ task.category.name }}
+                    </span>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="kanban-empty" id="empty-backlog">
+                <i class="far fa-clipboard"></i>
+                <p>No tasks</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 2. To Do Column -->
+    <div class="kanban-column" id="column-to-do" data-status="not-started">
+        <div class="column-header">
+            <div class="column-title">
+                <span class="status-dot to-do"></span>
+                <h3>To Do</h3>
+                <span class="task-count" id="count-not-started">{{ to_do_tasks.count }}</span>
+            </div>
+            <button class="icon-btn" onclick="openAddTaskModalWithStatus('not-started')" title="Add task to To Do"><i class="fas fa-plus"></i></button>
+        </div>
+        
+        <div class="kanban-cards-container" data-status="not-started" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'not-started')">
+            {% for task in to_do_tasks %}
+            <article class="kanban-card" data-task-id="{{ task.id }}" draggable="true" ondragstart="handleDragStart(event)" onclick="openEditTaskModal({{ task.id }})">
+                <div class="kanban-card-top">
+                    <span class="priority {{ task.priority }}">{{ task.priority|upper }}</span>
+                    <button type="button" class="task-menu-btn" onclick="event.stopPropagation(); openEditTaskModal({{ task.id }});">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+                <h4 class="kanban-card-title">{{ task.title }}</h4>
+                {% if task.description %}
+                <p class="kanban-card-desc">{{ task.description|truncatewords:10 }}</p>
+                {% endif %}
+                <div class="kanban-card-footer">
+                    {% if task.category %}
+                    <span class="kanban-category-badge" style="background: {{ task.category.color }}20; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}40;">
+                        <i class="fas fa-folder"></i> {{ task.category.name }}
+                    </span>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="kanban-empty" id="empty-not-started">
+                <i class="far fa-list-alt"></i>
+                <p>No tasks</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 3. In Progress Column -->
+    <div class="kanban-column" id="column-in-progress" data-status="in-progress">
+        <div class="column-header">
+            <div class="column-title">
+                <span class="status-dot in-progress"></span>
+                <h3>In Progress</h3>
+                <span class="task-count" id="count-in-progress">{{ in_progress_tasks.count }}</span>
+            </div>
+            <button class="icon-btn" onclick="openAddTaskModalWithStatus('in-progress')" title="Add task to In Progress"><i class="fas fa-plus"></i></button>
+        </div>
+        
+        <div class="kanban-cards-container" data-status="in-progress" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'in-progress')">
+            {% for task in in_progress_tasks %}
+            <article class="kanban-card" data-task-id="{{ task.id }}" draggable="true" ondragstart="handleDragStart(event)" onclick="openEditTaskModal({{ task.id }})">
+                <div class="kanban-card-top">
+                    <span class="priority {{ task.priority }}">{{ task.priority|upper }}</span>
+                    <button type="button" class="task-menu-btn" onclick="event.stopPropagation(); openEditTaskModal({{ task.id }});">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+                <h4 class="kanban-card-title">{{ task.title }}</h4>
+                {% if task.description %}
+                <p class="kanban-card-desc">{{ task.description|truncatewords:10 }}</p>
+                {% endif %}
+                <div class="kanban-card-footer">
+                    {% if task.category %}
+                    <span class="kanban-category-badge" style="background: {{ task.category.color }}20; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}40;">
+                        <i class="fas fa-folder"></i> {{ task.category.name }}
+                    </span>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="kanban-empty" id="empty-in-progress">
+                <i class="fas fa-spinner"></i>
+                <p>No tasks</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 4. Done Column -->
+    <div class="kanban-column" id="column-done" data-status="completed">
+        <div class="column-header">
+            <div class="column-title">
+                <span class="status-dot done"></span>
+                <h3>Done</h3>
+                <span class="task-count" id="count-completed">{{ done_tasks.count }}</span>
+            </div>
+            <button class="icon-btn" onclick="openAddTaskModalWithStatus('completed')" title="Add completed task"><i class="fas fa-plus"></i></button>
+        </div>
+        
+        <div class="kanban-cards-container" data-status="completed" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'completed')">
+            {% for task in done_tasks %}
+            <article class="kanban-card is-completed" data-task-id="{{ task.id }}" draggable="true" ondragstart="handleDragStart(event)" onclick="openEditTaskModal({{ task.id }})">
+                <div class="kanban-card-top">
+                    <span class="status completed">DONE</span>
+                    <button type="button" class="task-menu-btn" onclick="event.stopPropagation(); openEditTaskModal({{ task.id }});">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+                <h4 class="kanban-card-title strike-through">{{ task.title }}</h4>
+                {% if task.description %}
+                <p class="kanban-card-desc strike-through">{{ task.description|truncatewords:10 }}</p>
+                {% endif %}
+                <div class="kanban-card-footer">
+                    {% if task.category %}
+                    <span class="kanban-category-badge" style="background: {{ task.category.color }}20; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}40;">
+                        <i class="fas fa-folder"></i> {{ task.category.name }}
+                    </span>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="kanban-empty" id="empty-completed">
+                <i class="fas fa-check-circle"></i>
+                <p>No tasks</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 5. On Hold Column -->
+    <div class="kanban-column" id="column-on-hold" data-status="on-hold">
+        <div class="column-header">
+            <div class="column-title">
+                <span class="status-dot on-hold"></span>
+                <h3>On Hold</h3>
+                <span class="task-count" id="count-on-hold">{{ on_hold_tasks.count }}</span>
+            </div>
+            <button class="icon-btn" onclick="openAddTaskModalWithStatus('on-hold')" title="Add task to On Hold"><i class="fas fa-plus"></i></button>
+        </div>
+        
+        <div class="kanban-cards-container" data-status="on-hold" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'on-hold')">
+            {% for task in on_hold_tasks %}
+            <article class="kanban-card" data-task-id="{{ task.id }}" draggable="true" ondragstart="handleDragStart(event)" onclick="openEditTaskModal({{ task.id }})">
+                <div class="kanban-card-top">
+                    <span class="priority {{ task.priority }}">{{ task.priority|upper }}</span>
+                    <button type="button" class="task-menu-btn" onclick="event.stopPropagation(); openEditTaskModal({{ task.id }});">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+                <h4 class="kanban-card-title">{{ task.title }}</h4>
+                {% if task.description %}
+                <p class="kanban-card-desc">{{ task.description|truncatewords:10 }}</p>
+                {% endif %}
+                <div class="kanban-card-footer">
+                    {% if task.category %}
+                    <span class="kanban-category-badge" style="background: {{ task.category.color }}20; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}40;">
+                        <i class="fas fa-folder"></i> {{ task.category.name }}
+                    </span>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="kanban-empty" id="empty-on-hold">
+                <i class="fas fa-pause-circle"></i>
+                <p>No tasks</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 6. Canceled Column -->
+    <div class="kanban-column" id="column-canceled" data-status="canceled">
+        <div class="column-header">
+            <div class="column-title">
+                <span class="status-dot canceled"></span>
+                <h3>Canceled</h3>
+                <span class="task-count" id="count-canceled">{{ canceled_tasks.count }}</span>
+            </div>
+            <button class="icon-btn" onclick="openAddTaskModalWithStatus('canceled')" title="Add canceled task"><i class="fas fa-plus"></i></button>
+        </div>
+        
+        <div class="kanban-cards-container" data-status="canceled" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'canceled')">
+            {% for task in canceled_tasks %}
+            <article class="kanban-card" data-task-id="{{ task.id }}" draggable="true" ondragstart="handleDragStart(event)" onclick="openEditTaskModal({{ task.id }})">
+                <div class="kanban-card-top">
+                    <span class="status canceled">CANCELED</span>
+                    <button type="button" class="task-menu-btn" onclick="event.stopPropagation(); openEditTaskModal({{ task.id }});">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+                <h4 class="kanban-card-title strike-through">{{ task.title }}</h4>
+                {% if task.description %}
+                <p class="kanban-card-desc strike-through">{{ task.description|truncatewords:10 }}</p>
+                {% endif %}
+                <div class="kanban-card-footer">
+                    {% if task.category %}
+                    <span class="kanban-category-badge" style="background: {{ task.category.color }}20; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}40;">
+                        <i class="fas fa-folder"></i> {{ task.category.name }}
+                    </span>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="kanban-empty" id="empty-canceled">
+                <i class="fas fa-ban"></i>
+                <p>No tasks</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+    function switchKanbanProject(projectId) {
+        if (projectId) {
+            window.location.href = "{% url 'manage_kanban' %}?project=" + projectId;
+        } else {
+            window.location.href = "{% url 'manage_kanban' %}";
+        }
+    }
+
+    let draggedTaskId = null;
+
+    function handleDragStart(e) {
+        draggedTaskId = e.target.getAttribute('data-task-id');
+        e.dataTransfer.setData('text/plain', draggedTaskId);
+        e.target.style.opacity = '0.5';
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDrop(e, targetStatus) {
+        e.preventDefault();
+        const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+        if (!taskId) return;
+
+        const card = document.querySelector(`.kanban-card[data-task-id="${taskId}"]`);
+        if (card) {
+            card.style.opacity = '1';
+        }
+
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        const csrfToken = csrfInput ? csrfInput.value : '';
+        const formData = new FormData();
+        formData.append('status', targetStatus);
+
+        fetch(`/task/${taskId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Move card into new container target
+                const container = document.querySelector(`.kanban-cards-container[data-status="${targetStatus}"]`);
+                if (container && card) {
+                    container.appendChild(card);
+                    // Hide empty placeholder if present
+                    const emptyMsg = container.querySelector('.kanban-empty');
+                    if (emptyMsg) emptyMsg.style.display = 'none';
+                }
+            }
+        })
+        .catch(err => console.error('Error updating task status:', err));
+    }
+
+    document.querySelectorAll('.kanban-card').forEach(card => {
+        card.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+        });
+    });
+
+    function openAddTaskModalWithStatus(status) {
+        openAddTaskModal();
+        setTimeout(() => {
+            const statusSelect = document.querySelector('#add-task-form select[name="status"]');
+            if (statusSelect) {
+                statusSelect.value = status;
+                statusSelect.dispatchEvent(new Event('change'));
+            }
+        }, 100);
+    }
+</script>
+{% endblock scripts %}

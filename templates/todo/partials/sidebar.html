@@ -3,7 +3,6 @@
     
     <nav class="sidebar-nav">
         <ul role="list">
-            <!-- The 'active_page' variable will be passed from the view -->
             <li class="{% if active_page == 'dashboard' %}active{% endif %}">
                 <a href="{% url 'dashboard' %}">
                     <i class="fas fa-th-large" aria-hidden="true"></i> Dashboard
@@ -11,27 +10,48 @@
             </li>
             <li class="{% if active_page == 'my_tasks' %}active{% endif %}">
                 <a href="{% url 'my_tasks' %}">
-                    <i class="fas fa-tasks" aria-hidden="true"></i> My Task
+                    <i class="fas fa-tasks" aria-hidden="true"></i> Manage Tasks
                 </a>
             </li>
             <li class="{% if active_page == 'task_categories' %}active{% endif %}">
                 <a href="{% url 'task_categories' %}">
-                    <i class="fas fa-list-alt" aria-hidden="true"></i>Categories
+                    <i class="fas fa-folder-open" aria-hidden="true"></i> Manage Projects
                 </a>
             </li>
-            <li class="{% if active_page == 'settings' %}active{% endif %}">
-                <a href="{% url 'settings' %}">
-                    <i class="fas fa-cog" aria-hidden="true"></i> Settings
+            <li class="{% if active_page == 'manage_kanban' %}active{% endif %}">
+                <a href="{% url 'manage_kanban' %}">
+                    <i class="fas fa-columns" aria-hidden="true"></i> Manage Kanban
                 </a>
             </li>
         </ul>
     </nav>
     
-    <div class="logout-btn">
-        {# Logout will be handled by external auth app #}
-        <button type="button" aria-label="Logout" disabled style="opacity: 0.5; cursor: not-allowed;">
-            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
-        </button>
+    <div class="sidebar-bottom">
+        <!-- Settings option placed in bottom section above the dividing line -->
+        <div class="sidebar-settings-link {% if active_page == 'settings' %}active{% endif %}">
+            <a href="{% url 'settings' %}">
+                <i class="fas fa-cog" aria-hidden="true"></i> Settings
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+        
+        <!-- Logout button below dividing line -->
+        <div class="logout-btn">
+            <button type="button" class="btn-logout" aria-label="Logout">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+            </button>
+        </div>
+
+        <!-- User profile at the very bottom -->
+        <div class="sidebar-profile">
+            <div class="profile-pic">
+                {{ user.username|slice:":1"|upper }}
+            </div>
+            <div class="profile-info">
+                <span class="profile-name">{{ user.get_full_name|default:user.username }}</span>
+            </div>
+        </div>
     </div>
     {% else %}
     <div class="login-prompt">
