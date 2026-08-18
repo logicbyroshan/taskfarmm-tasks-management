@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">
     
     <!-- This title will be overridden by child templates -->
-    <title>{% block title %}TaskMitra{% endblock title %}</title>
+    <title>{% block title %}TaskFlix{% endblock title %}</title>
     
-    <meta name="description" content="TaskMitra - A modern, mobile-friendly task & project manager">
-    <meta name="author" content="TaskMitra">
+    <meta name="description" content="TaskFlix - A modern, mobile-friendly project & task manager">
+    <meta name="author" content="TaskFlix">
     
     <!-- Theme colors for mobile browsers -->
     <meta name="theme-color" content="#3b82f6">
@@ -27,8 +27,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS Links -->
-    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <!-- Block for any page-specific CSS -->
@@ -39,9 +39,9 @@
         <!-- Main Navigation Header (Consistent across all pages) -->
         <header class="navbar" role="banner">
             <div class="navbar-left">
-                <img src="{% static 'todo/images/logo.png' %}" alt="TaskMitra Logo" class="logo-img">
+                <img src="{% static 'todo/images/logo.png' %}" alt="TaskFlix Logo" class="logo-img">
                 <a href="{% url 'dashboard' %}" style="text-decoration: none;">
-                    <h1 class="logo">Task<span>Mitra</span></h1>
+                    <h1 class="logo">Task<span>Flix</span></h1>
                 </a>
             </div>
             <div class="navbar-right">

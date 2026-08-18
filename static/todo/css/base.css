@@ -32,20 +32,12 @@
     box-sizing: border-box;
 }
 
-@keyframes auroraMesh {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
 body {
     margin: 0;
     padding: var(--page-padding); /* Equal 20px gap on top, bottom, left, right */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--text-color);
-    background: linear-gradient(-45deg, #09090b, #1e1b4b, #2e1065, #0f172a, #172554, #09090b);
-    background-size: 400% 400%;
-    animation: auroraMesh 20s ease infinite;
+    background-color: #09090b;
     overflow: hidden;
     position: relative;
     height: 100vh;

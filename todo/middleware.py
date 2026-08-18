@@ -22,7 +22,7 @@ class DemoAuthMiddleware:
         except User.DoesNotExist:
             user = User.objects.create_user(
                 username=username,
-                email='demo@taskmitra.com',
+                email='demo@taskflix.com',
                 password='demo123',  # This won't be used
                 first_name='Demo',
                 last_name='User'

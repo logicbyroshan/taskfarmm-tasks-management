@@ -1,6 +1,6 @@
 # todo/api_auth.py
 """
-API Authentication for TaskMitra
+API Authentication for TaskFlix
 This module will handle token/session-based authentication from external auth service.
 Currently using demo middleware - replace with real API integration later.
 """
@@ -38,7 +38,7 @@ def api_verify_token(request):
                 'user': {
                     'id': 1,
                     'username': 'demo_user',
-                    'email': 'demo@taskmitra.com',
+                    'email': 'demo@taskflix.com',
                     'first_name': 'Demo',
                     'last_name': 'User'
                 }

@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-wzjz3xhp8s(so$mav5us0skf(0q*$ze85(hpa@&9&@!8x3#hm@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['taskflix.rkdapp.site', 'localhost', '127.0.0.1', '*']
 
 
 # Application definition
