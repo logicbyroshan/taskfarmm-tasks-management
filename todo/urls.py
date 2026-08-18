@@ -25,10 +25,11 @@ urlpatterns = [
     path('category/<int:pk>/update/', views.category_update, name='category_update'),
     path('category/<int:pk>/delete/', views.category_delete, name='category_delete'),
     
-    # API Authentication endpoints (for external auth integration)
+    # API Authentication & AI Assistant endpoints
     path('api/auth/verify-token/', api_auth.api_verify_token, name='api_verify_token'),
     path('api/auth/create-session/', api_auth.api_create_session, name='api_create_session'),
     path('api/auth/user-info/', api_auth.api_user_info, name='api_user_info'),
+    path('api/ai/suggest/', views.api_ai_suggest, name='api_ai_suggest'),
 ]
 
 # Removed: All authentication URLs (will be handled by another app)

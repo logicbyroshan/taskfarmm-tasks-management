@@ -88,9 +88,37 @@ GET /api/auth/user-info/
 {
     "id": 1,
     "username": "demo_user",
-    "email": "demo@taskmitra.com",
+    "email": "demo@taskflix.com",
     "first_name": "Demo",
     "last_name": "User"
+}
+```
+
+---
+
+## 🤖 AI Assistant Endpoints
+
+### **AI Suggest Task & Plan**
+
+```http
+POST /api/ai/suggest/
+```
+
+**Request Body:**
+```json
+{
+    "prompt": "Create a website launch strategy with subtasks"
+}
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "title": "Launch Strategy & Production Readiness",
+    "suggestion": "1. Finalize DNS records & SSL certificate configuration.\n2. Run cross-browser compatibility and lighthouse performance audit.\n3. Execute production database migrations.",
+    "description": "1. Finalize DNS records & SSL certificate configuration...",
+    "prompt": "Create a website launch strategy with subtasks"
 }
 ```
 

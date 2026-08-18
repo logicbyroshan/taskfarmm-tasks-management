@@ -227,10 +227,66 @@
                 <i class="fas fa-check"></i> Update Task
             </button>
         </div>
-        </form>
+{% endif %}
+
+<!-- TaskFlix Floating AI Assistant Widget -->
+<button id="ai-assistant-trigger" type="button" class="ai-fab-btn" onclick="openAiModal()">
+    <i class="fas fa-sparkles"></i> <span>AI Assistant</span>
+</button>
+
+<!-- TaskFlix AI Assistant Drawer / Modal -->
+<div id="ai-assistant-modal" class="task-modal" style="display: none;">
+    <div class="modal-backdrop" onclick="closeAiModal()"></div>
+    <div class="modal-content ai-modal-content" style="max-width: 580px; background: rgba(18, 18, 24, 0.95) !important;">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 14px;">
+            <h3 style="display: flex; align-items: center; gap: 10px; color: #60a5fa; margin: 0;">
+                <i class="fas fa-robot" style="color: #3b82f6;"></i> TaskFlix AI Assistant
+            </h3>
+            <button class="close-modal" type="button" onclick="closeAiModal()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; padding-top: 16px;">
+            <!-- AI Quick Prompts Chips -->
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">Quick Actions</label>
+                <div class="ai-prompt-chips" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <button type="button" class="ai-chip" onclick="setAiPrompt('Generate a 4-step launch plan for my website project')">
+                        <i class="fas fa-rocket"></i> Website Launch Plan
+                    </button>
+                    <button type="button" class="ai-chip" onclick="setAiPrompt('Break down task into subtasks: Implement user authentication')">
+                        <i class="fas fa-tasks"></i> Breakdown Subtasks
+                    </button>
+                    <button type="button" class="ai-chip" onclick="setAiPrompt('Suggest smart priority and due dates for pending backlog tasks')">
+                        <i class="fas fa-magic"></i> Auto-Prioritize
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Prompt Input -->
+            <div class="form-group" style="margin: 0;">
+                <label for="ai-prompt-input" style="font-size: 0.85rem; font-weight: 600; color: var(--text-color);">
+                    <i class="fas fa-comment-dots"></i> Ask AI Assistant
+                </label>
+                <textarea id="ai-prompt-input" rows="3" class="form-control" placeholder="e.g. Write a feature specification for user profiles..." style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 8px; padding: 10px; width: 100%; resize: vertical;"></textarea>
+            </div>
+
+            <!-- AI Action Buttons -->
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn" style="background: var(--accent-gradient); font-size: 0.85rem;" onclick="generateAiResponse()">
+                    <i class="fas fa-sparkles"></i> Generate AI Suggestion
+                </button>
+            </div>
+
+            <!-- AI Output Results Container -->
+            <div id="ai-response-box" style="display: none; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 14px; margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #60a5fa; text-transform: uppercase;"><i class="fas fa-lightbulb"></i> AI Output</span>
+                    <button type="button" class="icon-btn" style="width: 28px; height: 28px; font-size: 0.75rem;" onclick="applyAiSuggestionToTask()"><i class="fas fa-plus"></i> Add as Task</button>
+                </div>
+                <div id="ai-response-text" style="font-size: 0.875rem; color: #e4e4e7; line-height: 1.5; white-space: pre-line;"></div>
+            </div>
+        </div>
     </div>
 </div>
-{% endif %}
 
     <!-- Vanta.js Animated Blue Dots Background CDNs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>

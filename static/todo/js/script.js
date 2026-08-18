@@ -286,3 +286,126 @@ function setupPWA() {
             .catch(() => {});
     }
 }
+
+/* ==============================================================================
+ *  TASKFLIX AI ASSISTANT INTERACTIVE CONTROLLER
+ * ============================================================================== */
+
+function openAiModal() {
+    const modal = document.getElementById('ai-assistant-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        const promptInput = document.getElementById('ai-prompt-input');
+        if (promptInput) promptInput.focus();
+    }
+}
+
+function closeAiModal() {
+    const modal = document.getElementById('ai-assistant-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function setAiPrompt(text) {
+    const input = document.getElementById('ai-prompt-input');
+    if (input) {
+        input.value = text;
+        generateAiResponse();
+    }
+}
+
+let lastGeneratedAiTitle = "";
+let lastGeneratedAiDesc = "";
+
+function generateAiResponse() {
+    const input = document.getElementById('ai-prompt-input');
+    const responseBox = document.getElementById('ai-response-box');
+    const responseText = document.getElementById('ai-response-text');
+    
+    if (!input || !input.value.trim()) {
+        alert('Please enter an AI prompt or select a quick action.');
+        return;
+    }
+
+    const query = input.value.trim();
+    if (responseBox) responseBox.style.display = 'block';
+    if (responseText) responseText.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#60a5fa;"></i> Analyzing request with TaskFlix AI Engine...';
+
+    // Call AI Backend endpoint or simulate intelligent AI response
+    fetch('/api/ai/suggest/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({ prompt: query })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            lastGeneratedAiTitle = data.title || "AI Suggested Task";
+            lastGeneratedAiDesc = data.suggestion || data.description;
+            responseText.innerText = `💡 Title: ${lastGeneratedAiTitle}\n\n${lastGeneratedAiDesc}`;
+        } else {
+            simulateLocalAiFallback(query);
+        }
+    })
+    .catch(() => {
+        simulateLocalAiFallback(query);
+    });
+}
+
+function simulateLocalAiFallback(query) {
+    const responseText = document.getElementById('ai-response-text');
+    let title = "AI Generated Plan";
+    let desc = "";
+
+    if (query.toLowerCase().includes('website') || query.toLowerCase().includes('launch')) {
+        title = "Execute Website Launch Strategy";
+        desc = "1. Finalize DNS and SSL setup.\n2. Complete cross-browser visual QA.\n3. Run performance & lighthouse audit.\n4. Deploy database migrations and launch.";
+    } else if (query.toLowerCase().includes('subtask') || query.toLowerCase().includes('breakdown')) {
+        title = "Deconstruct Module Tasks";
+        desc = "Subtasks:\n- Setup API endpoints & payload validation\n- Write unit tests for business logic\n- Integrate frontend state management\n- Verify error boundaries & fallback state";
+    } else {
+        title = "Optimize Workflow & Prioritize";
+        desc = `AI Analysis for "${query}":\n- Priority: High\n- Estimated Time: 3.5 Hours\n- Recommended Action: Create backlog item, assign owner, and schedule review before release.`;
+    }
+
+    lastGeneratedAiTitle = title;
+    lastGeneratedAiDesc = desc;
+
+    if (responseText) {
+        responseText.innerText = `💡 Suggested Title: ${title}\n\n${desc}`;
+    }
+}
+
+function applyAiSuggestionToTask() {
+    closeAiModal();
+    const addTaskBtn = document.getElementById('add-task-btn');
+    if (addTaskBtn) addTaskBtn.click();
+
+    setTimeout(() => {
+        const titleInput = document.querySelector('#add-task-form input[name="title"]');
+        const descInput = document.querySelector('#add-task-form textarea[name="description"]');
+        if (titleInput && lastGeneratedAiTitle) titleInput.value = lastGeneratedAiTitle;
+        if (descInput && lastGeneratedAiDesc) descInput.value = lastGeneratedAiDesc;
+    }, 200);
+}
+
+function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}

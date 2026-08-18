@@ -313,3 +313,67 @@ def category_delete(request, pk):
         return redirect('task_categories')
         
     return render(request, 'todo/confirm_delete.html', {'object': category})
+
+
+# ==============================================================================
+#  AI ASSISTANT API ENDPOINTS (Stubs ready for LLM / OpenAI API Integration)
+# ==============================================================================
+
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+@login_required
+def api_ai_suggest(request):
+    """
+    AI Task & Project Assistant endpoint.
+    Accepts user prompts and returns AI task breakdowns, smart priority recommendations,
+    and task descriptions. Prepared for OpenAI / Gemini / Claude API key integration.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            prompt = data.get('prompt', '').strip()
+
+            if not prompt:
+                return JsonResponse({'success': False, 'error': 'Empty prompt'}, status=400)
+
+            # Smart AI Suggestion Generator Logic
+            prompt_lower = prompt.lower()
+            if 'website' in prompt_lower or 'launch' in prompt_lower or 'app' in prompt_lower:
+                title = "Launch Strategy & Production Readiness"
+                suggestion = (
+                    "1. Finalize DNS records & SSL certificate configuration.\n"
+                    "2. Run cross-browser compatibility and lighthouse performance audit.\n"
+                    "3. Execute production database migrations.\n"
+                    "4. Verify exception logging & error reporting setup."
+                )
+            elif 'subtask' in prompt_lower or 'breakdown' in prompt_lower or 'feature' in prompt_lower:
+                title = f"Task Breakdown: {prompt[:30]}..."
+                suggestion = (
+                    "Recommended Subtasks:\n"
+                    "- API Endpoint setup with request validation\n"
+                    "- Database schema migrations & indexing\n"
+                    "- Frontend UI component integration with glassmorphism styling\n"
+                    "- Comprehensive unit and integration test coverage"
+                )
+            else:
+                title = f"AI Workflow Task: {prompt[:35]}"
+                suggestion = (
+                    f"AI Action Plan for '{prompt}':\n"
+                    "- Priority: High\n"
+                    "- Recommended Timeline: Complete within 48 hours\n"
+                    "- Suggested Action: Create task, assign project category, and review progress."
+                )
+
+            return JsonResponse({
+                'success': True,
+                'title': title,
+                'suggestion': suggestion,
+                'description': suggestion,
+                'prompt': prompt
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'POST method required'}, status=405)

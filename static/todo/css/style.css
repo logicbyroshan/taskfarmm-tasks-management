@@ -1078,6 +1078,84 @@ select option {
     box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
 }
 
+/* ==============================================================================
+ *  AI ASSISTANT UI STYLES & DROPDOWN OVERFLOW FIXES
+ * ============================================================================== */
+
+/* Floating AI Trigger Button */
+.ai-fab-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius-full);
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 0.875rem;
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-fab-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 12px 28px rgba(139, 92, 246, 0.6);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* AI Quick Action Chips */
+.ai-chip {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+    border-radius: var(--radius-full);
+    padding: 6px 14px;
+    font-size: 0.775rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: auto;
+    box-shadow: none;
+}
+
+.ai-chip:hover {
+    background: rgba(59, 130, 246, 0.25);
+    color: #ffffff;
+    border-color: rgba(59, 130, 246, 0.6);
+    transform: translateY(-1px);
+}
+
+/* Custom Dropdown Z-Index & Overflow Fixes */
+.custom-select-wrapper {
+    position: relative;
+    z-index: 100;
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 9999 !important;
+    background: rgba(18, 18, 24, 0.95) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+    max-height: 220px;
+    overflow-y: auto;
+}
+
 /* Empty States */
 .empty-state {
     text-align: center;
