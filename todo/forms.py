@@ -1,6 +1,7 @@
 from django import forms
-from .models import Task, Category
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import PasswordChangeForm
+from .models import Task, Category, UserProfile
 
 
 class TaskForm(forms.ModelForm):
@@ -15,7 +16,8 @@ class TaskForm(forms.ModelForm):
             'description': forms.Textarea(attrs={
                 'id': 'task-description-editor',
                 'placeholder': 'Enter task description...',
-                'class': 'form-control'
+                'class': 'form-control',
+                'rows': 4,
             }),
             'due_date': forms.DateInput(attrs={
                 'type': 'date',
@@ -25,13 +27,11 @@ class TaskForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
         }
-        
+
     def __init__(self, *args, **kwargs):
-        # Get the user from the kwargs
         user = kwargs.pop('user', None)
         super(TaskForm, self).__init__(*args, **kwargs)
         if user:
-            # Filter the category queryset to only show categories belonging to the current user
             self.fields['category'].queryset = Category.objects.filter(user=user)
             self.fields['category'].empty_label = "No Category"
 
@@ -39,7 +39,7 @@ class TaskForm(forms.ModelForm):
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = ['name', 'color']
+        fields = ['name', 'color', 'description']
         widgets = {
             'name': forms.TextInput(attrs={
                 'placeholder': 'e.g., Work, Personal, Health',
@@ -48,6 +48,11 @@ class CategoryForm(forms.ModelForm):
             'color': forms.TextInput(attrs={
                 'type': 'color',
                 'class': 'form-control'
+            }),
+            'description': forms.Textarea(attrs={
+                'placeholder': 'Optional project description...',
+                'class': 'form-control',
+                'rows': 2,
             }),
         }
 
@@ -64,4 +69,26 @@ class UserUpdateForm(forms.ModelForm):
         }
 
 
-# Removed: Profile, RegistrationForm (auth handled by another app)
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = [
+            'theme',
+            'notify_task_reminders',
+            'notify_due_date_alerts',
+            'notify_app_updates',
+            'default_task_priority',
+            'default_task_status',
+        ]
+        widgets = {
+            'theme': forms.Select(attrs={'class': 'form-control'}),
+            'default_task_priority': forms.Select(attrs={'class': 'form-control'}),
+            'default_task_status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+class PasswordUpdateForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})

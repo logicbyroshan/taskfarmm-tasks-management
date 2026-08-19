@@ -2,17 +2,32 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 # ----------------- Django Contrib Imports -----------------
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash, logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 
 # ----------------- Database and Querying Imports -----------------
 from django.db.models import Count, Q
+from django.utils import timezone
+import json
 
 # ----------------- Local Application Imports -----------------
-from .models import Task, Category
-from .forms import TaskForm, CategoryForm, UserUpdateForm
+from .models import Task, Category, UserProfile, PreDefinedTask
+from .forms import TaskForm, CategoryForm, UserUpdateForm, UserProfileForm, PasswordUpdateForm
+
+
+# ==============================================================================
+#  HELPER: Get or create UserProfile
+# ==============================================================================
+
+def get_or_create_profile(user):
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    return profile
 
 
 # ==============================================================================
@@ -23,24 +38,43 @@ from .forms import TaskForm, CategoryForm, UserUpdateForm
 def dashboard(request):
     """
     Displays the main dashboard for an authenticated user.
-    It gathers various statistics (task counts) and lists of recent tasks
-    to provide a summary of the user's activity.
     """
     tasks = Task.objects.filter(user=request.user)
 
-    # Calculate counts for all 6 task statuses in 2x3 overview grid
+    # Calculate counts for all 6 task statuses
     backlog_count = tasks.filter(status='backlog').count()
     to_do_count = tasks.filter(status='not-started').count()
     in_progress_count = tasks.filter(status='in-progress').count()
     done_count = tasks.filter(status='completed').count()
     on_hold_count = tasks.filter(status='on-hold').count()
     canceled_count = tasks.filter(status='canceled').count()
+    total_count = tasks.count()
 
-    # Get the 5 most recent tasks that are not yet completed
+    # Completion rate
+    completion_rate = int((done_count / total_count) * 100) if total_count > 0 else 0
+
+    # Get the 5 most recent non-completed tasks
     recent_tasks = tasks.exclude(status='completed').order_by('-created_at')[:5]
 
     # Get the 3 most recently completed tasks
     recently_completed_tasks = tasks.filter(status='completed').order_by('-completed_at')[:3]
+
+    # Overdue tasks (due_date < today and not completed)
+    today = timezone.now().date()
+    overdue_count = tasks.filter(
+        due_date__lt=today
+    ).exclude(status__in=['completed', 'canceled']).count()
+
+    # Tasks due today
+    due_today_count = tasks.filter(
+        due_date=today
+    ).exclude(status__in=['completed', 'canceled']).count()
+
+    # Projects overview
+    projects = Category.objects.filter(user=request.user).annotate(
+        task_count=Count('tasks'),
+        completed_count=Count('tasks', filter=Q(tasks__status='completed'))
+    )[:4]
 
     context = {
         'backlog_count': backlog_count,
@@ -49,31 +83,79 @@ def dashboard(request):
         'done_count': done_count,
         'on_hold_count': on_hold_count,
         'canceled_count': canceled_count,
+        'total_count': total_count,
+        'completion_rate': completion_rate,
+        'overdue_count': overdue_count,
+        'due_today_count': due_today_count,
         'recent_tasks': recent_tasks,
         'recently_completed_tasks': recently_completed_tasks,
+        'projects': projects,
         'active_page': 'dashboard',
     }
     return render(request, 'todo/index.html', context)
 
 
 @login_required
-def my_tasks(request):
+def manage_tasks(request):
     """
-    Displays a grid of all tasks belonging to the current user (Manage Tasks view).
+    Displays a grid/list of ALL tasks belonging to the current user (Unorganized view).
+    Supports filtering and sorting via GET params.
     """
-    tasks = Task.objects.filter(user=request.user).order_by('-created_at')
+    tasks = Task.objects.filter(user=request.user)
+
+    # Filtering
+    status_filter = request.GET.get('status', 'all')
+    priority_filter = request.GET.get('priority', 'all')
+    project_filter = request.GET.get('project', 'all')
+    sort_by = request.GET.get('sort', 'newest')
+
+    if status_filter != 'all':
+        tasks = tasks.filter(status=status_filter)
+    if priority_filter != 'all':
+        tasks = tasks.filter(priority=priority_filter)
+    if project_filter != 'all':
+        if project_filter == 'none':
+            tasks = tasks.filter(category__isnull=True)
+        else:
+            tasks = tasks.filter(category_id=project_filter)
+
+    # Sorting
+    sort_map = {
+        'newest': '-created_at',
+        'oldest': 'created_at',
+        'due_date': 'due_date',
+        'priority': 'priority',
+        'title': 'title',
+    }
+    tasks = tasks.order_by(sort_map.get(sort_by, '-created_at'))
+
+    projects = Category.objects.filter(user=request.user)
+
     context = {
         'tasks': tasks,
-        'active_page': 'my_tasks',
+        'projects': projects,
+        'status_filter': status_filter,
+        'priority_filter': priority_filter,
+        'project_filter': project_filter,
+        'sort_by': sort_by,
+        'task_count': tasks.count(),
+        'active_page': 'manage_tasks',
     }
     return render(request, 'todo/manage-tasks.html', context)
+
+
+@login_required
+def my_tasks(request):
+    """
+    Alias for manage_tasks (Unorganized task pool).
+    """
+    return manage_tasks(request)
 
 
 @login_required
 def task_categories(request):
     """
     Displays all projects created by the user (Manage Projects view).
-    Calculates total task count and completion percentage for each project.
     """
     categories = Category.objects.filter(user=request.user).annotate(
         task_count=Count('tasks'),
@@ -85,7 +167,7 @@ def task_categories(request):
             category.progress = int((category.completed_count / category.task_count) * 100)
         else:
             category.progress = 0
-            
+
     form = CategoryForm()
     context = {
         'categories': categories,
@@ -98,13 +180,15 @@ def task_categories(request):
 @login_required
 def manage_kanban(request):
     """
-    Displays a Kanban board page with 6 columns matching Dashboard status overview:
-    Backlog, To Do, In Progress, Done, On Hold, Canceled.
-    Supports filtering by specific Project.
+    Displays a Kanban board (Organized task view) with 6 columns.
+    Supports filtering by Project.
     """
-    all_projects = Category.objects.filter(user=request.user)
+    all_projects = Category.objects.filter(user=request.user).annotate(
+        task_count=Count('tasks')
+    )
+
     tasks = Task.objects.filter(user=request.user)
-    
+
     project_id = request.GET.get('project')
     selected_project = None
     if project_id:
@@ -139,83 +223,147 @@ def manage_kanban(request):
 @login_required
 def settings_page(request):
     """
-    Handles the user settings page for profile updates only.
-    Password change removed as auth will be handled by another app.
+    Handles the user settings page — profile, password, preferences, and danger zone.
     """
-    if request.method == 'POST':
-        u_form = UserUpdateForm(request.POST, instance=request.user)
-        if u_form.is_valid():
-            u_form.save()
-            messages.success(request, 'Your profile has been updated successfully!')
-            return redirect('settings')
+    profile = get_or_create_profile(request.user)
 
-    # For GET requests
-    u_form = UserUpdateForm(instance=request.user)
+    if request.method == 'POST':
+        action = request.POST.get('action', 'profile')
+
+        if action == 'profile':
+            u_form = UserUpdateForm(request.POST, instance=request.user)
+            if u_form.is_valid():
+                u_form.save()
+                messages.success(request, 'Profile updated successfully!')
+                return redirect('settings')
+            else:
+                p_form = UserProfileForm(instance=profile)
+                pw_form = PasswordUpdateForm(request.user)
+
+        elif action == 'preferences':
+            p_form = UserProfileForm(request.POST, instance=profile)
+            if p_form.is_valid():
+                p_form.save()
+                messages.success(request, 'Preferences saved successfully!')
+                return redirect('settings')
+            else:
+                u_form = UserUpdateForm(instance=request.user)
+                pw_form = PasswordUpdateForm(request.user)
+
+        elif action == 'password':
+            pw_form = PasswordUpdateForm(request.user, request.POST)
+            if pw_form.is_valid():
+                user = pw_form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Password changed successfully!')
+                return redirect('settings')
+            else:
+                u_form = UserUpdateForm(instance=request.user)
+                p_form = UserProfileForm(instance=profile)
+
+        elif action == 'clear_data':
+            if request.POST.get('confirm_clear') == 'yes':
+                Task.objects.filter(user=request.user).delete()
+                Category.objects.filter(user=request.user).delete()
+                messages.success(request, 'All data cleared successfully.')
+                return redirect('settings')
+            else:
+                messages.error(request, 'Confirmation not provided. No data was deleted.')
+                return redirect('settings')
+
+        else:
+            u_form = UserUpdateForm(instance=request.user)
+            p_form = UserProfileForm(instance=profile)
+            pw_form = PasswordUpdateForm(request.user)
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = UserProfileForm(instance=profile)
+        pw_form = PasswordUpdateForm(request.user)
 
     context = {
         'active_page': 'settings',
         'u_form': u_form,
+        'p_form': p_form,
+        'pw_form': pw_form,
+        'profile': profile,
     }
     return render(request, 'todo/settings.html', context)
 
 
+@login_required
+def logout_view(request):
+    """Logs out the user and redirects to dashboard (demo mode will auto-login again)."""
+    auth_logout(request)
+    return redirect('dashboard')
+
+
 # ==============================================================================
-#  TASK CRUD (Create, Read, Update, Delete) VIEWS
+#  TASK CRUD
 # ==============================================================================
 
 @login_required
 def task_detail(request, pk):
-    """
-    Displays full task details on a dedicated page.
-    Shows all task information including rich text description.
-    """
+    """Returns task data as JSON for the edit modal."""
     task = get_object_or_404(Task, pk=pk, user=request.user)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        task_data = {
+            'id': task.id,
+            'title': task.title,
+            'description': task.description or '',
+            'category': task.category.id if task.category else '',
+            'category_name': task.category.name if task.category else '',
+            'priority': task.priority,
+            'status': task.status,
+            'due_date': task.due_date.strftime('%Y-%m-%d') if task.due_date else '',
+            'created_at': task.created_at.strftime('%d %b %Y'),
+        }
+        return JsonResponse({'success': True, 'task': task_data})
     context = {
         'task': task,
-        'active_page': 'my_tasks',
+        'active_page': 'manage_tasks',
     }
     return render(request, 'todo/task_detail.html', context)
 
 
 @login_required
 def task_create(request):
-    """
-    Handles the creation of a new task via an AJAX POST request from a modal.
-    Returns a JSON response indicating success or failure.
-    """
-    # This view should only accept POST requests now
+    """Handles task creation via AJAX POST request."""
     if request.method == 'POST':
         form = TaskForm(request.POST, user=request.user)
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
             task.save()
-            return JsonResponse({'success': True, 'message': 'Task created successfully!'})
+            return JsonResponse({
+                'success': True,
+                'message': 'Task created successfully!',
+                'task': {
+                    'id': task.id,
+                    'title': task.title,
+                    'status': task.status,
+                    'priority': task.priority,
+                }
+            })
         else:
-            # If the form is invalid, return the errors as JSON
             return JsonResponse({'success': False, 'errors': form.errors})
-    
-    # If it's a GET request, it's not a valid way to use this endpoint anymore
+
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 
 @login_required
 def task_update(request, pk):
-    """
-    Handles updating an existing task via POST request.
-    Supports quick status updates as well as full form updates.
-    """
+    """Updates an existing task (full form or quick status update)."""
     task = get_object_or_404(Task, pk=pk, user=request.user)
-    
+
     if request.method == 'POST':
         new_status = request.POST.get('status')
-        # If only status is passed (e.g. from Kanban move buttons or task checkboxes)
+        # Quick status-only update (e.g., from Kanban drag-drop or dashboard checkbox)
         if new_status and 'title' not in request.POST:
             if new_status in Task.Status.values:
                 task.status = new_status
                 task.save()
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'success': True, 'message': 'Task status updated!'})
+                    return JsonResponse({'success': True, 'message': 'Status updated!'})
                 return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
         # Full form update
@@ -229,106 +377,225 @@ def task_update(request, pk):
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': form.errors})
             return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
-    
-    # If it's a GET request, return task data as JSON for populating the edit form
+
+    # GET request: return task data as JSON for populating edit modal
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         task_data = {
             'title': task.title,
-            'description': task.description,
+            'description': task.description or '',
             'category': task.category.id if task.category else '',
             'priority': task.priority,
             'status': task.status,
             'due_date': task.due_date.strftime('%Y-%m-%d') if task.due_date else '',
         }
         return JsonResponse({'success': True, 'task': task_data})
-    
+
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 
 @login_required
 def task_delete(request, pk):
-    """
-    Handles the deletion of a task.
-    On GET, it shows a confirmation page.
-    On POST, it deletes the task and redirects to the task list.
-    """
+    """Deletes a task."""
     task = get_object_or_404(Task, pk=pk, user=request.user)
     if request.method == 'POST':
         task_title = task.title
         task.delete()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': f'Task "{task_title}" deleted.'})
         messages.success(request, f'Task "{task_title}" has been deleted.')
-        return redirect('my_tasks')
-        
-    return render(request, 'todo/confirm_delete.html', {'object': task})
+        return redirect('manage_tasks')
+
+    return render(request, 'todo/confirm_delete.html', {'object': task, 'type': 'task'})
 
 
 # ==============================================================================
-#  CATEGORY CRUD (Create, Read, Update, Delete) VIEWS
+#  CATEGORY CRUD
 # ==============================================================================
 
 @login_required
 def category_create(request):
-    """
-    Handles the creation of a new category via a POST request,
-    typically from a modal form. Redirects back to the categories page.
-    """
+    """Handles new project/category creation."""
     if request.method == 'POST':
         form = CategoryForm(request.POST)
         if form.is_valid():
             category = form.save(commit=False)
             category.user = request.user
             category.save()
-            messages.success(request, f'Category "{category.name}" created.')
-    
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Project "{category.name}" created!',
+                    'category': {
+                        'id': category.id,
+                        'name': category.name,
+                        'color': category.color,
+                    }
+                })
+            messages.success(request, f'Project "{category.name}" created.')
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors})
+
     return redirect('task_categories')
 
 
 @login_required
 def category_update(request, pk):
-    """
-    Handles updating an existing category via a POST request.
-    This would be used if you implement an "edit category" modal.
-    """
+    """Handles updating an existing category."""
     category = get_object_or_404(Category, pk=pk, user=request.user)
     if request.method == 'POST':
         form = CategoryForm(request.POST, instance=category)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Category "{category.name}" updated.')
-            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': f'Project "{category.name}" updated.'})
+            messages.success(request, f'Project "{category.name}" updated.')
+
     return redirect('task_categories')
 
 
 @login_required
 def category_delete(request, pk):
-    """
-    Handles the deletion of a category.
-    It's recommended to handle this with a POST request for security.
-    """
+    """Deletes a category."""
     category = get_object_or_404(Category, pk=pk, user=request.user)
     if request.method == 'POST':
         category_name = category.name
         category.delete()
-        messages.success(request, f'Category "{category_name}" has been deleted.')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': f'Project "{category_name}" deleted.'})
+        messages.success(request, f'Project "{category_name}" has been deleted.')
         return redirect('task_categories')
-        
-    return render(request, 'todo/confirm_delete.html', {'object': category})
+
+    return render(request, 'todo/confirm_delete.html', {'object': category, 'type': 'project'})
 
 
 # ==============================================================================
-#  AI ASSISTANT API ENDPOINTS (Stubs ready for LLM / OpenAI API Integration)
+#  PREDEFINED TASKS (Task Template Library)
 # ==============================================================================
 
-from django.views.decorators.csrf import csrf_exempt
-import json
+@login_required
+def predefined_tasks_api(request):
+    """
+    Returns a list of pre-defined task templates, optionally filtered by category.
+    Used by the frontend to display a task library picker.
+    """
+    category = request.GET.get('category', 'all')
+    tasks_qs = PreDefinedTask.objects.all()
+    if category != 'all':
+        tasks_qs = tasks_qs.filter(category=category)
+
+    tasks_data = [
+        {
+            'id': t.id,
+            'title': t.title,
+            'description': t.description or '',
+            'category': t.category,
+            'category_display': t.get_category_display(),
+            'suggested_priority': t.suggested_priority,
+            'icon': t.icon,
+        }
+        for t in tasks_qs
+    ]
+
+    categories = [
+        {'value': c[0], 'label': c[1]}
+        for c in PreDefinedTask.Category.choices
+    ]
+
+    return JsonResponse({
+        'success': True,
+        'tasks': tasks_data,
+        'categories': categories,
+    })
+
+
+@login_required
+def add_predefined_task(request):
+    """
+    Quickly adds a pre-defined task to the user's task pool.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            predefined_id = data.get('predefined_id')
+            category_id = data.get('category_id')
+
+            predefined = get_object_or_404(PreDefinedTask, pk=predefined_id)
+
+            category = None
+            if category_id:
+                try:
+                    category = Category.objects.get(pk=category_id, user=request.user)
+                except Category.DoesNotExist:
+                    pass
+
+            task = Task.objects.create(
+                user=request.user,
+                title=predefined.title,
+                description=predefined.description or '',
+                priority=predefined.suggested_priority,
+                category=category,
+                status=Task.Status.TO_DO,
+                is_predefined=True,
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': f'Task "{task.title}" added!',
+                'task_id': task.id,
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+    return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+
+
+# ==============================================================================
+#  STATS API
+# ==============================================================================
+
+@login_required
+def stats_api(request):
+    """Returns aggregated task stats for charts and widgets."""
+    tasks = Task.objects.filter(user=request.user)
+    total = tasks.count()
+    done = tasks.filter(status='completed').count()
+    in_progress = tasks.filter(status='in-progress').count()
+    backlog = tasks.filter(status='backlog').count()
+    on_hold = tasks.filter(status='on-hold').count()
+    canceled = tasks.filter(status='canceled').count()
+    to_do = tasks.filter(status='not-started').count()
+
+    today = timezone.now().date()
+    overdue = tasks.filter(
+        due_date__lt=today
+    ).exclude(status__in=['completed', 'canceled']).count()
+
+    return JsonResponse({
+        'success': True,
+        'stats': {
+            'total': total,
+            'done': done,
+            'in_progress': in_progress,
+            'backlog': backlog,
+            'on_hold': on_hold,
+            'canceled': canceled,
+            'to_do': to_do,
+            'overdue': overdue,
+            'completion_rate': int((done / total) * 100) if total > 0 else 0,
+        }
+    })
+
+
+# ==============================================================================
+#  AI ASSISTANT API
+# ==============================================================================
 
 @csrf_exempt
 @login_required
 def api_ai_suggest(request):
     """
     AI Task & Project Assistant endpoint.
-    Accepts user prompts and returns AI task breakdowns, smart priority recommendations,
-    and task descriptions. Prepared for OpenAI / Gemini / Claude API key integration.
     """
     if request.method == 'POST':
         try:
@@ -338,7 +605,6 @@ def api_ai_suggest(request):
             if not prompt:
                 return JsonResponse({'success': False, 'error': 'Empty prompt'}, status=400)
 
-            # Smart AI Suggestion Generator Logic
             prompt_lower = prompt.lower()
             if 'website' in prompt_lower or 'launch' in prompt_lower or 'app' in prompt_lower:
                 title = "Launch Strategy & Production Readiness"
@@ -346,7 +612,8 @@ def api_ai_suggest(request):
                     "1. Finalize DNS records & SSL certificate configuration.\n"
                     "2. Run cross-browser compatibility and lighthouse performance audit.\n"
                     "3. Execute production database migrations.\n"
-                    "4. Verify exception logging & error reporting setup."
+                    "4. Verify exception logging & error reporting setup.\n"
+                    "5. Set up monitoring & uptime alerts."
                 )
             elif 'subtask' in prompt_lower or 'breakdown' in prompt_lower or 'feature' in prompt_lower:
                 title = f"Task Breakdown: {prompt[:30]}..."
@@ -354,8 +621,18 @@ def api_ai_suggest(request):
                     "Recommended Subtasks:\n"
                     "- API Endpoint setup with request validation\n"
                     "- Database schema migrations & indexing\n"
-                    "- Frontend UI component integration with glassmorphism styling\n"
-                    "- Comprehensive unit and integration test coverage"
+                    "- Frontend UI component integration\n"
+                    "- Write unit and integration tests\n"
+                    "- Code review and deployment"
+                )
+            elif 'marketing' in prompt_lower or 'campaign' in prompt_lower:
+                title = "Marketing Campaign Execution Plan"
+                suggestion = (
+                    "1. Define target audience and campaign objectives.\n"
+                    "2. Create content calendar and asset list.\n"
+                    "3. Set up ad creatives and A/B tests.\n"
+                    "4. Launch campaign and monitor metrics.\n"
+                    "5. Analyze results and optimize."
                 )
             else:
                 title = f"AI Workflow Task: {prompt[:35]}"
@@ -363,7 +640,8 @@ def api_ai_suggest(request):
                     f"AI Action Plan for '{prompt}':\n"
                     "- Priority: High\n"
                     "- Recommended Timeline: Complete within 48 hours\n"
-                    "- Suggested Action: Create task, assign project category, and review progress."
+                    "- Suggested Action: Create task, assign project category, and review progress.\n"
+                    "- Next Step: Break into subtasks if the scope is large."
                 )
 
             return JsonResponse({

@@ -5,43 +5,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">
     
-    <!-- This title will be overridden by child templates -->
-    <title>{% block title %}TaskFlix{% endblock title %}</title>
+    <title>{% block title %}TaskMitra{% endblock title %}</title>
     
-    <meta name="description" content="TaskFlix - A modern, mobile-friendly project & task manager">
-    <meta name="author" content="TaskFlix">
+    <meta name="description" content="TaskMitra - A modern project & task manager with predefined task templates">
+    <meta name="author" content="TaskMitra">
     
-    <!-- Theme colors for mobile browsers -->
     <meta name="theme-color" content="#3b82f6">
     <meta name="msapplication-TileColor" content="#3b82f6">
     
-    <!-- Favicon & PWA settings -->
     <link rel="icon" type="image/png" href="{% static 'todo/images/logo.png' %}">
     <link rel="shortcut icon" type="image/png" href="{% static 'todo/images/logo.png' %}">
     <link rel="apple-touch-icon" href="{% static 'todo/images/logo.png' %}">
-    <link rel="manifest" href="{% static 'todo/manifest.json' %}">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS Links -->
-    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=5">
-    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=6">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- Block for any page-specific CSS -->
     {% block styles %}{% endblock styles %}
 </head>
 <body>
     <div class="container">
-        <!-- Main Navigation Header (Consistent across all pages) -->
+        <!-- Main Navigation Header -->
         <header class="navbar" role="banner">
             <div class="navbar-left">
-                <img src="{% static 'todo/images/logo.png' %}" alt="TaskFlix Logo" class="logo-img">
+                <img src="{% static 'todo/images/logo.png' %}" alt="TaskMitra Logo" class="logo-img">
                 <a href="{% url 'dashboard' %}" style="text-decoration: none;">
-                    <h1 class="logo">Task<span>Flix</span></h1>
+                    <h1 class="logo">Task<span>Mitra</span></h1>
                 </a>
             </div>
             <div class="navbar-right">
@@ -50,8 +45,8 @@
                     <input type="text" id="search-input" placeholder="Search tasks or projects..." aria-label="Search tasks">
                     <i class="fas fa-search" aria-hidden="true"></i>
                 </div>
-                <div class="date-day" role="status" aria-live="polite">
-                    <span>Tuesday 18/08/2026</span>
+                <div class="date-day" role="status" aria-live="polite" id="live-date">
+                    <span>Loading...</span>
                 </div>
             </div>
         </header>
@@ -60,16 +55,27 @@
             <!-- Include the Sidebar Partial -->
             {% include 'todo/partials/sidebar.html' %}
 
-            <!-- Main Content Area (This will be filled by child templates) -->
+            <!-- Main Content Area -->
             <main class="content-area" role="main">
+                {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} auto-dismiss">
+                        <i class="fas fa-{% if 'success' in message.tags %}check-circle{% elif 'error' in message.tags %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 {% block content %}
-                <!-- Page-specific content will go here -->
                 {% endblock content %}
             </main>
         </div>
     </div>
 
     {% if user.is_authenticated %}
+    <!-- Add Task Modal -->
     <div id="add-task-modal" class="task-modal" style="display: none;">
         <div class="modal-backdrop"></div>
         <div class="modal-content">
@@ -77,218 +83,199 @@
                 <h3><i class="fas fa-plus-circle"></i> Add New Task</h3>
                 <button class="close-modal" aria-label="Close">&times;</button>
             </div>
-            {# The action points to our task_create view #}
             <form id="add-task-form" class="task-form" method="post" action="{% url 'task_create' %}">
-            {% csrf_token %}
-            <div class="modal-body">
-                
-                <!-- Title - Full width -->
-                <div class="form-group form-grid-full">
-                    <label for="{{ task_create_form.title.id_for_label }}">
-                        <i class="fas fa-heading"></i> Task Title *
-                    </label>
-                    {{ task_create_form.title }}
-                </div>
-                
-                <!-- Description - Full width -->
-                <div class="form-group form-grid-full">
-                    <label for="{{ task_create_form.description.id_for_label }}">
-                        <i class="fas fa-align-left"></i> Description
-                    </label>
-                    {{ task_create_form.description }}
-                </div>
-                
-                <!-- Two columns for smaller fields -->
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="{{ task_create_form.category.id_for_label }}">
-                            <i class="fas fa-folder"></i> Project
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group form-grid-full">
+                        <label for="{{ task_create_form.title.id_for_label }}">
+                            <i class="fas fa-heading"></i> Task Title *
                         </label>
-                        {{ task_create_form.category }}
+                        {{ task_create_form.title }}
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ task_create_form.priority.id_for_label }}">
-                            <i class="fas fa-exclamation-circle"></i> Priority
+                    <div class="form-group form-grid-full">
+                        <label for="{{ task_create_form.description.id_for_label }}">
+                            <i class="fas fa-align-left"></i> Description
                         </label>
-                        {{ task_create_form.priority }}
+                        {{ task_create_form.description }}
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ task_create_form.status.id_for_label }}">
-                            <i class="fas fa-tasks"></i> Status
-                        </label>
-                        {{ task_create_form.status }}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ task_create_form.due_date.id_for_label }}">
-                            <i class="fas fa-calendar-alt"></i> Due Date
-                        </label>
-                        {{ task_create_form.due_date }}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="{{ task_create_form.category.id_for_label }}">
+                                <i class="fas fa-folder"></i> Project
+                            </label>
+                            {{ task_create_form.category }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ task_create_form.priority.id_for_label }}">
+                                <i class="fas fa-exclamation-circle"></i> Priority
+                            </label>
+                            {{ task_create_form.priority }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ task_create_form.status.id_for_label }}">
+                                <i class="fas fa-tasks"></i> Status
+                            </label>
+                            {{ task_create_form.status }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ task_create_form.due_date.id_for_label }}">
+                                <i class="fas fa-calendar-alt"></i> Due Date
+                            </label>
+                            {{ task_create_form.due_date }}
+                        </div>
                     </div>
                 </div>
-
-            </div>
-            <div class="modal-actions form-actions">
-                <button type="button" class="btn-cancel">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="submit" class="btn-submit">
-                    <i class="fas fa-check"></i> Add Task
-                </button>
-            </div>
-        </form>
+                <div class="modal-actions form-actions">
+                    <button type="button" class="btn-cancel">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i> Add Task
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<!-- Edit Task Modal -->
-<div id="edit-task-modal" class="task-modal" style="display: none;">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-edit"></i> Edit Task</h3>
-            <button class="close-modal" aria-label="Close">&times;</button>
-        </div>
-        <form id="edit-task-form" class="task-form" method="post">
-        {% csrf_token %}
-        <input type="hidden" id="edit-task-id" name="task_id">
-        <div class="modal-body">
-            
-            <!-- Title - Full width -->
-            <div class="form-group form-grid-full">
-                <label for="edit-title">
-                    <i class="fas fa-heading"></i> Task Title *
-                </label>
-                <input type="text" id="edit-title" name="title" required>
+    <!-- Edit Task Modal -->
+    <div id="edit-task-modal" class="task-modal" style="display: none;">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Task</h3>
+                <button class="close-modal" aria-label="Close">&times;</button>
             </div>
-            
-            <!-- Description - Full width -->
-            <div class="form-group form-grid-full">
-                <label for="edit-description">
-                    <i class="fas fa-align-left"></i> Description
-                </label>
-                <textarea id="edit-description" name="description" rows="4"></textarea>
-            </div>
-            
-            <!-- Two columns for smaller fields -->
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="edit-category">
-                        <i class="fas fa-folder"></i> Project
-                    </label>
-                    <select id="edit-category" name="category">
-                        <option value="">---------</option>
-                        {% for category in user.categories.all %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
+            <form id="edit-task-form" class="task-form" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="edit-task-id" name="task_id">
+                <div class="modal-body">
+                    <div class="form-group form-grid-full">
+                        <label for="edit-title">
+                            <i class="fas fa-heading"></i> Task Title *
+                        </label>
+                        <input type="text" id="edit-title" name="title" required class="form-control">
+                    </div>
+                    <div class="form-group form-grid-full">
+                        <label for="edit-description">
+                            <i class="fas fa-align-left"></i> Description
+                        </label>
+                        <textarea id="edit-description" name="description" rows="4" class="form-control"></textarea>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="edit-category">
+                                <i class="fas fa-folder"></i> Project
+                            </label>
+                            <select id="edit-category" name="category" class="form-control">
+                                <option value="">No Category</option>
+                                {% for category in user.categories.all %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-priority">
+                                <i class="fas fa-exclamation-circle"></i> Priority
+                            </label>
+                            <select id="edit-priority" name="priority" class="form-control">
+                                <option value="low">Low</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-status">
+                                <i class="fas fa-tasks"></i> Status
+                            </label>
+                            <select id="edit-status" name="status" class="form-control">
+                                <option value="backlog">Backlog</option>
+                                <option value="not-started">To Do</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Done</option>
+                                <option value="on-hold">On Hold</option>
+                                <option value="canceled">Canceled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-due_date">
+                                <i class="fas fa-calendar-alt"></i> Due Date
+                            </label>
+                            <input type="date" id="edit-due_date" name="due_date" class="form-control">
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="edit-priority">
-                        <i class="fas fa-exclamation-circle"></i> Priority
-                    </label>
-                    <select id="edit-priority" name="priority">
-                        <option value="low">Low</option>
-                        <option value="moderate">Moderate</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit-status">
-                        <i class="fas fa-tasks"></i> Status
-                    </label>
-                    <select id="edit-status" name="status">
-                        <option value="backlog">Backlog</option>
-                        <option value="not-started">To Do</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="completed">Done</option>
-                        <option value="on-hold">On Hold</option>
-                        <option value="canceled">Canceled</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit-due_date">
-                        <i class="fas fa-calendar-alt"></i> Due Date
-                    </label>
-                    <input type="date" id="edit-due_date" name="due_date">
-                </div>
-            </div>
-
-        </div>
-        <div class="modal-actions form-actions">
-            <button type="button" class="btn-cancel">
-                <i class="fas fa-times"></i> Cancel
-            </button>
-            <button type="submit" class="btn-submit">
-                <i class="fas fa-check"></i> Update Task
-            </button>
-        </div>
-{% endif %}
-
-<!-- TaskFlix Floating AI Assistant Widget -->
-<button id="ai-assistant-trigger" type="button" class="ai-fab-btn" onclick="openAiModal()">
-    <i class="fas fa-sparkles"></i> <span>AI Assistant</span>
-</button>
-
-<!-- TaskFlix AI Assistant Drawer / Modal -->
-<div id="ai-assistant-modal" class="task-modal" style="display: none;">
-    <div class="modal-backdrop" onclick="closeAiModal()"></div>
-    <div class="modal-content ai-modal-content" style="max-width: 580px; background: rgba(18, 18, 24, 0.95) !important;">
-        <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 14px;">
-            <h3 style="display: flex; align-items: center; gap: 10px; color: #60a5fa; margin: 0;">
-                <i class="fas fa-robot" style="color: #3b82f6;"></i> TaskFlix AI Assistant
-            </h3>
-            <button class="close-modal" type="button" onclick="closeAiModal()" aria-label="Close">&times;</button>
-        </div>
-        <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; padding-top: 16px;">
-            <!-- AI Quick Prompts Chips -->
-            <div>
-                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">Quick Actions</label>
-                <div class="ai-prompt-chips" style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    <button type="button" class="ai-chip" onclick="setAiPrompt('Generate a 4-step launch plan for my website project')">
-                        <i class="fas fa-rocket"></i> Website Launch Plan
+                <div class="modal-actions form-actions">
+                    <button type="button" id="edit-delete-btn" class="btn-danger" style="margin-right: auto;">
+                        <i class="fas fa-trash"></i> Delete
                     </button>
-                    <button type="button" class="ai-chip" onclick="setAiPrompt('Break down task into subtasks: Implement user authentication')">
-                        <i class="fas fa-tasks"></i> Breakdown Subtasks
+                    <button type="button" class="btn-cancel">
+                        <i class="fas fa-times"></i> Cancel
                     </button>
-                    <button type="button" class="ai-chip" onclick="setAiPrompt('Suggest smart priority and due dates for pending backlog tasks')">
-                        <i class="fas fa-magic"></i> Auto-Prioritize
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check"></i> Update Task
                     </button>
                 </div>
-            </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
 
-            <!-- AI Prompt Input -->
-            <div class="form-group" style="margin: 0;">
-                <label for="ai-prompt-input" style="font-size: 0.85rem; font-weight: 600; color: var(--text-color);">
-                    <i class="fas fa-comment-dots"></i> Ask AI Assistant
-                </label>
-                <textarea id="ai-prompt-input" rows="3" class="form-control" placeholder="e.g. Write a feature specification for user profiles..." style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 8px; padding: 10px; width: 100%; resize: vertical;"></textarea>
-            </div>
+    <!-- TaskMitra Floating AI Assistant Widget -->
+    <button id="ai-assistant-trigger" type="button" class="ai-fab-btn" onclick="openAiModal()">
+        <i class="fas fa-robot"></i> <span>AI</span>
+    </button>
 
-            <!-- AI Action Buttons -->
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn" style="background: var(--accent-gradient); font-size: 0.85rem;" onclick="generateAiResponse()">
-                    <i class="fas fa-sparkles"></i> Generate AI Suggestion
-                </button>
+    <!-- TaskMitra AI Assistant Modal -->
+    <div id="ai-assistant-modal" class="task-modal" style="display: none;">
+        <div class="modal-backdrop" onclick="closeAiModal()"></div>
+        <div class="modal-content ai-modal-content">
+            <div class="modal-header">
+                <h3 style="display: flex; align-items: center; gap: 10px; color: #60a5fa; margin: 0;">
+                    <i class="fas fa-robot" style="color: #3b82f6;"></i> TaskMitra AI Assistant
+                </h3>
+                <button class="close-modal" type="button" onclick="closeAiModal()" aria-label="Close">&times;</button>
             </div>
-
-            <!-- AI Output Results Container -->
-            <div id="ai-response-box" style="display: none; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 14px; margin-top: 6px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #60a5fa; text-transform: uppercase;"><i class="fas fa-lightbulb"></i> AI Output</span>
-                    <button type="button" class="icon-btn" style="width: 28px; height: 28px; font-size: 0.75rem;" onclick="applyAiSuggestionToTask()"><i class="fas fa-plus"></i> Add as Task</button>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px; padding-top: 16px;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">Quick Actions</label>
+                    <div class="ai-prompt-chips">
+                        <button type="button" class="ai-chip" onclick="setAiPrompt('Generate a 4-step launch plan for my website project')">
+                            <i class="fas fa-rocket"></i> Website Launch Plan
+                        </button>
+                        <button type="button" class="ai-chip" onclick="setAiPrompt('Break down task into subtasks: Implement user authentication')">
+                            <i class="fas fa-tasks"></i> Breakdown Subtasks
+                        </button>
+                        <button type="button" class="ai-chip" onclick="setAiPrompt('Suggest smart priority and due dates for pending backlog tasks')">
+                            <i class="fas fa-magic"></i> Auto-Prioritize
+                        </button>
+                        <button type="button" class="ai-chip" onclick="setAiPrompt('Create marketing campaign execution plan')">
+                            <i class="fas fa-bullhorn"></i> Marketing Plan
+                        </button>
+                    </div>
                 </div>
-                <div id="ai-response-text" style="font-size: 0.875rem; color: #e4e4e7; line-height: 1.5; white-space: pre-line;"></div>
+                <div class="form-group" style="margin: 0;">
+                    <label for="ai-prompt-input">
+                        <i class="fas fa-comment-dots"></i> Ask AI Assistant
+                    </label>
+                    <textarea id="ai-prompt-input" rows="3" class="form-control" placeholder="e.g. Write a feature specification for user profiles..."></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn-submit" style="background: var(--accent-gradient);" onclick="generateAiResponse()">
+                        <i class="fas fa-sparkles"></i> Generate Suggestion
+                    </button>
+                </div>
+                <div id="ai-response-box" style="display: none; background: rgba(0,0,0,0.4); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #60a5fa; text-transform: uppercase;"><i class="fas fa-lightbulb"></i> AI Output</span>
+                        <button type="button" class="icon-btn" style="width: auto; padding: 0 10px; font-size: 0.75rem;" onclick="applyAiSuggestionToTask()"><i class="fas fa-plus"></i> Add as Task</button>
+                    </div>
+                    <div id="ai-response-text" style="font-size: 0.875rem; color: #e4e4e7; line-height: 1.5; white-space: pre-line;"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-    <!-- Vanta.js Animated Blue Dots Background CDNs -->
+    <!-- Vanta.js Animated Background -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.dots.min.js"></script>
     <script>
@@ -313,7 +300,7 @@
             }
         });
     </script>
-    <script src="{% static 'todo/js/script.js' %}"></script>
+    <script src="{% static 'todo/js/script.js' %}?v=6"></script>
     {% block scripts %}{% endblock scripts %}
 </body>
 </html>

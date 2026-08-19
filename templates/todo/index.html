@@ -1,125 +1,192 @@
 {% extends 'todo/base.html' %}
 {% load static %}
 
-{% block title %}Dashboard - TaskFlix{% endblock title %}
+{% block title %}Dashboard - TaskMitra{% endblock title %}
 
 {% block content %}
-<div class="content-grid">
-    <!-- To-Do Tasks Section -->
-    <section class="to-do-section" aria-labelledby="todo-heading">
-        <div class="todo-header">
-            <h3 id="todo-heading">Recent Tasks</h3>
-            <div class="filter-options">
-                <!-- This can be made dynamic with JavaScript or link to filtered views -->
-                <label for="filter">Filter:</label>
-                <select id="filter" aria-label="Filter tasks by time period">
-                    <option value="all">All</option>
-                    <option value="today">Today</option>
-                    <option value="this-week">This Week</option>
-                    <option value="this-month">This Month</option>
-                </select>
-                <button class="invite-btn" type="button" aria-label="Add new task" style="margin-left: 15px;">
-                    <i class="fas fa-plus" aria-hidden="true"></i> Add Task
-                </button>
-            </div>
-        </div>
-        
-        <div class="task-list-container">
-            <div id="tasks-container" role="list" aria-label="Task list" style="display: flex; flex-direction: column; gap: 14px;">
-                {% for task in recent_tasks %}
-                <article class="task-card" role="listitem">
-                    <div class="task-header">
-                        <!-- AJAX checkbox to complete task without page reload or URL navigation -->
-                        <div class="d-inline">
-                            {% csrf_token %}
-                            <input type="checkbox" name="task{{ task.id }}" id="task{{ task.id }}" onchange="toggleTaskComplete({{ task.id }}, this)">
-                        </div>
-                        <label for="task{{ task.id }}">{{ task.title }}</label>
-                        <button type="button" class="task-menu-btn" aria-label="Edit task" onclick="openEditTaskModal({{ task.id }})">
-                            <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    {% if task.description %}
-                    <p id="task{{ task.id }}-desc">{{ task.description|truncatewords:20 }}</p>
-                    {% endif %}
-                    <div class="task-footer" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        {% if task.category %}
-                        <span class="project-badge" style="background-color: {{ task.category.color }}25; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}50; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 0.775rem;" role="status">
-                            <i class="fas fa-folder" aria-hidden="true"></i> Project: {{ task.category.name }}
-                        </span>
-                        {% else %}
-                        <span class="project-badge" style="background-color: #27272a; color: #a1a1aa; border: 1px solid #3f3f46; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 0.775rem;" role="status">
-                            <i class="fas fa-folder" aria-hidden="true"></i> General
-                        </span>
-                        {% endif %}
-                        <span class="priority {{ task.priority }}" role="status">Priority: {{ task.get_priority_display|upper }}</span>
-                        <span class="status {{ task.status }}" role="status">Status: {{ task.get_status_display|upper }}</span>
-                        <span class="created-on">Created: {{ task.created_at|date:"d/m/Y" }}</span>
-                    </div>
-                </article>
-                {% empty %}
-                <div class="empty-state">
-                    <i class="far fa-check-circle empty-icon"></i>
-                    <p>No recent pending tasks! All caught up.</p>
+<div class="dash-grid">
+    <!-- Left: Stats Row + Recent Tasks -->
+    <section class="dash-left">
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card stat-total">
+                <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+                <div class="stat-info">
+                    <span class="stat-num">{{ total_count }}</span>
+                    <span class="stat-label">Total Tasks</span>
                 </div>
-                {% endfor %}
+            </div>
+            <div class="stat-card stat-progress">
+                <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+                <div class="stat-info">
+                    <span class="stat-num">{{ in_progress_count }}</span>
+                    <span class="stat-label">In Progress</span>
+                </div>
+            </div>
+            <div class="stat-card stat-done">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <span class="stat-num">{{ done_count }}</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+            </div>
+            <div class="stat-card stat-overdue">
+                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-info">
+                    <span class="stat-num">{{ overdue_count }}</span>
+                    <span class="stat-label">Overdue</span>
+                </div>
             </div>
         </div>
-    </section>
 
-    <!-- Right Sidebar Content -->
-    <div class="right-content">
-        <!-- Task Status Overview (2x3 Grid for 6 Statuses) -->
-        <section class="task-status-cards" aria-labelledby="status-heading">
-            <h3 id="status-heading">Task Status</h3>
-            <div class="status-grid-2x3">
-                <div class="status-item" role="status">
-                    <span class="status-label">Backlog</span>
-                    <span class="status-count backlog">{{ backlog_count }}</span>
+        <!-- Recent Tasks Section -->
+        <section class="to-do-section" aria-labelledby="todo-heading">
+            <div class="todo-header">
+                <h3 id="todo-heading"><i class="fas fa-clock" style="color: var(--accent-color);"></i> Recent Tasks</h3>
+                <div class="filter-options">
+                    <a href="{% url 'manage_tasks' %}" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+                    <button class="invite-btn" type="button" onclick="openAddTaskModal()">
+                        <i class="fas fa-plus" aria-hidden="true"></i> Add Task
+                    </button>
                 </div>
-                <div class="status-item" role="status">
-                    <span class="status-label">To Do</span>
-                    <span class="status-count to-do">{{ to_do_count }}</span>
-                </div>
-                <div class="status-item" role="status">
-                    <span class="status-label">In Progress</span>
-                    <span class="status-count in-progress">{{ in_progress_count }}</span>
-                </div>
-                <div class="status-item" role="status">
-                    <span class="status-label">Done</span>
-                    <span class="status-count done">{{ done_count }}</span>
-                </div>
-                <div class="status-item" role="status">
-                    <span class="status-label">On Hold</span>
-                    <span class="status-count on-hold">{{ on_hold_count }}</span>
-                </div>
-                <div class="status-item" role="status">
-                    <span class="status-label">Canceled</span>
-                    <span class="status-count canceled">{{ canceled_count }}</span>
+            </div>
+            
+            <div class="task-list-container">
+                <div id="tasks-container" role="list" aria-label="Task list">
+                    {% for task in recent_tasks %}
+                    <article class="task-card" role="listitem">
+                        <div class="task-header">
+                            <div class="d-inline">
+                                {% csrf_token %}
+                                <input type="checkbox" name="task{{ task.id }}" id="task{{ task.id }}" 
+                                       {% if task.status == 'completed' %}checked{% endif %}
+                                       onchange="toggleTaskComplete({{ task.id }}, this)">
+                            </div>
+                            <label for="task{{ task.id }}">{{ task.title }}</label>
+                            <button type="button" class="task-menu-btn" aria-label="Edit task" onclick="openEditTaskModal({{ task.id }})">
+                                <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        {% if task.description %}
+                        <p id="task{{ task.id }}-desc" style="margin: 4px 0 8px 28px; font-size: 0.82rem; color: var(--text-muted);">{{ task.description|truncatewords:15 }}</p>
+                        {% endif %}
+                        <div class="task-footer">
+                            {% if task.category %}
+                            <span class="project-badge" style="background-color: {{ task.category.color }}25; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}50;">
+                                <i class="fas fa-folder"></i> {{ task.category.name }}
+                            </span>
+                            {% else %}
+                            <span class="project-badge" style="background-color: #27272a; color: #a1a1aa; border: 1px solid #3f3f46;">
+                                <i class="fas fa-inbox"></i> General
+                            </span>
+                            {% endif %}
+                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                            <span class="status {{ task.status }}">{{ task.get_status_display }}</span>
+                            {% if task.due_date %}
+                            <span class="created-on"><i class="fas fa-calendar"></i> {{ task.due_date|date:"d M" }}</span>
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="far fa-check-circle empty-icon"></i>
+                        <p>No pending tasks! <a href="#" onclick="openAddTaskModal(); return false;">Add one?</a></p>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </section>
+    </section>
 
-        <!-- Completed Tasks Section -->
+    <!-- Right Sidebar Content -->
+    <div class="dash-right">
+        <!-- Completion Rate -->
+        <div class="completion-card">
+            <div class="completion-header">
+                <span>Overall Progress</span>
+                <span class="completion-pct">{{ completion_rate }}%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: {{ completion_rate }}%; background: var(--accent-gradient);"></div>
+            </div>
+            <div class="completion-meta">
+                <span><i class="fas fa-calendar-day" style="color: #60a5fa;"></i> {{ due_today_count }} due today</span>
+                <span><i class="fas fa-exclamation-circle" style="color: #f87171;"></i> {{ overdue_count }} overdue</span>
+            </div>
+        </div>
+
+        <!-- Task Status Overview -->
+        <section class="task-status-cards" aria-labelledby="status-heading">
+            <h3 id="status-heading">Task Status</h3>
+            <div class="status-grid-2x3">
+                <a href="{% url 'manage_tasks' %}?status=backlog" class="status-item" style="text-decoration: none; display: flex;">
+                    <span class="status-label">Backlog</span>
+                    <span class="status-count backlog">{{ backlog_count }}</span>
+                </a>
+                <a href="{% url 'manage_tasks' %}?status=not-started" class="status-item" style="text-decoration: none; display: flex;">
+                    <span class="status-label">To Do</span>
+                    <span class="status-count to-do">{{ to_do_count }}</span>
+                </a>
+                <a href="{% url 'manage_tasks' %}?status=in-progress" class="status-item" style="text-decoration: none; display: flex;">
+                    <span class="status-label">In Progress</span>
+                    <span class="status-count in-progress">{{ in_progress_count }}</span>
+                </a>
+                <a href="{% url 'manage_tasks' %}?status=completed" class="status-item" style="text-decoration: none; display: flex;">
+                    <span class="status-label">Done</span>
+                    <span class="status-count done">{{ done_count }}</span>
+                </a>
+                <a href="{% url 'manage_tasks' %}?status=on-hold" class="status-item" style="text-decoration: none; display: flex;">
+                    <span class="status-label">On Hold</span>
+                    <span class="status-count on-hold">{{ on_hold_count }}</span>
+                </a>
+                <a href="{% url 'manage_tasks' %}?status=canceled" class="status-item" style="text-decoration: none; display: flex;">
+                    <span class="status-label">Canceled</span>
+                    <span class="status-count canceled">{{ canceled_count }}</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Recently Completed -->
         <section class="completed-tasks-section" aria-labelledby="completed-heading">
-            <h3 id="completed-heading">Recently Completed</h3>
+            <h3 id="completed-heading"><i class="fas fa-check" style="color: #34d399;"></i> Recently Completed</h3>
             <div id="completed-tasks-container" role="list" aria-label="Completed tasks list">
                 {% for task in recently_completed_tasks %}
                 <article class="completed-task-card" role="listitem">
                     <div class="task-header">
-                        <input type="checkbox" name="completed-task{{ task.id }}" id="completed-task{{ task.id }}" checked disabled>
-                        <label for="completed-task{{ task.id }}">{{ task.title }}</label>
+                        <input type="checkbox" id="completed-task{{ task.id }}" checked disabled>
+                        <label for="completed-task{{ task.id }}" style="text-decoration: line-through; color: var(--text-muted);">{{ task.title }}</label>
                     </div>
                     <div class="task-footer">
-                        <span class="status completed" role="status">Status: {{ task.get_status_display }}</span>
-                        <span class="created-on">Completed {{ task.completed_at|timesince }} ago</span>
+                        <span class="status completed">Done</span>
+                        {% if task.completed_at %}
+                        <span class="created-on">{{ task.completed_at|timesince }} ago</span>
+                        {% endif %}
                     </div>
                 </article>
                 {% empty %}
-                <p style="text-align: center; color: #888;">No tasks completed recently.</p>
+                <p style="text-align: center; color: #666; font-size: 0.85rem; padding: 16px 0;">No tasks completed recently.</p>
                 {% endfor %}
             </div>
         </section>
+
+        <!-- Projects Quick Access -->
+        {% if projects %}
+        <section class="projects-quick" aria-labelledby="projects-heading">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 id="projects-heading" style="margin: 0; font-size: 1rem;">Projects</h3>
+                <a href="{% url 'task_categories' %}" style="font-size: 0.8rem; color: var(--accent-color);">View All</a>
+            </div>
+            {% for project in projects %}
+            <a href="{% url 'manage_kanban' %}?project={{ project.id }}" class="project-quick-card" style="--project-color: {{ project.color }}">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ project.color }}; flex-shrink: 0;"></span>
+                    <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color);">{{ project.name }}</span>
+                </div>
+                <span style="font-size: 0.775rem; color: var(--text-muted);">{{ project.task_count }} task{{ project.task_count|pluralize }}</span>
+            </a>
+            {% endfor %}
+        </section>
+        {% endif %}
     </div>
 </div>
 {% endblock content %}
@@ -134,21 +201,17 @@
 
         fetch(`/task/${taskId}/update/`, {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
             if (data.success) {
                 const card = checkboxElem.closest('.task-card');
-                if (card) {
-                    card.style.opacity = '0.3';
-                    card.style.transform = 'scale(0.98)';
+                if (card && checkboxElem.checked) {
+                    card.style.opacity = '0.4';
                     card.style.transition = 'all 0.3s ease';
-                    setTimeout(() => { card.remove(); }, 300);
+                    setTimeout(() => card.remove(), 300);
                 }
             }
         })

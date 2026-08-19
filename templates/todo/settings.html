@@ -1,94 +1,132 @@
 {% extends 'todo/base.html' %}
 {% load static %}
 
-{% block title %}Settings - TaskFlix{% endblock title %}
+{% block title %}Settings - TaskMitra{% endblock title %}
 
 {% block styles %}
-    {# Link the page-specific stylesheet #}
-    <link rel="stylesheet" href="{% static 'todo/css/settings.css' %}?v=3">
-    <style>
-        /* Add these styles to your settings.css for better presentation */
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: .25rem;
-        }
-        .alert-success {
-            color: #0f5132;
-            background-color: #d1e7dd;
-            border-color: #badbcc;
-        }
-        .profile-pic-preview {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 15px;
-            border: 2px solid var(--border-color);
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'todo/css/settings.css' %}?v=4">
 {% endblock styles %}
 
 {% block content %}
-{# Display success messages from the view #}
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-success">{{ message }}</div>
-    {% endfor %}
-{% endif %}
+<div class="page-header-bar" style="margin-bottom: 0;">
+    <div class="page-header-left">
+        <h2><i class="fas fa-cog" style="color: var(--accent-color);"></i> Settings</h2>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Manage your profile, preferences, and account</span>
+    </div>
+</div>
 
 <div class="settings-grid">
-    <!-- Profile Settings Card -->
+    <!-- Profile Information Card -->
     <article class="settings-card">
         <header class="settings-card-header">
             <h3><i class="fas fa-user-edit"></i> Profile Information</h3>
         </header>
         <div class="settings-card-body">
-            {# Profile update - no password or image (auth handled externally) #}
             <form method="post">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="profile">
                 
-                <div class="form-group">
-                    <label for="{{ u_form.username.id_for_label }}">Username</label>
-                    {{ u_form.username }}
-                    {{ u_form.username.errors }}
+                <div class="avatar-row">
+                    <div class="settings-avatar">{{ user.username|slice:":1"|upper }}</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 1rem;">{{ user.get_full_name|default:user.username }}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">{{ user.email|default:"No email set" }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                            Member since {{ user.date_joined|date:"M Y" }}
+                        </div>
+                    </div>
                 </div>
-                 <div class="form-group">
-                    <label for="{{ u_form.first_name.id_for_label }}">First Name</label>
-                    {{ u_form.first_name }}
-                    {{ u_form.first_name.errors }}
-                </div>
-                 <div class="form-group">
-                    <label for="{{ u_form.last_name.id_for_label }}">Last Name</label>
-                    {{ u_form.last_name }}
-                    {{ u_form.last_name.errors }}
-                </div>
-                <div class="form-group">
-                    <label for="{{ u_form.email.id_for_label }}">Email</label>
-                    {{ u_form.email }}
-                    {{ u_form.email.errors }}
+
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="{{ u_form.username.id_for_label }}">Username</label>
+                        {{ u_form.username }}
+                        {{ u_form.username.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ u_form.email.id_for_label }}">Email</label>
+                        {{ u_form.email }}
+                        {{ u_form.email.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ u_form.first_name.id_for_label }}">First Name</label>
+                        {{ u_form.first_name }}
+                        {{ u_form.first_name.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ u_form.last_name.id_for_label }}">Last Name</label>
+                        {{ u_form.last_name }}
+                        {{ u_form.last_name.errors }}
+                    </div>
                 </div>
                 
-                <button type="submit" class="btn-submit">Save Changes</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Profile</button>
             </form>
         </div>
     </article>
 
-    <!-- Appearance Settings Card -->
+    <!-- Change Password Card -->
     <article class="settings-card">
         <header class="settings-card-header">
-            <h3><i class="fas fa-palette"></i> Appearance</h3>
+            <h3><i class="fas fa-lock"></i> Change Password</h3>
         </header>
         <div class="settings-card-body">
-            <div class="form-group">
-                <label>Theme</label>
-                <div class="theme-selector">
-                    <button class="theme-option active" data-theme="dark">Dark</button>
-                    <button class="theme-option" data-theme="light">Light</button>
-                    <button class="theme-option" data-theme="system">System</button>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="password">
+                
+                {% for error in pw_form.non_field_errors %}
+                <div class="alert alert-error" style="margin-bottom: 12px;">{{ error }}</div>
+                {% endfor %}
+
+                <div class="form-group">
+                    <label for="{{ pw_form.old_password.id_for_label }}">Current Password</label>
+                    {{ pw_form.old_password }}
+                    {{ pw_form.old_password.errors }}
                 </div>
-            </div>
+                <div class="form-group">
+                    <label for="{{ pw_form.new_password1.id_for_label }}">New Password</label>
+                    {{ pw_form.new_password1 }}
+                    {{ pw_form.new_password1.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ pw_form.new_password2.id_for_label }}">Confirm New Password</label>
+                    {{ pw_form.new_password2 }}
+                    {{ pw_form.new_password2.errors }}
+                </div>
+                
+                <button type="submit" class="btn-submit"><i class="fas fa-key"></i> Change Password</button>
+            </form>
+        </div>
+    </article>
+
+    <!-- Preferences Card -->
+    <article class="settings-card">
+        <header class="settings-card-header">
+            <h3><i class="fas fa-sliders-h"></i> Task Preferences</h3>
+        </header>
+        <div class="settings-card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="preferences">
+
+                <div class="form-group">
+                    <label for="{{ p_form.theme.id_for_label }}"><i class="fas fa-palette"></i> Theme</label>
+                    {{ p_form.theme }}
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ p_form.default_task_priority.id_for_label }}"><i class="fas fa-flag"></i> Default Priority</label>
+                        {{ p_form.default_task_priority }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ p_form.default_task_status.id_for_label }}"><i class="fas fa-tasks"></i> Default Status</label>
+                        {{ p_form.default_task_status }}
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Preferences</button>
+            </form>
         </div>
     </article>
 
@@ -98,38 +136,200 @@
             <h3><i class="fas fa-bell"></i> Notifications</h3>
         </header>
         <div class="settings-card-body">
-            <div class="setting-item">
-                <span>Task Reminders</span>
-                <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-            </div>
-            <div class="setting-item">
-                <span>Due Date Alerts</span>
-                <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
-            </div>
-             <div class="setting-item">
-                <span>App Updates</span>
-                <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="preferences">
+                <input type="hidden" name="theme" value="{{ profile.theme }}">
+                <input type="hidden" name="default_task_priority" value="{{ profile.default_task_priority }}">
+                <input type="hidden" name="default_task_status" value="{{ profile.default_task_status }}">
+
+                <div class="setting-item">
+                    <div>
+                        <strong>Task Reminders</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Get reminded about upcoming tasks</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="notify_task_reminders" {% if profile.notify_task_reminders %}checked{% endif %} onchange="this.form.submit()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>Due Date Alerts</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Alert when tasks are approaching their deadline</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="notify_due_date_alerts" {% if profile.notify_due_date_alerts %}checked{% endif %} onchange="this.form.submit()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>App Updates</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Notifications about new features</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="notify_app_updates" {% if profile.notify_app_updates %}checked{% endif %} onchange="this.form.submit()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </form>
+        </div>
+    </article>
+
+    <!-- Quick Stats Card -->
+    <article class="settings-card">
+        <header class="settings-card-header">
+            <h3><i class="fas fa-chart-bar"></i> Your Stats</h3>
+        </header>
+        <div class="settings-card-body">
+            <div class="stats-overview-grid">
+                <div class="stat-overview-item">
+                    <span class="stat-overview-num" id="stat-total-tasks">-</span>
+                    <span class="stat-overview-label">Total Tasks</span>
+                </div>
+                <div class="stat-overview-item">
+                    <span class="stat-overview-num" id="stat-done-tasks" style="color: #34d399;">-</span>
+                    <span class="stat-overview-label">Completed</span>
+                </div>
+                <div class="stat-overview-item">
+                    <span class="stat-overview-num" id="stat-progress-tasks" style="color: #60a5fa;">-</span>
+                    <span class="stat-overview-label">In Progress</span>
+                </div>
+                <div class="stat-overview-item">
+                    <span class="stat-overview-num" id="stat-overdue-tasks" style="color: #f87171;">-</span>
+                    <span class="stat-overview-label">Overdue</span>
+                </div>
             </div>
         </div>
     </article>
 
-    <!-- Danger Zone -->
+    <!-- Export Data Card -->
+    <article class="settings-card">
+        <header class="settings-card-header">
+            <h3><i class="fas fa-download"></i> Data Export</h3>
+        </header>
+        <div class="settings-card-body">
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 16px;">
+                Export your tasks and projects data for backup or use in other tools.
+            </p>
+            <div class="setting-item">
+                <div>
+                    <strong>Export Tasks as JSON</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Download all tasks in JSON format</p>
+                </div>
+                <button type="button" class="icon-btn" onclick="exportTasks('json')" title="Export JSON">
+                    <i class="fas fa-file-code"></i>
+                </button>
+            </div>
+            <div class="setting-item">
+                <div>
+                    <strong>Export Tasks as CSV</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Download all tasks in CSV format</p>
+                </div>
+                <button type="button" class="icon-btn" onclick="exportTasks('csv')" title="Export CSV">
+                    <i class="fas fa-file-csv"></i>
+                </button>
+            </div>
+        </div>
+    </article>
+
+    <!-- Danger Zone Card -->
     <article class="settings-card danger-zone">
         <header class="settings-card-header">
             <h3><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3>
         </header>
         <div class="settings-card-body">
-            <form method="post" action="#" onsubmit="return confirm('Are you absolutely sure? This will delete all your data permanently.');">
-                {% csrf_token %}
-                <div class="setting-item">
-                    <div>
-                        <strong>Clear All Data</strong>
-                        <p>Permanently delete all tasks and settings.</p>
-                    </div>
-                    <button type="submit" class="btn-danger">Clear Data</button>
+            <div class="setting-item">
+                <div>
+                    <strong>Clear All Tasks</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Permanently delete all tasks. Projects will remain.</p>
                 </div>
-            </form>
+                <button type="button" class="btn-danger" onclick="confirmClearTasks()">
+                    <i class="fas fa-trash"></i> Clear Tasks
+                </button>
+            </div>
+            <div class="setting-item" style="margin-top: 12px;">
+                <div>
+                    <strong>Clear All Data</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Permanently delete all tasks AND projects.</p>
+                </div>
+                <button type="button" class="btn-danger" onclick="confirmClearAll()">
+                    <i class="fas fa-radiation"></i> Clear Everything
+                </button>
+            </div>
         </div>
     </article>
 </div>
+
+<!-- Hidden clear data form -->
+<form id="clear-data-form" method="post" action="{% url 'settings' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="clear_data">
+    <input type="hidden" name="confirm_clear" value="yes">
+</form>
 {% endblock content %}
+
+{% block scripts %}
+<script>
+    // Load stats on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/stats/')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('stat-total-tasks').textContent = data.stats.total;
+                    document.getElementById('stat-done-tasks').textContent = data.stats.done;
+                    document.getElementById('stat-progress-tasks').textContent = data.stats.in_progress;
+                    document.getElementById('stat-overdue-tasks').textContent = data.stats.overdue;
+                }
+            })
+            .catch(() => {});
+    });
+
+    function confirmClearTasks() {
+        if (confirm('Are you sure? This will permanently delete ALL your tasks. This cannot be undone.')) {
+            document.getElementById('clear-data-form').submit();
+        }
+    }
+
+    function confirmClearAll() {
+        const input = prompt('Type "DELETE" to confirm clearing all data:');
+        if (input === 'DELETE') {
+            document.getElementById('clear-data-form').submit();
+        } else {
+            alert('Confirmation failed. No data was deleted.');
+        }
+    }
+
+    function exportTasks(format) {
+        // Fetch stats and build a simple data export
+        fetch('/api/stats/')
+            .then(r => r.json())
+            .then(data => {
+                if (format === 'json') {
+                    const blob = new Blob([JSON.stringify(data.stats, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'taskmitra-stats.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    // CSV of stats
+                    const csv = Object.entries(data.stats)
+                        .map(([k, v]) => `${k},${v}`)
+                        .join('\n');
+                    const blob = new Blob([`metric,value\n${csv}`], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'taskmitra-stats.csv';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            })
+            .catch(() => alert('Export failed. Please try again.'));
+    }
+</script>
+{% endblock scripts %}

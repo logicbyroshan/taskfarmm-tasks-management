@@ -10,10 +10,32 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEditTaskModal();
     setupCustomDropdowns();
     setupPWA();
+    setupAlertAutoDismiss();
 
     // Update the date/time display every minute
     setInterval(updateDateTime, 60000);
 });
+
+// Global expose so onclick="openAddTaskModal()" works from HTML
+window.openAddTaskModal = function() {
+    const taskModal = document.getElementById('add-task-modal');
+    if (taskModal) {
+        taskModal.style.display = 'flex';
+        const titleInput = taskModal.querySelector('input[name="title"]');
+        if (titleInput) titleInput.focus();
+    }
+};
+
+function setupAlertAutoDismiss() {
+    document.querySelectorAll('.auto-dismiss').forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => alert.remove(), 500);
+        }, 4000);
+    });
+}
+
 
 /**
  * Custom Dropdown UI Transformer
@@ -229,6 +251,7 @@ function setupAddTaskModal() {
 function setupEditTaskModal() {
     const editModal = document.getElementById('edit-task-modal');
     const editForm = document.getElementById('edit-task-form');
+    const deleteBtn = document.getElementById('edit-delete-btn');
     if (!editModal || !editForm) return;
 
     const closeModal = () => { editModal.style.display = 'none'; };
@@ -238,6 +261,37 @@ function setupEditTaskModal() {
             closeModal();
         }
     });
+
+    // Delete button in edit modal
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            const taskId = document.getElementById('edit-task-id').value;
+            if (!taskId) return;
+            if (!confirm('Are you sure you want to delete this task?')) return;
+
+            const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', csrfToken);
+
+            fetch(`/task/${taskId}/delete/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    window.location.reload();
+                }
+            })
+            .catch(() => {
+                // Fallback - reload page
+                closeModal();
+                window.location.reload();
+            });
+        });
+    }
 
     window.openEditTaskModal = function(taskId) {
         fetch(`/task/${taskId}/update/`, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -261,10 +315,19 @@ function setupEditTaskModal() {
         event.preventDefault();
         const taskId = document.getElementById('edit-task-id').value;
         const formData = new FormData(editForm);
-        fetch(`/task/${taskId}/update/`, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        fetch(`/task/${taskId}/update/`, { 
+            method: 'POST', 
+            body: formData, 
+            headers: { 
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest' 
+            } 
+        })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                closeModal();
                 window.location.reload();
             } else {
                 let errorMessages = 'Please correct the following errors:\n\n';
@@ -276,6 +339,7 @@ function setupEditTaskModal() {
         }).catch(error => alert('An unexpected error occurred.'));
     });
 }
+
 
 /**
  * Sets up Progressive Web App (PWA) features.

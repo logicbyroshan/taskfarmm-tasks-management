@@ -8,19 +8,19 @@
                     <i class="fas fa-th-large" aria-hidden="true"></i> Dashboard
                 </a>
             </li>
-            <li class="{% if active_page == 'my_tasks' %}active{% endif %}">
-                <a href="{% url 'my_tasks' %}">
-                    <i class="fas fa-tasks" aria-hidden="true"></i> Manage Tasks
+            <li class="{% if active_page == 'manage_tasks' or active_page == 'my_tasks' %}active{% endif %}">
+                <a href="{% url 'manage_tasks' %}">
+                    <i class="fas fa-list-ul" aria-hidden="true"></i> All Tasks
                 </a>
             </li>
             <li class="{% if active_page == 'task_categories' %}active{% endif %}">
                 <a href="{% url 'task_categories' %}">
-                    <i class="fas fa-folder-open" aria-hidden="true"></i> Manage Projects
+                    <i class="fas fa-folder-open" aria-hidden="true"></i> Projects
                 </a>
             </li>
             <li class="{% if active_page == 'manage_kanban' %}active{% endif %}">
                 <a href="{% url 'manage_kanban' %}">
-                    <i class="fas fa-columns" aria-hidden="true"></i> Manage Kanban
+                    <i class="fas fa-columns" aria-hidden="true"></i> Kanban Board
                 </a>
             </li>
             <li>
@@ -32,7 +32,6 @@
     </nav>
     
     <div class="sidebar-bottom">
-        <!-- Settings option placed in bottom section above the dividing line -->
         <div class="sidebar-settings-link {% if active_page == 'settings' %}active{% endif %}">
             <a href="{% url 'settings' %}">
                 <i class="fas fa-cog" aria-hidden="true"></i> Settings
@@ -41,11 +40,11 @@
 
         <div class="sidebar-divider"></div>
         
-        <!-- Logout button below dividing line -->
+        <!-- Logout button -->
         <div class="logout-btn">
-            <button type="button" class="btn-logout" aria-label="Logout">
+            <a href="{% url 'logout' %}" class="btn-logout" aria-label="Logout">
                 <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
-            </button>
+            </a>
         </div>
 
         <!-- User profile at the very bottom -->
@@ -60,7 +59,7 @@
     </div>
     {% else %}
     <div class="login-prompt">
-        <p>Authentication handled by external app.</p>
+        <p>Please log in to continue.</p>
     </div>
     {% endif %}
 </aside>
