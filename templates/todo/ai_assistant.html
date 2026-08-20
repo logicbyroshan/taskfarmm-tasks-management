@@ -1,268 +1,749 @@
 {% extends 'todo/base.html' %}
 {% load static %}
 
-{% block title %}AI Assistant - TaskMitra{% endblock %}
+{% block title %}AI Assistant - TaskFlixx{% endblock %}
+
+{% block styles %}
+<style>
+/* ===============================================
+   CHATGPT-STYLE AI ASSISTANT LAYOUT
+   =============================================== */
+.ai-chat-layout {
+    display: flex;
+    height: calc(100vh - 100px);
+    background: #050507;
+    border: 1px solid #1a1a1e;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: 0;
+}
+
+/* Chat Main Workspace (Left) */
+.ai-chat-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #050507;
+    min-width: 0;
+}
+
+/* Chat Top Header */
+.ai-chat-header {
+    height: 54px;
+    padding: 0 20px;
+    border-bottom: 1px solid #1a1a1e;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #09090b;
+    flex-shrink: 0;
+}
+
+.ai-chat-header-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ai-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: var(--radius-full);
+    color: #34d399;
+    font-size: 0.725rem;
+    font-weight: 600;
+}
+
+/* ===============================================
+   KILL ALL GLOWS & FOCUS OUTLINES ON AI PAGE
+   =============================================== */
+*:focus,
+*:focus-visible,
+*:focus-within {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.ai-controls-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ai-select-compact {
+    height: 34px;
+    padding: 0 10px;
+    background: #121216;
+    border: 1px solid #27272a;
+    border-radius: var(--radius-md);
+    color: #e4e4e7;
+    font-size: 0.775rem;
+    cursor: pointer;
+    transition: var(--transition);
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.ai-select-compact:focus, .ai-select-compact:hover {
+    border-color: #2a2a36 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Scrollable Chat Thread */
+.ai-chat-thread {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Chat Message Bubbles */
+.chat-msg {
+    display: flex;
+    gap: 14px;
+    max-width: 85%;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-msg.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.chat-msg.assistant {
+    align-self: flex-start;
+}
+
+.chat-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.user .chat-avatar {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+}
+
+.assistant .chat-avatar {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: #ffffff;
+}
+
+.chat-bubble {
+    padding: 14px 18px;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.user .chat-bubble {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #f1f5f9;
+    border-top-right-radius: 2px;
+}
+
+.assistant .chat-bubble {
+    background: #0f0f13;
+    border: 1px solid #1e1e24;
+    color: #e4e4e7;
+    border-top-left-radius: 2px;
+    width: 100%;
+}
+
+.chat-actions-row {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #1f1f26;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.chat-action-btn {
+    height: 30px;
+    padding: 0 12px;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: var(--radius-sm);
+    color: #60a5fa;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.chat-action-btn:hover {
+    background: rgba(59, 130, 246, 0.25);
+    color: #ffffff;
+}
+
+/* Chat Input Bar */
+.ai-chat-input-bar {
+    padding: 12px 20px;
+    border-top: 1px solid #1a1a1e;
+    background: #09090b;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.ai-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0d0d12;
+    border: 1px solid #1c1c24;
+    border-radius: var(--radius-md);
+    padding: 6px 12px;
+    transition: var(--transition);
+    position: relative;
+}
+
+.ai-input-wrap:focus-within {
+    border-color: #272732;
+    box-shadow: none !important;
+}
+
+/* Upward Opening Templates Dropdown inside Input Wrap */
+.template-dropdown-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.template-btn {
+    height: 32px;
+    padding: 0 10px;
+    background: #14141c;
+    border: 1px solid #22222e;
+    border-radius: var(--radius-sm);
+    color: #a1a1aa;
+    font-size: 0.775rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: var(--transition);
+}
+
+.template-btn:hover {
+    background: #1a1a24;
+    border-color: #2e2e3e;
+    color: #ffffff;
+}
+
+.template-menu-upward {
+    position: absolute;
+    bottom: 44px; /* Opens UPWARD */
+    left: 0;
+    width: 290px;
+    background: #0d0d12;
+    border: 1px solid #252530;
+    border-radius: var(--radius-md);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.template-menu-header {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #71717a;
+    padding: 6px 10px;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #1a1a24;
+    margin-bottom: 4px;
+}
+
+.template-item {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    color: #d4d4d8;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.template-item:hover {
+    background: #181824;
+    color: #ffffff;
+}
+
+.ai-chat-textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.875rem;
+    resize: none;
+    height: 38px;
+    max-height: 120px;
+    line-height: 1.5;
+}
+
+.ai-send-btn {
+    width: 38px;
+    height: 38px;
+    background: #3b82f6;
+    border: none;
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.ai-send-btn:hover {
+    background: #2563eb;
+    transform: scale(1.04);
+}
+
+/* Sidebar Inside AI Page (Right Side) */
+.ai-chat-sidebar {
+    width: 290px;
+    background: #09090b;
+    border-left: 1px solid #1a1a1e;
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.ai-new-chat-btn {
+    width: 100%;
+    height: 40px;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: var(--radius-md);
+    color: #60a5fa;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.ai-new-chat-btn:hover {
+    background: rgba(59, 130, 246, 0.22);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #ffffff;
+}
+
+.ai-sidebar-section-title {
+    font-size: 0.725rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #71717a;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Premium Recent Chats Cards in Sidebar */
+.ai-recent-chats-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.ai-recent-list-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 2px;
+}
+
+.ai-recent-card {
+    background: #0c0c10;
+    border: 1px solid #1c1c24;
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.ai-recent-card:hover {
+    background: #14141d;
+    border-color: #3b82f6;
+}
+
+.ai-recent-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #d4d4d8;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+</style>
+{% endblock styles %}
 
 {% block content %}
-<div class="page-header-bar">
-    <div class="page-header-left">
-        <h2><i class="fas fa-robot" style="color:#3b82f6;"></i> AI Assistant</h2>
-        <span class="task-total-badge">Smart Automation</span>
-    </div>
-</div>
-
-<div class="ai-page-grid">
-    <!-- Left: Prompt Panel -->
-    <div class="ai-left-panel">
-        <!-- Quick Action Cards -->
-        <div class="ai-action-cards">
-            <button class="ai-action-card" onclick="loadAiTemplate('project')">
-                <div class="ai-action-icon" style="background:rgba(59,130,246,0.15);color:#60a5fa;"><i class="fas fa-folder-plus"></i></div>
-                <div><strong>Create Project</strong><span>Auto-generate a project with tasks</span></div>
-            </button>
-            <button class="ai-action-card" onclick="loadAiTemplate('tasks')">
-                <div class="ai-action-icon" style="background:rgba(139,92,246,0.15);color:#a78bfa;"><i class="fas fa-list-check"></i></div>
-                <div><strong>Generate Tasks</strong><span>AI suggests a task list for your goal</span></div>
-            </button>
-            <button class="ai-action-card" onclick="loadAiTemplate('breakdown')">
-                <div class="ai-action-icon" style="background:rgba(16,185,129,0.15);color:#34d399;"><i class="fas fa-sitemap"></i></div>
-                <div><strong>Break Down Work</strong><span>Split big tasks into subtasks</span></div>
-            </button>
-            <button class="ai-action-card" onclick="loadAiTemplate('plan')">
-                <div class="ai-action-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24;"><i class="fas fa-rocket"></i></div>
-                <div><strong>Launch Plan</strong><span>Get a step-by-step launch checklist</span></div>
-            </button>
-        </div>
-
-        <!-- Prompt Area -->
-        <div class="ai-prompt-card">
-            <label class="ai-section-label">Tell AI what you need</label>
-            <textarea id="ai-page-prompt" class="form-control" rows="4"
-                placeholder="e.g. I'm building an e-commerce website. Generate a full project plan with tasks..."></textarea>
-
-            <div class="ai-mode-row">
-                <div class="form-group" style="flex:1;margin:0;">
-                    <label style="font-size:0.8rem;color:var(--text-muted);">Output Mode</label>
-                    <select id="ai-output-mode" class="form-control">
-                        <option value="suggest">Suggest Tasks (show first)</option>
-                        <option value="create_tasks">Auto-Create Tasks</option>
-                        <option value="create_project">Auto-Create Project + Tasks</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex:1;margin:0;">
-                    <label style="font-size:0.8rem;color:var(--text-muted);">Assign to Project</label>
-                    <select id="ai-page-project" class="form-control">
-                        <option value="">No Project</option>
-                        {% for proj in projects %}
-                        <option value="{{ proj.id }}">{{ proj.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+<div class="ai-chat-layout" onclick="closeTemplateMenuOutside(event)">
+    <!-- Main Chat Workspace (Left) -->
+    <div class="ai-chat-workspace">
+        <!-- Top Control Bar -->
+        <div class="ai-chat-header">
+            <div class="ai-chat-header-info">
+                <h3 style="margin:0; font-size:1rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-robot" style="color:#3b82f6;"></i> ChatGPT Assistant
+                </h3>
+                <span class="ai-status-badge"><i class="fas fa-circle" style="font-size:0.5rem;"></i> Online</span>
             </div>
 
-            <button type="button" class="btn-submit" style="width:100%;" onclick="runAiPage()">
-                <i class="fas fa-wand-magic-sparkles"></i> Run AI Assistant
-            </button>
-        </div>
-
-        <!-- Response Area -->
-        <div id="ai-page-response-wrap" style="display:none;" class="ai-response-card">
-            <div class="ai-response-header">
-                <span><i class="fas fa-lightbulb"></i> <span id="ai-page-response-title">AI Output</span></span>
-                <div id="ai-page-action-btns" style="display:flex;gap:8px;"></div>
+            <div class="ai-controls-bar">
+                <select id="chat-output-mode" class="ai-select-compact">
+                    <option value="suggest">Mode: Suggest Tasks</option>
+                    <option value="create_tasks">Mode: Auto-Create Tasks</option>
+                    <option value="create_project">Mode: Auto-Create Project</option>
+                </select>
+                <select id="chat-project-id" class="ai-select-compact">
+                    <option value="">Project: None</option>
+                    {% for proj in projects %}
+                    <option value="{{ proj.id }}">Project: {{ proj.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div id="ai-page-response-text" class="ai-page-response-text"></div>
-            <div id="ai-task-list-preview" style="display:none;margin-top:12px;"></div>
         </div>
-    </div>
 
-    <!-- Right: Context Panel -->
-    <div class="ai-right-panel">
-        <!-- Prompt Chips -->
-        <div class="ai-drawer-section">
-            <p class="ai-section-label">Quick Prompts</p>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-                {% for chip in prompt_chips %}
-                <button class="ai-page-chip" onclick="setAiPagePrompt('{{ chip.prompt }}')">
-                    <i class="{{ chip.icon }}"></i> {{ chip.label }}
+        <!-- Chat Thread Area -->
+        <div class="ai-chat-thread" id="chat-thread">
+            <!-- Initial AI Greeting -->
+            <div class="chat-msg assistant">
+                <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+                <div class="chat-bubble">
+                    <strong>Hello! I'm your TaskFlixx AI Assistant.</strong><br>
+                    How can I help you today? Click <strong>Templates</strong> inside the input bar or type your custom request!
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Input Bar -->
+        <div class="ai-chat-input-bar">
+            <div class="ai-input-wrap">
+                <!-- Templates Dropdown inside Input Wrap (Opens Upward) -->
+                <div class="template-dropdown-wrapper">
+                    <button type="button" class="template-btn" onclick="toggleTemplateMenu(event)">
+                        <i class="fas fa-layer-group" style="color:#60a5fa;"></i> Templates <i class="fas fa-chevron-up" style="font-size:0.7rem; margin-left:2px;"></i>
+                    </button>
+
+                    <div id="template-menu" class="template-menu-upward" style="display:none;">
+                        <div class="template-menu-header">Pre-planned Templates</div>
+                        <div class="template-item" onclick="applyTemplate('Create a new project named Mobile App Redesign with 6 key tasks.')">
+                            <i class="fas fa-folder-plus" style="color:#60a5fa;"></i> Create Project (Mobile App)
+                        </div>
+                        <div class="template-item" onclick="applyTemplate('Generate a task breakdown for launching an e-commerce website.')">
+                            <i class="fas fa-store" style="color:#a78bfa;"></i> E-commerce Store Setup
+                        </div>
+                        <div class="template-item" onclick="applyTemplate('Break down the task: Implement OAuth 2.0 User Authentication into subtasks.')">
+                            <i class="fas fa-key" style="color:#34d399;"></i> Break Down Work (OAuth 2.0)
+                        </div>
+                        <div class="template-item" onclick="applyTemplate('Create a step-by-step product launch plan checklist.')">
+                            <i class="fas fa-rocket" style="color:#fbbf24;"></i> Product Launch Plan
+                        </div>
+                        <div class="template-item" onclick="applyTemplate('Create a complete website launch plan with all necessary tasks including SEO, performance, and deployment.')">
+                            <i class="fas fa-globe" style="color:#60a5fa;"></i> Website Launch Plan
+                        </div>
+                        <div class="template-item" onclick="applyTemplate('Create a marketing campaign execution plan with social media, email and advertising tasks.')">
+                            <i class="fas fa-bullhorn" style="color:#f472b6;"></i> Marketing Campaign
+                        </div>
+                        <div class="template-item" onclick="applyTemplate('Create a DevOps setup plan including CI/CD, monitoring, backups and deployment pipelines.')">
+                            <i class="fas fa-server" style="color:#38bdf8;"></i> DevOps Setup Plan
+                        </div>
+                    </div>
+                </div>
+
+                <textarea id="chat-input" class="ai-chat-textarea" placeholder="Ask AI Assistant or type your goal..." onkeydown="handleChatKeyDown(event)"></textarea>
+
+                <button type="button" class="ai-send-btn" onclick="submitChatMessage()" title="Send prompt">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
-                {% endfor %}
             </div>
         </div>
+    </div>
 
-        <!-- Recent Tasks for context -->
-        {% if recent_tasks %}
-        <div class="ai-drawer-section">
-            <p class="ai-section-label">Recent Tasks (for context)</p>
-            <div style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;">
-                {% for task in recent_tasks %}
-                <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#18181b;border-radius:6px;border:1px solid var(--border-color);">
-                    <span class="priority {{ task.priority }}" style="font-size:0.65rem;padding:2px 6px;">{{ task.get_priority_display }}</span>
-                    <span style="font-size:0.8rem;color:var(--text-color);flex:1;">{{ task.title|truncatechars:35 }}</span>
-                </div>
-                {% endfor %}
+    <!-- Right Sidebar Inside AI Page (ONLY Recent Chats & New Chat) -->
+    <div class="ai-chat-sidebar">
+        <button class="ai-new-chat-btn" onclick="startNewChat()">
+            <i class="fas fa-plus"></i> New Chat
+        </button>
+
+        <div class="ai-recent-chats-container">
+            <div class="ai-sidebar-section-title"><i class="fas fa-comments" style="color:#60a5fa;"></i> Recent Chats</div>
+            <div class="ai-recent-list-wrap" id="recent-chats-list">
+                <!-- Dynamically populated -->
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 
-<!-- Toast notification -->
 <div id="ai-toast" class="ai-toast" style="display:none;"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-const AI_CHIPS = [
-    {label:"Website Launch Plan", icon:"fas fa-rocket", prompt:"Create a complete website launch plan with all necessary tasks including SEO, performance, and deployment."},
-    {label:"E-commerce Store Setup", icon:"fas fa-store", prompt:"Generate a task list for setting up an e-commerce store from scratch."},
-    {label:"Mobile App Development", icon:"fas fa-mobile-alt", prompt:"Create a project plan for building a mobile app with design, development and launch tasks."},
-    {label:"Marketing Campaign", icon:"fas fa-bullhorn", prompt:"Create a marketing campaign execution plan with social media, email and advertising tasks."},
-    {label:"Team Onboarding Process", icon:"fas fa-users", prompt:"Generate an HR onboarding checklist for a new team member joining the company."},
-    {label:"Product Launch Checklist", icon:"fas fa-box-open", prompt:"Create a product launch checklist covering development, marketing, sales and support."},
-    {label:"Blog & Content Strategy", icon:"fas fa-pen-nib", prompt:"Generate a content marketing strategy with writing, SEO and publishing tasks."},
-    {label:"DevOps Setup", icon:"fas fa-server", prompt:"Create a DevOps setup plan including CI/CD, monitoring, backups and deployment pipelines."},
-];
+let recentChats = JSON.parse(localStorage.getItem('taskflixx_recent_chats') || '[]');
 
-// Render chips on load
 document.addEventListener('DOMContentLoaded', () => {
-    const chipsWrap = document.querySelector('.ai-right-panel .ai-drawer-section:first-child div');
-    if (!chipsWrap) return;
-    chipsWrap.innerHTML = AI_CHIPS.map(c =>
-        `<button class="ai-page-chip" onclick="setAiPagePrompt('${c.prompt.replace(/'/g,"\\'")}')"><i class="${c.icon}"></i> ${c.label}</button>`
-    ).join('');
+    renderRecentChats();
 });
 
-function setAiPagePrompt(text) {
-    document.getElementById('ai-page-prompt').value = text;
-    document.getElementById('ai-page-prompt').focus();
+function toggleTemplateMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('template-menu');
+    menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'flex' : 'none';
 }
 
-function loadAiTemplate(type) {
-    const templates = {
-        project: "Create a new project called 'My New Project' with 6 key tasks to complete it successfully.",
-        tasks: "Generate a prioritized task list to help me achieve my goal. Focus on actionable steps.",
-        breakdown: "Break down a complex feature into smaller subtasks: Implement user authentication with JWT tokens.",
-        plan: "Create a comprehensive step-by-step launch plan for a SaaS product including all pre-launch and post-launch tasks."
-    };
-    setAiPagePrompt(templates[type]);
+function closeTemplateMenuOutside(e) {
+    const menu = document.getElementById('template-menu');
+    if (menu && !e.target.closest('.template-dropdown-wrapper')) {
+        menu.style.display = 'none';
+    }
 }
 
-let aiPageTitle = '', aiPageDesc = '', aiPageTaskList = [];
+function applyTemplate(text) {
+    document.getElementById('chat-input').value = text;
+    document.getElementById('template-menu').style.display = 'none';
+    document.getElementById('chat-input').focus();
+}
 
-function runAiPage() {
-    const prompt = document.getElementById('ai-page-prompt').value.trim();
-    if (!prompt) { showToast('Please enter a prompt first.', 'error'); return; }
+function handleChatKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitChatMessage();
+    }
+}
 
-    const mode = document.getElementById('ai-output-mode').value;
-    const projectId = document.getElementById('ai-page-project').value;
-    const responseWrap = document.getElementById('ai-page-response-wrap');
-    const responseText = document.getElementById('ai-page-response-text');
-    const actionBtns = document.getElementById('ai-page-action-btns');
+function startNewChat() {
+    const thread = document.getElementById('chat-thread');
+    thread.innerHTML = `
+        <div class="chat-msg assistant">
+            <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+            <div class="chat-bubble">
+                <strong>New conversation started.</strong><br>
+                What would you like to accomplish next?
+            </div>
+        </div>
+    `;
+    showToast('Started new chat conversation', 'info');
+}
 
-    responseWrap.style.display = 'block';
-    responseText.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#60a5fa;"></i> AI is thinking...';
-    actionBtns.innerHTML = '';
-    document.getElementById('ai-task-list-preview').style.display = 'none';
+function renderRecentChats() {
+    const list = document.getElementById('recent-chats-list');
+    if (!list) return;
+
+    if (!recentChats.length) {
+        list.innerHTML = `<div style="font-size:0.775rem; color:#71717a; padding:10px; text-align:center;">No recent chats yet.</div>`;
+        return;
+    }
+
+    list.innerHTML = recentChats.map((chat, idx) => `
+        <div class="ai-recent-card" onclick="reopenRecentChat('${escapeHtml(chat.prompt).replace(/'/g, "\\'")}')">
+            <i class="fas fa-comment-alt" style="color:#60a5fa; font-size:0.75rem; flex-shrink:0;"></i>
+            <span class="ai-recent-title" title="${escapeHtml(chat.prompt)}">${escapeHtml(chat.prompt)}</span>
+        </div>
+    `).join('');
+}
+
+function reopenRecentChat(promptText) {
+    document.getElementById('chat-input').value = promptText;
+    submitChatMessage();
+}
+
+function addRecentChat(promptText) {
+    // Avoid duplicate title at top
+    recentChats = recentChats.filter(c => c.prompt !== promptText);
+    recentChats.unshift({ prompt: promptText, timestamp: new Date().toLocaleTimeString() });
+    if (recentChats.length > 15) recentChats.pop();
+    localStorage.setItem('taskflixx_recent_chats', JSON.stringify(recentChats));
+    renderRecentChats();
+}
+
+function submitChatMessage() {
+    const input = document.getElementById('chat-input');
+    const prompt = input.value.trim();
+    if (!prompt) return;
+
+    input.value = '';
+    const menu = document.getElementById('template-menu');
+    if (menu) menu.style.display = 'none';
+
+    addRecentChat(prompt);
+
+    const thread = document.getElementById('chat-thread');
+
+    // Append User Message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'chat-msg user';
+    userMsg.innerHTML = `
+        <div class="chat-avatar"><i class="fas fa-user"></i></div>
+        <div class="chat-bubble">${escapeHtml(prompt)}</div>
+    `;
+    thread.appendChild(userMsg);
+
+    // Append Loading Assistant Message
+    const loadingId = 'ai-loading-' + Date.now();
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'chat-msg assistant';
+    aiMsg.id = loadingId;
+    aiMsg.innerHTML = `
+        <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+        <div class="chat-bubble">
+            <i class="fas fa-spinner fa-spin" style="color:#60a5fa; margin-right:6px;"></i> Thinking...
+        </div>
+    `;
+    thread.appendChild(aiMsg);
+    thread.scrollTop = thread.scrollHeight;
+
+    const mode = document.getElementById('chat-output-mode').value;
+    const projectId = document.getElementById('chat-project-id').value;
 
     fetch('/api/ai/suggest/', {
         method: 'POST',
-        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrfToken(),'X-Requested-With':'XMLHttpRequest'},
-        body: JSON.stringify({prompt})
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ prompt })
     })
     .then(r => r.json())
     .then(data => {
+        const loadingMsg = document.getElementById(loadingId);
+        if (!loadingMsg) return;
+
         if (data.success) {
-            aiPageTitle = data.title || 'AI Suggestion';
-            aiPageDesc = data.suggestion || data.description || '';
-            document.getElementById('ai-page-response-title').textContent = aiPageTitle;
+            const title = data.title || 'AI Task Plan';
+            const desc = data.suggestion || data.description || '';
+            const lines = desc.split('\n').filter(l => l.trim());
 
-            // Parse lines as task list
-            aiPageTaskList = aiPageDesc.split('\n')
-                .filter(l => l.trim())
-                .map(l => l.replace(/^[\d\-\.\*\•]+\s*/, '').trim())
-                .filter(l => l.length > 5);
+            let formattedLines = lines.map(l => `<div style="margin:4px 0;"><i class="fas fa-angle-right" style="color:#3b82f6; font-size:0.75rem;"></i> ${escapeHtml(l)}</div>`).join('');
 
-            responseText.innerHTML = aiPageDesc.split('\n').filter(l=>l.trim()).map(l =>
-                `<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.875rem;">${l}</div>`
-            ).join('');
+            loadingMsg.querySelector('.chat-bubble').innerHTML = `
+                <div style="font-weight:700; color:#ffffff; font-size:0.95rem; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                    <i class="fas fa-lightbulb" style="color:#fbbf24;"></i> ${escapeHtml(title)}
+                </div>
+                <div style="margin-bottom:10px;">${formattedLines}</div>
+                <div class="chat-actions-row">
+                    <button class="chat-action-btn" onclick="createTasksFromChat('${escapeHtml(title)}', ${JSON.stringify(lines).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-plus"></i> Create Tasks
+                    </button>
+                    <button class="chat-action-btn" style="background:rgba(139,92,246,0.15); color:#a78bfa; border-color:rgba(139,92,246,0.3);" onclick="createProjectFromChat('${escapeHtml(prompt)}')">
+                        <i class="fas fa-folder-plus"></i> Create Project
+                    </button>
+                </div>
+            `;
 
-            // Build action buttons
-            if (mode === 'suggest') {
-                actionBtns.innerHTML = `
-                    <button class="ai-chip" style="padding:4px 12px;font-size:0.75rem;" onclick="addSingleTask()"><i class="fas fa-plus"></i> Add as Task</button>
-                    <button class="ai-chip" style="padding:4px 12px;font-size:0.75rem;background:rgba(139,92,246,0.15);color:#a78bfa;border-color:rgba(139,92,246,0.3);" onclick="bulkCreateTasks()"><i class="fas fa-layer-group"></i> Create All as Tasks</button>
-                `;
-            } else if (mode === 'create_tasks') {
-                bulkCreateTasks(projectId);
+            if (mode === 'create_tasks') {
+                createTasksFromChat(title, lines);
             } else if (mode === 'create_project') {
-                autoCreateProject(prompt, projectId);
+                createProjectFromChat(prompt);
             }
         } else {
-            responseText.textContent = 'AI response failed. Please try again.';
+            loadingMsg.querySelector('.chat-bubble').innerHTML = `<span style="color:#ef4444;">Unable to generate response. Please try again.</span>`;
         }
+        thread.scrollTop = thread.scrollHeight;
     })
-    .catch(() => { responseText.textContent = 'Network error. Please try again.'; });
-}
-
-function addSingleTask() {
-    if (!aiPageTitle) return;
-    fetch('/api/ai/create-task/', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
-        body: JSON.stringify({
-            title: aiPageTitle,
-            description: aiPageDesc,
-            priority: 'moderate',
-            category_id: document.getElementById('ai-page-project').value || null
-        })
-    }).then(r => r.json()).then(d => {
-        if (d.success) showToast('✅ ' + d.message, 'success');
-        else showToast('❌ Failed: ' + d.error, 'error');
+    .catch(() => {
+        const loadingMsg = document.getElementById(loadingId);
+        if (loadingMsg) {
+            loadingMsg.querySelector('.chat-bubble').innerHTML = `<span style="color:#ef4444;">Network error. Please try again.</span>`;
+        }
     });
 }
 
-function bulkCreateTasks(projectId) {
-    const pid = projectId || document.getElementById('ai-page-project').value || null;
-    if (!aiPageTaskList.length) { showToast('No tasks parsed from AI response.', 'error'); return; }
+function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function createTasksFromChat(title, lines) {
+    const projectId = document.getElementById('chat-project-id').value || null;
+    const taskTitles = lines.map(l => l.replace(/^[\d\-\.\*\•]+\s*/, '').trim()).filter(l => l.length > 3);
+    
+    if (!taskTitles.length) taskTitles.push(title);
 
     let created = 0;
-    const promises = aiPageTaskList.slice(0, 8).map(title =>
+    const promises = taskTitles.slice(0, 6).map(t =>
         fetch('/api/ai/create-task/', {
             method: 'POST',
             headers: {'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
-            body: JSON.stringify({title, priority:'moderate', category_id: pid})
+            body: JSON.stringify({ title: t, priority: 'moderate', category_id: projectId })
         }).then(r => r.json()).then(d => { if(d.success) created++; })
     );
 
     Promise.all(promises).then(() => {
-        showToast(`✅ Created ${created} tasks successfully!`, 'success');
+        showToast(`✅ Created ${created} task(s) in TaskFlixx!`, 'success');
     });
 }
 
-function autoCreateProject(prompt, projectId) {
-    const projectName = prompt.split(' ').slice(0, 4).join(' ') + ' Project';
+function createProjectFromChat(prompt) {
+    const name = prompt.split(' ').slice(0, 4).join(' ') + ' Project';
     fetch('/api/ai/create-project/', {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
-        body: JSON.stringify({
-            name: projectName,
-            description: aiPageDesc.substring(0, 200),
-            color: '#3b82f6',
-            tasks: aiPageTaskList.slice(0, 8).map(t => ({title: t, priority: 'moderate'}))
-        })
-    }).then(r => r.json()).then(d => {
-        if (d.success) showToast(`✅ ${d.message}`, 'success');
-        else showToast('❌ Failed: ' + d.error, 'error');
+        body: JSON.stringify({ name: name, description: prompt })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) showToast(`🚀 Project '${name}' created successfully!`, 'success');
+        else showToast('Failed to create project', 'error');
     });
-}
-
-function showToast(msg, type) {
-    const t = document.getElementById('ai-toast');
-    t.textContent = msg;
-    t.className = 'ai-toast ' + (type === 'error' ? 'ai-toast-error' : 'ai-toast-success');
-    t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 3500);
 }
 </script>
 {% endblock %}

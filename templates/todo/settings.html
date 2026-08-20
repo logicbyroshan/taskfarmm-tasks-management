@@ -1,20 +1,21 @@
 {% extends 'todo/base.html' %}
 {% load static %}
 
-{% block title %}Settings - TaskMitra{% endblock title %}
+{% block title %}Settings - TaskFlixx{% endblock title %}
 
 {% block styles %}
-    <link rel="stylesheet" href="{% static 'todo/css/settings.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'todo/css/settings.css' %}?v=99">
 {% endblock styles %}
 
 {% block content %}
-<div class="page-header-bar" style="margin-bottom: 0;">
+<div class="page-header-bar">
     <div class="page-header-left">
         <h2><i class="fas fa-cog" style="color: var(--accent-color);"></i> Settings</h2>
-        <span style="font-size: 0.85rem; color: var(--text-muted);">Manage your profile, preferences, and account</span>
+        <p class="page-header-subtitle">Manage your profile, preferences, and account</p>
     </div>
 </div>
 
+<div class="settings-wrapper">
 <div class="settings-grid">
     <!-- Profile Information Card -->
     <article class="settings-card">
@@ -312,7 +313,7 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'taskmitra-stats.json';
+                    a.download = 'taskflixx-stats.json';
                     a.click();
                     URL.revokeObjectURL(url);
                 } else {
@@ -324,7 +325,7 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'taskmitra-stats.csv';
+                    a.download = 'taskflixx-stats.csv';
                     a.click();
                     URL.revokeObjectURL(url);
                 }

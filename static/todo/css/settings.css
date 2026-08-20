@@ -1,39 +1,49 @@
 /* 
 ==============================================
-SETTINGS PAGE STYLES
+SETTINGS PAGE STYLES — Pitch Black & Precise Layout
 ==============================================
 */
+
+/* Settings wrapper fills full height with scroll */
+.settings-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    padding-bottom: 16px;
+}
 
 .settings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 20px;
+    gap: 16px;
+    align-content: start;
 }
 
 .settings-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: #070709 !important;
+    border: 1px solid #1a1a1e !important;
     border-radius: var(--radius-lg);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    height: 100%;
 }
 
 .settings-card-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-color);
-    background: rgba(0, 0, 0, 0.2);
+    padding: 14px 18px;
+    border-bottom: 1px solid #1a1a1e;
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .settings-card-header h3 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--highlight-color);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .settings-card-header i {
@@ -41,10 +51,126 @@ SETTINGS PAGE STYLES
 }
 
 .settings-card-body {
-    padding: 20px;
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
+    flex: 1;
+}
+
+/* FORM SPACING & BOTTOM-ALIGNED BUTTONS */
+.settings-card-body form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    justify-content: space-between;
+}
+
+.settings-card-body .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+}
+
+.settings-card-body .form-group label {
+    font-size: 0.775rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.settings-card-body input[type="text"],
+.settings-card-body input[type="email"],
+.settings-card-body input[type="password"],
+.settings-card-body select {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    background: #111116;
+    border: 1px solid #22222a;
+    border-radius: var(--radius-md);
+    color: var(--text-color);
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: var(--transition);
+    box-sizing: border-box;
+}
+
+.settings-card-body input:focus,
+.settings-card-body select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Push Submit Buttons to Bottom of Cards */
+.settings-card-body .btn-submit {
+    margin-top: auto;
+    height: 38px;
+    padding: 0 16px;
+    background: var(--accent-gradient);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.825rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    transition: var(--transition);
+}
+
+.settings-card-body .btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* YOUR STATS 2x2 GRID LAYOUT */
+.stats-overview-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-top: 4px;
+}
+
+.stat-overview-item {
+    background: #0d0d12;
+    border: 1px solid #1c1c24;
+    border-radius: var(--radius-md);
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.stat-overview-num {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--highlight-color);
+}
+
+.stat-overview-label {
+    font-size: 0.725rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
 }
 
 /* Theme Selector Control */
@@ -59,13 +185,13 @@ SETTINGS PAGE STYLES
 
 .theme-option {
     flex: 1;
-    height: 36px;
-    padding: 0 12px;
+    height: 34px;
+    padding: 0 10px;
     border-radius: var(--radius-sm);
     background: transparent;
     border: none;
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: 0.825rem;
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
@@ -78,7 +204,6 @@ SETTINGS PAGE STYLES
 .theme-option:hover {
     color: var(--highlight-color);
     background: rgba(255, 255, 255, 0.05);
-    transform: none;
 }
 
 .theme-option.active {
@@ -92,26 +217,26 @@ SETTINGS PAGE STYLES
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 6px 0;
 }
 
 .setting-item span {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-color);
 }
 
 .setting-item p {
-    font-size: 0.8rem;
+    font-size: 0.775rem;
     color: var(--text-muted);
-    margin: 4px 0 0 0;
+    margin: 2px 0 0 0;
 }
 
 .switch {
     position: relative;
     display: inline-block;
-    width: 48px;
-    height: 26px;
+    width: 44px;
+    height: 24px;
     flex-shrink: 0;
 }
 
@@ -131,14 +256,14 @@ SETTINGS PAGE STYLES
     background-color: rgba(255, 255, 255, 0.12);
     border: 1px solid var(--border-color);
     transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 26px;
+    border-radius: 24px;
 }
 
 .slider:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
+    height: 16px;
+    width: 16px;
     left: 3px;
     bottom: 3px;
     background-color: #ffffff;
@@ -153,12 +278,12 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
-    transform: translateX(22px);
+    transform: translateX(20px);
 }
 
 /* Danger Zone */
 .danger-zone {
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
 .danger-zone .settings-card-header i {

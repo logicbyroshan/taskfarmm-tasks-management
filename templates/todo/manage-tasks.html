@@ -1,19 +1,57 @@
 {% extends 'todo/base.html' %}
 {% load static %}
 
-{% block title %}All Tasks - TaskMitra{% endblock title %}
+{% block title %}All Tasks - TaskFlixx{% endblock title %}
 
 {% block styles %}
     <link rel="stylesheet" href="{% static 'todo/css/my-tasks.css' %}?v=5">
 {% endblock styles %}
 
 {% block content %}
-<!-- Page Header -->
+<!-- Combined Header + Filter Bar -->
 <div class="page-header-bar">
     <div class="page-header-left">
         <h2><i class="fas fa-list-ul" style="color: var(--accent-color);"></i> All Tasks</h2>
-        <span class="task-total-badge">{{ task_count }} task{{ task_count|pluralize }}</span>
+        <p class="page-header-subtitle">{{ task_count }} task{{ task_count|pluralize }}</p>
     </div>
+
+    <form method="GET" action="{% url 'manage_tasks' %}" id="filter-form" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <select name="sort" id="sort" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:130px;">
+            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>↓ Newest</option>
+            <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>↑ Oldest</option>
+            <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>📅 Due Date</option>
+            <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>🔺 Priority</option>
+            <option value="title" {% if sort_by == 'title' %}selected{% endif %}>A–Z Title</option>
+        </select>
+        <select name="status" id="status" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:130px;">
+            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+            <option value="backlog" {% if status_filter == 'backlog' %}selected{% endif %}>Backlog</option>
+            <option value="not-started" {% if status_filter == 'not-started' %}selected{% endif %}>To Do</option>
+            <option value="in-progress" {% if status_filter == 'in-progress' %}selected{% endif %}>In Progress</option>
+            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Done</option>
+            <option value="on-hold" {% if status_filter == 'on-hold' %}selected{% endif %}>On Hold</option>
+            <option value="canceled" {% if status_filter == 'canceled' %}selected{% endif %}>Canceled</option>
+        </select>
+        <select name="priority" id="priority" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:120px;">
+            <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All Priorities</option>
+            <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>🔴 High</option>
+            <option value="moderate" {% if priority_filter == 'moderate' %}selected{% endif %}>🟡 Moderate</option>
+            <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>🟢 Low</option>
+        </select>
+        <select name="project" id="project" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:130px;">
+            <option value="all" {% if project_filter == 'all' %}selected{% endif %}>All Projects</option>
+            <option value="none" {% if project_filter == 'none' %}selected{% endif %}>No Project</option>
+            {% for proj in projects %}
+            <option value="{{ proj.id }}" {% if project_filter == proj.id|stringformat:"s" %}selected{% endif %}>{{ proj.name }}</option>
+            {% endfor %}
+        </select>
+        {% if status_filter != 'all' or priority_filter != 'all' or project_filter != 'all' or sort_by != 'newest' %}
+        <a href="{% url 'manage_tasks' %}" class="clear-filters-btn" title="Clear all filters">
+            <i class="fas fa-times"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+
     <div class="page-header-right">
         <button class="invite-btn" type="button" onclick="openAddTaskModal()">
             <i class="fas fa-plus"></i> Add Task
@@ -24,59 +62,6 @@
     </div>
 </div>
 
-<!-- Filter and Sort Bar -->
-<form method="GET" action="{% url 'manage_tasks' %}" id="filter-form">
-    <div class="filter-bar">
-        <div class="filter-options">
-            <div class="filter-group">
-                <label for="sort"><i class="fas fa-sort"></i> Sort:</label>
-                <select name="sort" id="sort" onchange="this.form.submit()">
-                    <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
-                    <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
-                    <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>Due Date</option>
-                    <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>Priority</option>
-                    <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title A-Z</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="status"><i class="fas fa-filter"></i> Status:</label>
-                <select name="status" id="status" onchange="this.form.submit()">
-                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
-                    <option value="backlog" {% if status_filter == 'backlog' %}selected{% endif %}>Backlog</option>
-                    <option value="not-started" {% if status_filter == 'not-started' %}selected{% endif %}>To Do</option>
-                    <option value="in-progress" {% if status_filter == 'in-progress' %}selected{% endif %}>In Progress</option>
-                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Done</option>
-                    <option value="on-hold" {% if status_filter == 'on-hold' %}selected{% endif %}>On Hold</option>
-                    <option value="canceled" {% if status_filter == 'canceled' %}selected{% endif %}>Canceled</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="priority"><i class="fas fa-flag"></i> Priority:</label>
-                <select name="priority" id="priority" onchange="this.form.submit()">
-                    <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All Priorities</option>
-                    <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
-                    <option value="moderate" {% if priority_filter == 'moderate' %}selected{% endif %}>Moderate</option>
-                    <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="project"><i class="fas fa-folder"></i> Project:</label>
-                <select name="project" id="project" onchange="this.form.submit()">
-                    <option value="all" {% if project_filter == 'all' %}selected{% endif %}>All Projects</option>
-                    <option value="none" {% if project_filter == 'none' %}selected{% endif %}>No Project</option>
-                    {% for proj in projects %}
-                    <option value="{{ proj.id }}" {% if project_filter == proj.id|stringformat:"s" %}selected{% endif %}>{{ proj.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            {% if status_filter != 'all' or priority_filter != 'all' or project_filter != 'all' or sort_by != 'newest' %}
-            <a href="{% url 'manage_tasks' %}" class="clear-filters-btn" title="Clear all filters">
-                <i class="fas fa-times"></i> Clear
-            </a>
-            {% endif %}
-        </div>
-    </div>
-</form>
 
 <!-- Tasks Grid -->
 <div id="my-tasks-grid">
