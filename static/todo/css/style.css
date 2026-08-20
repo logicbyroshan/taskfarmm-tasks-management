@@ -2827,12 +2827,47 @@ select.form-control {
     box-shadow: 0 4px 16px rgba(59,130,246,0.35);
 }
 
-@media (max-width: 1100px) {
-    .ai-page-grid { grid-template-columns: 1fr; }
-}
-
 @media (max-width: 768px) {
     .ai-side-drawer { width: 100vw; }
     .ai-action-cards { grid-template-columns: 1fr; }
     .ai-mode-row { flex-direction: column; }
+}
+
+/* ==============================================================================
+ * UNIFIED PAGE HEADER BAR COMPONENT
+ * ============================================================================== */
+.page-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #09090b;
+    border: 1px solid #1a1a1e;
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.page-header-left h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-header-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.825rem;
+    color: #a1a1aa;
+}
+
+.page-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
