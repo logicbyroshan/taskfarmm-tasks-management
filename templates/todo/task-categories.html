@@ -9,14 +9,16 @@
 {% endblock styles %}
 
 {% block content %}
-<div class="category-header">
-    <div class="page-title-box">
-        <h2><i class="fas fa-folder-open" style="color: var(--accent-color); margin-right: 10px;"></i>Manage Projects</h2>
-        <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.875rem;">Click any project to view its dedicated Kanban task board.</p>
+<div class="page-header-bar">
+    <div class="page-header-left">
+        <h2><i class="fas fa-folder-open" style="color: var(--accent-color);"></i> Manage Projects</h2>
+        <p class="page-header-subtitle">Click any project to view its dedicated Kanban task board</p>
     </div>
-    <button class="invite-btn" id="add-category-btn" type="button" aria-label="Add new project">
-        <i class="fas fa-plus"></i> Add Project
-    </button>
+    <div class="page-header-right">
+        <button class="invite-btn" id="add-category-btn" type="button" aria-label="Add new project">
+            <i class="fas fa-plus"></i> Add Project
+        </button>
+    </div>
 </div>
 
 <!-- Container for all project cards -->

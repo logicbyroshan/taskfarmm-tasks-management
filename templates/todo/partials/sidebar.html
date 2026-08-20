@@ -47,16 +47,6 @@
                 <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
             </a>
         </div>
-
-        <!-- User profile at the very bottom -->
-        <div class="sidebar-profile">
-            <div class="profile-pic">
-                {{ user.username|slice:":1"|upper }}
-            </div>
-            <div class="profile-info">
-                <span class="profile-name">{{ user.get_full_name|default:user.username }}</span>
-            </div>
-        </div>
     </div>
     {% else %}
     <div class="login-prompt">
