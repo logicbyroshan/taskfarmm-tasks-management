@@ -1,0 +1,268 @@
+{% extends 'todo/base.html' %}
+{% load static %}
+
+{% block title %}AI Assistant - TaskMitra{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="page-header-left">
+        <h2><i class="fas fa-robot" style="color:#3b82f6;"></i> AI Assistant</h2>
+        <span class="task-total-badge">Smart Automation</span>
+    </div>
+</div>
+
+<div class="ai-page-grid">
+    <!-- Left: Prompt Panel -->
+    <div class="ai-left-panel">
+        <!-- Quick Action Cards -->
+        <div class="ai-action-cards">
+            <button class="ai-action-card" onclick="loadAiTemplate('project')">
+                <div class="ai-action-icon" style="background:rgba(59,130,246,0.15);color:#60a5fa;"><i class="fas fa-folder-plus"></i></div>
+                <div><strong>Create Project</strong><span>Auto-generate a project with tasks</span></div>
+            </button>
+            <button class="ai-action-card" onclick="loadAiTemplate('tasks')">
+                <div class="ai-action-icon" style="background:rgba(139,92,246,0.15);color:#a78bfa;"><i class="fas fa-list-check"></i></div>
+                <div><strong>Generate Tasks</strong><span>AI suggests a task list for your goal</span></div>
+            </button>
+            <button class="ai-action-card" onclick="loadAiTemplate('breakdown')">
+                <div class="ai-action-icon" style="background:rgba(16,185,129,0.15);color:#34d399;"><i class="fas fa-sitemap"></i></div>
+                <div><strong>Break Down Work</strong><span>Split big tasks into subtasks</span></div>
+            </button>
+            <button class="ai-action-card" onclick="loadAiTemplate('plan')">
+                <div class="ai-action-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24;"><i class="fas fa-rocket"></i></div>
+                <div><strong>Launch Plan</strong><span>Get a step-by-step launch checklist</span></div>
+            </button>
+        </div>
+
+        <!-- Prompt Area -->
+        <div class="ai-prompt-card">
+            <label class="ai-section-label">Tell AI what you need</label>
+            <textarea id="ai-page-prompt" class="form-control" rows="4"
+                placeholder="e.g. I'm building an e-commerce website. Generate a full project plan with tasks..."></textarea>
+
+            <div class="ai-mode-row">
+                <div class="form-group" style="flex:1;margin:0;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);">Output Mode</label>
+                    <select id="ai-output-mode" class="form-control">
+                        <option value="suggest">Suggest Tasks (show first)</option>
+                        <option value="create_tasks">Auto-Create Tasks</option>
+                        <option value="create_project">Auto-Create Project + Tasks</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1;margin:0;">
+                    <label style="font-size:0.8rem;color:var(--text-muted);">Assign to Project</label>
+                    <select id="ai-page-project" class="form-control">
+                        <option value="">No Project</option>
+                        {% for proj in projects %}
+                        <option value="{{ proj.id }}">{{ proj.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <button type="button" class="btn-submit" style="width:100%;" onclick="runAiPage()">
+                <i class="fas fa-wand-magic-sparkles"></i> Run AI Assistant
+            </button>
+        </div>
+
+        <!-- Response Area -->
+        <div id="ai-page-response-wrap" style="display:none;" class="ai-response-card">
+            <div class="ai-response-header">
+                <span><i class="fas fa-lightbulb"></i> <span id="ai-page-response-title">AI Output</span></span>
+                <div id="ai-page-action-btns" style="display:flex;gap:8px;"></div>
+            </div>
+            <div id="ai-page-response-text" class="ai-page-response-text"></div>
+            <div id="ai-task-list-preview" style="display:none;margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <!-- Right: Context Panel -->
+    <div class="ai-right-panel">
+        <!-- Prompt Chips -->
+        <div class="ai-drawer-section">
+            <p class="ai-section-label">Quick Prompts</p>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                {% for chip in prompt_chips %}
+                <button class="ai-page-chip" onclick="setAiPagePrompt('{{ chip.prompt }}')">
+                    <i class="{{ chip.icon }}"></i> {{ chip.label }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Tasks for context -->
+        {% if recent_tasks %}
+        <div class="ai-drawer-section">
+            <p class="ai-section-label">Recent Tasks (for context)</p>
+            <div style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;">
+                {% for task in recent_tasks %}
+                <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#18181b;border-radius:6px;border:1px solid var(--border-color);">
+                    <span class="priority {{ task.priority }}" style="font-size:0.65rem;padding:2px 6px;">{{ task.get_priority_display }}</span>
+                    <span style="font-size:0.8rem;color:var(--text-color);flex:1;">{{ task.title|truncatechars:35 }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div id="ai-toast" class="ai-toast" style="display:none;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const AI_CHIPS = [
+    {label:"Website Launch Plan", icon:"fas fa-rocket", prompt:"Create a complete website launch plan with all necessary tasks including SEO, performance, and deployment."},
+    {label:"E-commerce Store Setup", icon:"fas fa-store", prompt:"Generate a task list for setting up an e-commerce store from scratch."},
+    {label:"Mobile App Development", icon:"fas fa-mobile-alt", prompt:"Create a project plan for building a mobile app with design, development and launch tasks."},
+    {label:"Marketing Campaign", icon:"fas fa-bullhorn", prompt:"Create a marketing campaign execution plan with social media, email and advertising tasks."},
+    {label:"Team Onboarding Process", icon:"fas fa-users", prompt:"Generate an HR onboarding checklist for a new team member joining the company."},
+    {label:"Product Launch Checklist", icon:"fas fa-box-open", prompt:"Create a product launch checklist covering development, marketing, sales and support."},
+    {label:"Blog & Content Strategy", icon:"fas fa-pen-nib", prompt:"Generate a content marketing strategy with writing, SEO and publishing tasks."},
+    {label:"DevOps Setup", icon:"fas fa-server", prompt:"Create a DevOps setup plan including CI/CD, monitoring, backups and deployment pipelines."},
+];
+
+// Render chips on load
+document.addEventListener('DOMContentLoaded', () => {
+    const chipsWrap = document.querySelector('.ai-right-panel .ai-drawer-section:first-child div');
+    if (!chipsWrap) return;
+    chipsWrap.innerHTML = AI_CHIPS.map(c =>
+        `<button class="ai-page-chip" onclick="setAiPagePrompt('${c.prompt.replace(/'/g,"\\'")}')"><i class="${c.icon}"></i> ${c.label}</button>`
+    ).join('');
+});
+
+function setAiPagePrompt(text) {
+    document.getElementById('ai-page-prompt').value = text;
+    document.getElementById('ai-page-prompt').focus();
+}
+
+function loadAiTemplate(type) {
+    const templates = {
+        project: "Create a new project called 'My New Project' with 6 key tasks to complete it successfully.",
+        tasks: "Generate a prioritized task list to help me achieve my goal. Focus on actionable steps.",
+        breakdown: "Break down a complex feature into smaller subtasks: Implement user authentication with JWT tokens.",
+        plan: "Create a comprehensive step-by-step launch plan for a SaaS product including all pre-launch and post-launch tasks."
+    };
+    setAiPagePrompt(templates[type]);
+}
+
+let aiPageTitle = '', aiPageDesc = '', aiPageTaskList = [];
+
+function runAiPage() {
+    const prompt = document.getElementById('ai-page-prompt').value.trim();
+    if (!prompt) { showToast('Please enter a prompt first.', 'error'); return; }
+
+    const mode = document.getElementById('ai-output-mode').value;
+    const projectId = document.getElementById('ai-page-project').value;
+    const responseWrap = document.getElementById('ai-page-response-wrap');
+    const responseText = document.getElementById('ai-page-response-text');
+    const actionBtns = document.getElementById('ai-page-action-btns');
+
+    responseWrap.style.display = 'block';
+    responseText.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#60a5fa;"></i> AI is thinking...';
+    actionBtns.innerHTML = '';
+    document.getElementById('ai-task-list-preview').style.display = 'none';
+
+    fetch('/api/ai/suggest/', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrfToken(),'X-Requested-With':'XMLHttpRequest'},
+        body: JSON.stringify({prompt})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            aiPageTitle = data.title || 'AI Suggestion';
+            aiPageDesc = data.suggestion || data.description || '';
+            document.getElementById('ai-page-response-title').textContent = aiPageTitle;
+
+            // Parse lines as task list
+            aiPageTaskList = aiPageDesc.split('\n')
+                .filter(l => l.trim())
+                .map(l => l.replace(/^[\d\-\.\*\•]+\s*/, '').trim())
+                .filter(l => l.length > 5);
+
+            responseText.innerHTML = aiPageDesc.split('\n').filter(l=>l.trim()).map(l =>
+                `<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.875rem;">${l}</div>`
+            ).join('');
+
+            // Build action buttons
+            if (mode === 'suggest') {
+                actionBtns.innerHTML = `
+                    <button class="ai-chip" style="padding:4px 12px;font-size:0.75rem;" onclick="addSingleTask()"><i class="fas fa-plus"></i> Add as Task</button>
+                    <button class="ai-chip" style="padding:4px 12px;font-size:0.75rem;background:rgba(139,92,246,0.15);color:#a78bfa;border-color:rgba(139,92,246,0.3);" onclick="bulkCreateTasks()"><i class="fas fa-layer-group"></i> Create All as Tasks</button>
+                `;
+            } else if (mode === 'create_tasks') {
+                bulkCreateTasks(projectId);
+            } else if (mode === 'create_project') {
+                autoCreateProject(prompt, projectId);
+            }
+        } else {
+            responseText.textContent = 'AI response failed. Please try again.';
+        }
+    })
+    .catch(() => { responseText.textContent = 'Network error. Please try again.'; });
+}
+
+function addSingleTask() {
+    if (!aiPageTitle) return;
+    fetch('/api/ai/create-task/', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
+        body: JSON.stringify({
+            title: aiPageTitle,
+            description: aiPageDesc,
+            priority: 'moderate',
+            category_id: document.getElementById('ai-page-project').value || null
+        })
+    }).then(r => r.json()).then(d => {
+        if (d.success) showToast('✅ ' + d.message, 'success');
+        else showToast('❌ Failed: ' + d.error, 'error');
+    });
+}
+
+function bulkCreateTasks(projectId) {
+    const pid = projectId || document.getElementById('ai-page-project').value || null;
+    if (!aiPageTaskList.length) { showToast('No tasks parsed from AI response.', 'error'); return; }
+
+    let created = 0;
+    const promises = aiPageTaskList.slice(0, 8).map(title =>
+        fetch('/api/ai/create-task/', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
+            body: JSON.stringify({title, priority:'moderate', category_id: pid})
+        }).then(r => r.json()).then(d => { if(d.success) created++; })
+    );
+
+    Promise.all(promises).then(() => {
+        showToast(`✅ Created ${created} tasks successfully!`, 'success');
+    });
+}
+
+function autoCreateProject(prompt, projectId) {
+    const projectName = prompt.split(' ').slice(0, 4).join(' ') + ' Project';
+    fetch('/api/ai/create-project/', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
+        body: JSON.stringify({
+            name: projectName,
+            description: aiPageDesc.substring(0, 200),
+            color: '#3b82f6',
+            tasks: aiPageTaskList.slice(0, 8).map(t => ({title: t, priority: 'moderate'}))
+        })
+    }).then(r => r.json()).then(d => {
+        if (d.success) showToast(`✅ ${d.message}`, 'success');
+        else showToast('❌ Failed: ' + d.error, 'error');
+    });
+}
+
+function showToast(msg, type) {
+    const t = document.getElementById('ai-toast');
+    t.textContent = msg;
+    t.className = 'ai-toast ' + (type === 'error' ? 'ai-toast-error' : 'ai-toast-success');
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+</script>
+{% endblock %}

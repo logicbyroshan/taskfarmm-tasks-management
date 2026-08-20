@@ -23,11 +23,12 @@
                     <i class="fas fa-columns" aria-hidden="true"></i> Kanban Board
                 </a>
             </li>
-            <li>
-                <a href="#" onclick="openAiModal(); return false;" style="color: #60a5fa;">
+            <li class="{% if active_page == 'ai_assistant' %}active{% endif %}" style="border-left: 2px solid transparent; {% if active_page == 'ai_assistant' %}border-left-color: #3b82f6;{% endif %}">
+                <a href="{% url 'ai_assistant' %}" style="{% if active_page == 'ai_assistant' %}color: #60a5fa;{% endif %}">
                     <i class="fas fa-robot" aria-hidden="true" style="color: #3b82f6;"></i> AI Assistant
                 </a>
             </li>
+
         </ul>
     </nav>
     

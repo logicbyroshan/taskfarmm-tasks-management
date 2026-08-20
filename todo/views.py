@@ -70,11 +70,27 @@ def dashboard(request):
         due_date=today
     ).exclude(status__in=['completed', 'canceled']).count()
 
-    # Projects overview
+    # Projects overview with progress data
     projects = Category.objects.filter(user=request.user).annotate(
         task_count=Count('tasks'),
         completed_count=Count('tasks', filter=Q(tasks__status='completed'))
     )[:4]
+
+    # Build project_progress list for the progress dropdown in the dashboard
+    all_projects_progress = []
+    all_projects_qs = Category.objects.filter(user=request.user).annotate(
+        task_count=Count('tasks'),
+        completed_count=Count('tasks', filter=Q(tasks__status='completed'))
+    )
+    for proj in all_projects_qs:
+        prog = int((proj.completed_count / proj.task_count) * 100) if proj.task_count > 0 else 0
+        all_projects_progress.append({
+            'name': proj.name,
+            'color': proj.color,
+            'task_count': proj.task_count,
+            'completed_count': proj.completed_count,
+            'progress': prog,
+        })
 
     context = {
         'backlog_count': backlog_count,
@@ -90,6 +106,7 @@ def dashboard(request):
         'recent_tasks': recent_tasks,
         'recently_completed_tasks': recently_completed_tasks,
         'projects': projects,
+        'all_projects_progress': all_projects_progress,
         'active_page': 'dashboard',
     }
     return render(request, 'todo/index.html', context)
@@ -655,3 +672,126 @@ def api_ai_suggest(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': 'POST method required'}, status=405)
+
+
+# ==============================================================================
+#  AI ASSISTANT PAGE
+# ==============================================================================
+
+@login_required
+def ai_assistant_page(request):
+    """
+    Renders the dedicated AI Assistant page.
+    """
+    projects = Category.objects.filter(user=request.user).annotate(
+        task_count=Count('tasks')
+    )
+    recent_tasks = Task.objects.filter(user=request.user).order_by('-created_at')[:10]
+    context = {
+        'active_page': 'ai_assistant',
+        'projects': projects,
+        'recent_tasks': recent_tasks,
+    }
+    return render(request, 'todo/ai_assistant.html', context)
+
+
+@login_required
+def ai_create_task(request):
+    """
+    Creates a task directly from AI suggestion data posted from the AI assistant page.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            title = data.get('title', '').strip()
+            description = data.get('description', '').strip()
+            priority = data.get('priority', 'moderate')
+            status = data.get('status', 'not-started')
+            category_id = data.get('category_id')
+
+            if not title:
+                return JsonResponse({'success': False, 'error': 'Title is required'}, status=400)
+
+            category = None
+            if category_id:
+                try:
+                    category = Category.objects.get(pk=category_id, user=request.user)
+                except Category.DoesNotExist:
+                    pass
+
+            task = Task.objects.create(
+                user=request.user,
+                title=title,
+                description=description,
+                priority=priority if priority in ['high', 'moderate', 'low'] else 'moderate',
+                status=status if status in Task.Status.values else 'not-started',
+                category=category,
+            )
+            return JsonResponse({
+                'success': True,
+                'message': f'Task "{task.title}" created successfully!',
+                'task_id': task.id,
+                'task_title': task.title,
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+
+
+@login_required
+def ai_create_project(request):
+    """
+    Creates a project/category directly from AI suggestion data.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name', '').strip()
+            description = data.get('description', '').strip()
+            color = data.get('color', '#3b82f6')
+            tasks_to_create = data.get('tasks', [])  # List of task titles/dicts
+
+            if not name:
+                return JsonResponse({'success': False, 'error': 'Project name is required'}, status=400)
+
+            # Validate hex color
+            import re
+            if not re.match(r'^#[0-9A-Fa-f]{6}$', color):
+                color = '#3b82f6'
+
+            project = Category.objects.create(
+                user=request.user,
+                name=name,
+                description=description,
+                color=color,
+            )
+
+            created_tasks = []
+            for task_data in tasks_to_create[:10]:  # Max 10 tasks at a time
+                if isinstance(task_data, str):
+                    task_title = task_data
+                    task_priority = 'moderate'
+                else:
+                    task_title = task_data.get('title', '')
+                    task_priority = task_data.get('priority', 'moderate')
+
+                if task_title:
+                    t = Task.objects.create(
+                        user=request.user,
+                        title=task_title,
+                        priority=task_priority,
+                        status='not-started',
+                        category=project,
+                    )
+                    created_tasks.append({'id': t.id, 'title': t.title})
+
+            return JsonResponse({
+                'success': True,
+                'message': f'Project "{project.name}" created with {len(created_tasks)} tasks!',
+                'project_id': project.id,
+                'project_name': project.name,
+                'tasks_created': created_tasks,
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    return JsonResponse({'success': False, 'error': 'POST required'}, status=405)

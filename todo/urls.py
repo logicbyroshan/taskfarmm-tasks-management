@@ -12,6 +12,7 @@ urlpatterns = [
     path('projects/', views.task_categories, name='manage_projects'),
     path('categories/', views.task_categories, name='task_categories'),
     path('kanban/', views.manage_kanban, name='manage_kanban'),
+    path('ai-assistant/', views.ai_assistant_page, name='ai_assistant'),
     path('settings/', views.settings_page, name='settings'),
     path('logout/', views.logout_view, name='logout'),
 
@@ -39,4 +40,6 @@ urlpatterns = [
     path('api/auth/create-session/', api_auth.api_create_session, name='api_create_session'),
     path('api/auth/user-info/', api_auth.api_user_info, name='api_user_info'),
     path('api/ai/suggest/', views.api_ai_suggest, name='api_ai_suggest'),
+    path('api/ai/create-task/', views.ai_create_task, name='ai_create_task'),
+    path('api/ai/create-project/', views.ai_create_project, name='ai_create_project'),
 ]

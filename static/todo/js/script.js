@@ -352,32 +352,98 @@ function setupPWA() {
 }
 
 /* ==============================================================================
- *  TASKFLIX AI ASSISTANT INTERACTIVE CONTROLLER
+ *  TASKMITRA AI SIDE DRAWER
  * ============================================================================== */
 
-function openAiModal() {
-    const modal = document.getElementById('ai-assistant-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        const promptInput = document.getElementById('ai-prompt-input');
-        if (promptInput) promptInput.focus();
-    }
+function openAiDrawer() {
+    document.getElementById('ai-side-drawer')?.classList.add('open');
+    document.getElementById('ai-drawer-overlay')?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('ai-drawer-prompt')?.focus(), 350);
 }
 
-function closeAiModal() {
-    const modal = document.getElementById('ai-assistant-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+function closeAiDrawer() {
+    document.getElementById('ai-side-drawer')?.classList.remove('open');
+    document.getElementById('ai-drawer-overlay')?.classList.remove('open');
+    document.body.style.overflow = '';
 }
 
-function setAiPrompt(text) {
-    const input = document.getElementById('ai-prompt-input');
-    if (input) {
-        input.value = text;
-        generateAiResponse();
-    }
+// Close drawer on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAiDrawer();
+});
+
+function setAiDrawerPrompt(text) {
+    const input = document.getElementById('ai-drawer-prompt');
+    if (input) { input.value = text; input.focus(); }
 }
+
+let drawerAiTitle = '', drawerAiDesc = '';
+
+function generateAiDrawerResponse() {
+    const input = document.getElementById('ai-drawer-prompt');
+    const responseBox = document.getElementById('ai-drawer-response');
+    const responseText = document.getElementById('ai-drawer-response-text');
+    if (!input || !input.value.trim()) return;
+    const query = input.value.trim();
+
+    responseBox.style.display = 'flex';
+    responseText.textContent = '⚡ Thinking...';
+
+    fetch('/api/ai/suggest/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken(), 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ prompt: query })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            drawerAiTitle = data.title || 'AI Suggestion';
+            drawerAiDesc = data.suggestion || data.description || '';
+            responseText.textContent = `💡 ${drawerAiTitle}\n\n${drawerAiDesc}`;
+        } else {
+            simulateLocalAiFallback_drawer(query);
+        }
+    })
+    .catch(() => simulateLocalAiFallback_drawer(query));
+}
+
+function simulateLocalAiFallback_drawer(query) {
+    const responseText = document.getElementById('ai-drawer-response-text');
+    const q = query.toLowerCase();
+    let title, desc;
+    if (q.includes('website') || q.includes('launch')) {
+        title = 'Website Launch Plan';
+        desc = '1. Finalize DNS & SSL setup\n2. Cross-browser QA audit\n3. Performance & Lighthouse check\n4. Deploy migrations & go live\n5. Monitor uptime & errors';
+    } else if (q.includes('marketing') || q.includes('campaign')) {
+        title = 'Marketing Campaign Plan';
+        desc = '1. Define audience & objectives\n2. Create content calendar\n3. Set up ad creatives & A/B tests\n4. Launch & monitor metrics\n5. Analyse & optimise';
+    } else {
+        title = 'AI Workflow Plan';
+        desc = `Action plan for "${query}":\n- Priority: High\n- Estimate: 3-5 hours\n- Steps: Research, plan, execute, review`;
+    }
+    drawerAiTitle = title;
+    drawerAiDesc = desc;
+    if (responseText) responseText.textContent = `💡 ${title}\n\n${desc}`;
+}
+
+function applyAiDrawerToTask() {
+    closeAiDrawer();
+    window.openAddTaskModal && window.openAddTaskModal();
+    setTimeout(() => {
+        const titleInput = document.querySelector('#add-task-form input[name="title"]');
+        const descInput = document.querySelector('#add-task-form textarea[name="description"]');
+        if (titleInput && drawerAiTitle) titleInput.value = drawerAiTitle;
+        if (descInput && drawerAiDesc) descInput.value = drawerAiDesc;
+    }, 250);
+}
+
+// Keep backward compatibility
+function openAiModal() { openAiDrawer(); }
+function closeAiModal() { closeAiDrawer(); }
+function setAiPrompt(text) { setAiDrawerPrompt(text); openAiDrawer(); }
+
+
 
 let lastGeneratedAiTitle = "";
 let lastGeneratedAiDesc = "";

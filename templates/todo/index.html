@@ -100,20 +100,55 @@
 
     <!-- Right Sidebar Content -->
     <div class="dash-right">
-        <!-- Completion Rate -->
+        <!-- Completion Rate Card with project-wise toggle -->
         <div class="completion-card">
             <div class="completion-header">
-                <span>Overall Progress</span>
-                <span class="completion-pct">{{ completion_rate }}%</span>
+                <span id="progress-view-label">Overall Progress</span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="progress-view-toggle">
+                        <button class="progress-toggle-btn active" id="btn-overall" onclick="switchProgress('overall')">Overall</button>
+                        <button class="progress-toggle-btn" id="btn-projects" onclick="switchProgress('projects')">By Project</button>
+                    </div>
+                    <span class="completion-pct" id="progress-pct-display">{{ completion_rate }}%</span>
+                </div>
             </div>
-            <div class="progress-bar-container">
-                <div class="progress-bar" style="width: {{ completion_rate }}%; background: var(--accent-gradient);"></div>
+
+            <!-- Overall Progress Bar (default visible) -->
+            <div id="overall-progress-view">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: {{ completion_rate }}%;"></div>
+                </div>
+                <div class="completion-meta">
+                    <span><i class="fas fa-calendar-day" style="color:#60a5fa;"></i> {{ due_today_count }} due today</span>
+                    <span><i class="fas fa-exclamation-circle" style="color:#f87171;"></i> {{ overdue_count }} overdue</span>
+                </div>
             </div>
-            <div class="completion-meta">
-                <span><i class="fas fa-calendar-day" style="color: #60a5fa;"></i> {{ due_today_count }} due today</span>
-                <span><i class="fas fa-exclamation-circle" style="color: #f87171;"></i> {{ overdue_count }} overdue</span>
+
+            <!-- Project-wise Progress (hidden by default) -->
+            <div id="project-progress-view" style="display:none;">
+                {% if all_projects_progress %}
+                <div class="project-progress-list">
+                    {% for p in all_projects_progress %}
+                    <div class="project-progress-row">
+                        <div class="project-progress-label">
+                            <span style="display:flex;align-items:center;gap:6px;">
+                                <span style="width:8px;height:8px;border-radius:50%;background:{{ p.color }};display:inline-block;flex-shrink:0;"></span>
+                                {{ p.name }}
+                            </span>
+                            <span style="color:var(--text-muted);">{{ p.completed_count }}/{{ p.task_count }} &nbsp;<strong style="color:{{ p.color }};">{{ p.progress }}%</strong></span>
+                        </div>
+                        <div class="project-progress-bar">
+                            <div class="project-progress-fill" style="width:{{ p.progress }}%;background:{{ p.color }};"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:8px 0;">No projects yet. <a href="{% url 'project_create' %}" style="color:var(--accent-color);">Create one</a></p>
+                {% endif %}
             </div>
         </div>
+
 
         <!-- Task Status Overview -->
         <section class="task-status-cards" aria-labelledby="status-heading">
@@ -216,6 +251,29 @@
             }
         })
         .catch(err => console.error('Error toggling task:', err));
+    }
+
+    function switchProgress(view) {
+        const overall = document.getElementById('overall-progress-view');
+        const project = document.getElementById('project-progress-view');
+        const label   = document.getElementById('progress-view-label');
+        const pctEl   = document.getElementById('progress-pct-display');
+        const btnO    = document.getElementById('btn-overall');
+        const btnP    = document.getElementById('btn-projects');
+
+        if (view === 'overall') {
+            overall.style.display = '';
+            project.style.display = 'none';
+            label.textContent = 'Overall Progress';
+            btnO.classList.add('active'); btnP.classList.remove('active');
+            pctEl.style.display = '';
+        } else {
+            overall.style.display = 'none';
+            project.style.display = '';
+            label.textContent = 'Project Progress';
+            btnP.classList.add('active'); btnO.classList.remove('active');
+            pctEl.style.display = 'none';
+        }
     }
 </script>
 {% endblock scripts %}
