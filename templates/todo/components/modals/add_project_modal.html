@@ -1,0 +1,67 @@
+<!-- Add Project Modal -->
+<div id="category-modal" class="task-modal" style="display: none;">
+    <div class="modal-backdrop" onclick="document.getElementById('category-modal').style.display='none';"></div>
+    <div class="modal-content" style="background: #000000; border: 1px solid #27272a;">
+        <div class="modal-header">
+            <h3><i class="fas fa-folder-plus" style="color: var(--accent-color);"></i> Add New Project</h3>
+            <button id="category-modal-close-btn" class="close-modal" aria-label="Close" onclick="document.getElementById('category-modal').style.display='none';">&times;</button>
+        </div>
+        <form id="category-form" method="post" action="{% url 'project_create' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new_project_name"><i class="fas fa-tag"></i> Project Name *</label>
+                    <input type="text" id="new_project_name" name="name" required class="form-control" placeholder="e.g. Mobile App Redesign" style="background: #000000; border: 1px solid #27272a;">
+                </div>
+                <div class="form-group">
+                    <label for="new_project_color"><i class="fas fa-palette"></i> Theme Color</label>
+                    <input type="color" id="new_project_color" name="color" value="#3b82f6" class="form-control" style="height: 42px; background: #000000; border: 1px solid #27272a; cursor: pointer;">
+                </div>
+            </div>
+            <div class="modal-actions form-actions">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('category-modal').style.display='none';">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check"></i> Create Project
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div id="edit-category-modal" class="task-modal" style="display: none;">
+    <div class="modal-backdrop" onclick="document.getElementById('edit-category-modal').style.display='none';"></div>
+    <div class="modal-content" style="background: #000000; border: 1px solid #27272a;">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit" style="color: #60a5fa;"></i> Edit Project</h3>
+            <button class="close-modal" aria-label="Close" onclick="document.getElementById('edit-category-modal').style.display='none';">&times;</button>
+        </div>
+        <form id="edit-category-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="edit_project_id" name="project_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_project_name"><i class="fas fa-tag"></i> Project Name *</label>
+                    <input type="text" id="edit_project_name" name="name" required class="form-control" style="background: #000000; border: 1px solid #27272a;">
+                </div>
+                <div class="form-group">
+                    <label for="edit_project_color"><i class="fas fa-palette"></i> Theme Color</label>
+                    <input type="color" id="edit_project_color" name="color" class="form-control" style="height: 42px; background: #000000; border: 1px solid #27272a; cursor: pointer;">
+                </div>
+            </div>
+            <div class="modal-actions form-actions">
+                <button type="button" id="edit-project-delete-btn" class="btn-danger" style="margin-right: auto;">
+                    <i class="fas fa-trash"></i> Delete Project
+                </button>
+                <button type="button" class="btn-cancel" onclick="document.getElementById('edit-category-modal').style.display='none';">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

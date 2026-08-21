@@ -1,0 +1,67 @@
+<article class="category-card" 
+         id="project-card-{{ category.id }}" 
+         style="--category-color: {{ category.color }}; cursor: pointer;" 
+         onclick="navigateToProjectKanban({{ category.id }})"
+         x-data="{ dropdownOpen: false }">
+    <div class="category-header">
+        <div class="category-icon" style="background: {{ category.color }}20; color: {{ category.color }}; border-color: {{ category.color }}40;">
+            <i class="fas fa-folder"></i>
+        </div>
+        <div class="category-info">
+            <h3 class="category-name">{{ category.name }}</h3>
+            <span class="category-task-count">{{ category.task_count }} Task{{ category.task_count|pluralize }}</span>
+        </div>
+        <div class="category-menu-wrapper" style="position: relative;" @click.outside="dropdownOpen = false" onclick="event.stopPropagation();">
+            <button class="task-menu-btn category-options-btn" 
+                    type="button" 
+                    @click.stop="dropdownOpen = !dropdownOpen" 
+                    aria-label="Project options">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="category-options-dropdown" 
+                 x-show="dropdownOpen" 
+                 x-transition:enter="transition ease-out duration-100"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-75"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 style="display: none; position: absolute; right: 0; top: calc(100% + 6px); background: #000000; border: 1px solid #27272a; border-radius: 8px; padding: 5px; z-index: 99999; min-width: 150px; box-shadow: 0 12px 30px rgba(0,0,0,0.9);">
+                <a href="{% url 'manage_kanban' %}?project={{ category.id }}" class="dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #60a5fa; border-radius: 6px; text-decoration: none;">
+                    <i class="fas fa-columns"></i> View Kanban
+                </a>
+                <a href="{% url 'manage_tasks' %}?project={{ category.id }}" class="dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #a1a1aa; border-radius: 6px; text-decoration: none;">
+                    <i class="fas fa-list"></i> View Tasks
+                </a>
+                <button type="button" 
+                        class="dropdown-item edit-project-trigger-btn" 
+                        data-id="{{ category.id }}" 
+                        data-name="{{ category.name }}" 
+                        data-color="{{ category.color }}" 
+                        @click="dropdownOpen = false" 
+                        style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #e4e4e7; border-radius: 6px; text-align: left; cursor: pointer;">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button type="button" 
+                        class="dropdown-item delete-project-trigger-btn" 
+                        hx-post="{% url 'category_delete' category.id %}"
+                        hx-confirm="Are you sure you want to delete project '{{ category.name|escapejs }}'? All tasks will become unassigned."
+                        hx-target="#project-card-{{ category.id }}"
+                        hx-swap="outerHTML swap:0.3s"
+                        @click="dropdownOpen = false" 
+                        style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #f87171; border-radius: 6px; text-align: left; cursor: pointer;">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="category-progress">
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+            <span style="color: var(--text-muted);">Completion Progress</span>
+            <span style="font-weight: 700; color: {{ category.color }};">{{ category.progress }}%</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" style="width: {{ category.progress }}%; background-color: {{ category.color }};"></div>
+        </div>
+    </div>
+</article>

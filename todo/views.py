@@ -1,9 +1,9 @@
 # ----------------- Django Core Imports -----------------
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 # ----------------- Django Contrib Imports -----------------
 from django.contrib import messages
@@ -48,65 +48,42 @@ def dashboard(request):
     done_count = tasks.filter(status='completed').count()
     on_hold_count = tasks.filter(status='on-hold').count()
     canceled_count = tasks.filter(status='canceled').count()
-    total_count = tasks.count()
 
-    # Completion rate
-    completion_rate = int((done_count / total_count) * 100) if total_count > 0 else 0
+    total_tasks = tasks.count()
+    completion_rate = int((done_count / total_tasks) * 100) if total_tasks > 0 else 0
 
-    # Get the 5 most recent non-completed tasks
-    recent_tasks = tasks.exclude(status='completed').order_by('-created_at')[:5]
-
-    # Get the 3 most recently completed tasks
-    recently_completed_tasks = tasks.filter(status='completed').order_by('-completed_at')[:3]
-
-    # Overdue tasks (due_date < today and not completed)
+    # Overdue tasks
     today = timezone.now().date()
     overdue_count = tasks.filter(
         due_date__lt=today
     ).exclude(status__in=['completed', 'canceled']).count()
 
-    # Tasks due today
-    due_today_count = tasks.filter(
-        due_date=today
-    ).exclude(status__in=['completed', 'canceled']).count()
+    # Recent tasks (last 5)
+    recent_tasks = tasks.order_by('-created_at')[:6]
 
-    # Projects overview with progress data
-    projects = Category.objects.filter(user=request.user).annotate(
-        task_count=Count('tasks'),
-        completed_count=Count('tasks', filter=Q(tasks__status='completed'))
-    )[:4]
-
-    # Build project_progress list for the progress dropdown in the dashboard
-    all_projects_progress = []
-    all_projects_qs = Category.objects.filter(user=request.user).annotate(
+    # Category completion stats (for project toggle breakdown)
+    category_stats = Category.objects.filter(user=request.user).annotate(
         task_count=Count('tasks'),
         completed_count=Count('tasks', filter=Q(tasks__status='completed'))
     )
-    for proj in all_projects_qs:
-        prog = int((proj.completed_count / proj.task_count) * 100) if proj.task_count > 0 else 0
-        all_projects_progress.append({
-            'name': proj.name,
-            'color': proj.color,
-            'task_count': proj.task_count,
-            'completed_count': proj.completed_count,
-            'progress': prog,
-        })
+    for cat in category_stats:
+        if cat.task_count > 0:
+            cat.progress = int((cat.completed_count / cat.task_count) * 100)
+        else:
+            cat.progress = 0
 
     context = {
+        'total_tasks': total_tasks,
         'backlog_count': backlog_count,
         'to_do_count': to_do_count,
         'in_progress_count': in_progress_count,
         'done_count': done_count,
         'on_hold_count': on_hold_count,
         'canceled_count': canceled_count,
-        'total_count': total_count,
         'completion_rate': completion_rate,
         'overdue_count': overdue_count,
-        'due_today_count': due_today_count,
         'recent_tasks': recent_tasks,
-        'recently_completed_tasks': recently_completed_tasks,
-        'projects': projects,
-        'all_projects_progress': all_projects_progress,
+        'category_stats': category_stats,
         'active_page': 'dashboard',
     }
     return render(request, 'todo/index.html', context)
@@ -115,8 +92,8 @@ def dashboard(request):
 @login_required
 def manage_tasks(request):
     """
-    Displays a grid/list of ALL tasks belonging to the current user (Unorganized view).
-    Supports search, filtering and sorting via GET params.
+    Displays a grid/list of ALL tasks belonging to the current user.
+    Supports live HTMX search, filtering, and sorting without page reloads.
     """
     tasks = Task.objects.filter(user=request.user)
 
@@ -166,6 +143,11 @@ def manage_tasks(request):
         'task_count': tasks.count(),
         'active_page': 'manage_tasks',
     }
+
+    # If requested via HTMX, return only the task list partial
+    if request.headers.get('HX-Request'):
+        return render(request, 'todo/components/task_list_partial.html', context)
+
     return render(request, 'todo/manage-tasks.html', context)
 
 
@@ -419,12 +401,45 @@ def task_update(request, pk):
 
 
 @login_required
+@require_http_methods(['POST'])
+def task_toggle_status(request, pk):
+    """
+    Toggles a task between completed (DONE) and not-started / previous status.
+    Returns the updated task_card.html component when requested via HTMX.
+    """
+    task = get_object_or_404(Task, pk=pk, user=request.user)
+    if task.status == Task.Status.DONE:
+        task.status = Task.Status.TO_DO
+        task.completed_at = None
+    else:
+        task.status = Task.Status.DONE
+        task.completed_at = timezone.now()
+    task.save()
+
+    if request.headers.get('HX-Request'):
+        return render(request, 'todo/components/task_card.html', {'task': task})
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'task': {
+                'id': task.id,
+                'status': task.status,
+                'is_completed': task.status == Task.Status.DONE,
+            }
+        })
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+
+
+@login_required
 def task_delete(request, pk):
     """Deletes a task."""
     task = get_object_or_404(Task, pk=pk, user=request.user)
     if request.method == 'POST':
         task_title = task.title
         task.delete()
+        if request.headers.get('HX-Request'):
+            return HttpResponse('', status=200)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': f'Task "{task_title}" deleted.'})
         messages.success(request, f'Task "{task_title}" has been deleted.')
@@ -486,6 +501,8 @@ def category_delete(request, pk):
     if request.method == 'POST':
         category_name = category.name
         category.delete()
+        if request.headers.get('HX-Request'):
+            return HttpResponse('', status=200)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': f'Project "{category_name}" deleted.'})
         messages.success(request, f'Project "{category_name}" has been deleted.')

@@ -27,9 +27,13 @@
     <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=101">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
+    <!-- HTMX & Alpine.js -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.14.3/dist/cdn.min.js"></script>
+
     {% block styles %}{% endblock styles %}
 </head>
-<body>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     <!-- Dynamic Ambient Dot Wave Canvas Background -->
     <canvas id="bg-wave-canvas" class="bg-wave-canvas" aria-hidden="true"></canvas>
 
@@ -82,153 +86,13 @@
     </div>
 
     {% if user.is_authenticated %}
-    <!-- Add Task Modal -->
-    <div id="add-task-modal" class="task-modal" style="display: none;">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-plus-circle"></i> Add New Task</h3>
-                <button class="close-modal" aria-label="Close">&times;</button>
-            </div>
-            <form id="add-task-form" class="task-form" method="post" action="{% url 'task_create' %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="form-group form-grid-full">
-                        <label for="{{ task_create_form.title.id_for_label }}">
-                            <i class="fas fa-heading"></i> Task Title *
-                        </label>
-                        {{ task_create_form.title }}
-                    </div>
-                    <div class="form-group form-grid-full">
-                        <label for="{{ task_create_form.description.id_for_label }}">
-                            <i class="fas fa-align-left"></i> Description
-                        </label>
-                        {{ task_create_form.description }}
-                    </div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="{{ task_create_form.category.id_for_label }}">
-                                <i class="fas fa-folder"></i> Project
-                            </label>
-                            {{ task_create_form.category }}
-                        </div>
-                        <div class="form-group">
-                            <label for="{{ task_create_form.priority.id_for_label }}">
-                                <i class="fas fa-exclamation-circle"></i> Priority
-                            </label>
-                            {{ task_create_form.priority }}
-                        </div>
-                        <div class="form-group">
-                            <label for="{{ task_create_form.status.id_for_label }}">
-                                <i class="fas fa-tasks"></i> Status
-                            </label>
-                            {{ task_create_form.status }}
-                        </div>
-                        <div class="form-group">
-                            <label for="{{ task_create_form.due_date.id_for_label }}">
-                                <i class="fas fa-calendar-alt"></i> Due Date
-                            </label>
-                            {{ task_create_form.due_date }}
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-actions form-actions">
-                    <button type="button" class="btn-cancel">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i> Add Task
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Task Modal -->
-    <div id="edit-task-modal" class="task-modal" style="display: none;">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Task</h3>
-                <button class="close-modal" aria-label="Close">&times;</button>
-            </div>
-            <form id="edit-task-form" class="task-form" method="post">
-                {% csrf_token %}
-                <input type="hidden" id="edit-task-id" name="task_id">
-                <div class="modal-body">
-                    <div class="form-group form-grid-full">
-                        <label for="edit-title">
-                            <i class="fas fa-heading"></i> Task Title *
-                        </label>
-                        <input type="text" id="edit-title" name="title" required class="form-control">
-                    </div>
-                    <div class="form-group form-grid-full">
-                        <label for="edit-description">
-                            <i class="fas fa-align-left"></i> Description
-                        </label>
-                        <textarea id="edit-description" name="description" rows="4" class="form-control"></textarea>
-                    </div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="edit-category">
-                                <i class="fas fa-folder"></i> Project
-                            </label>
-                            <select id="edit-category" name="category" class="form-control">
-                                <option value="">No Category</option>
-                                {% for category in user.categories.all %}
-                                <option value="{{ category.id }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-priority">
-                                <i class="fas fa-exclamation-circle"></i> Priority
-                            </label>
-                            <select id="edit-priority" name="priority" class="form-control">
-                                <option value="low">Low</option>
-                                <option value="moderate">Moderate</option>
-                                <option value="high">High</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-status">
-                                <i class="fas fa-tasks"></i> Status
-                            </label>
-                            <select id="edit-status" name="status" class="form-control">
-                                <option value="backlog">Backlog</option>
-                                <option value="not-started">To Do</option>
-                                <option value="in-progress">In Progress</option>
-                                <option value="completed">Done</option>
-                                <option value="on-hold">On Hold</option>
-                                <option value="canceled">Canceled</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-due_date">
-                                <i class="fas fa-calendar-alt"></i> Due Date
-                            </label>
-                            <input type="date" id="edit-due_date" name="due_date" class="form-control">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-actions form-actions">
-                    <button type="button" id="edit-delete-btn" class="btn-danger" style="margin-right: auto;">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                    <button type="button" class="btn-cancel">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i> Update Task
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    {% include 'todo/components/modals/add_task_modal.html' %}
+    {% include 'todo/components/modals/edit_task_modal.html' %}
+    {% include 'todo/components/modals/add_project_modal.html' %}
     {% endif %}
+    {% include 'todo/components/toast_container.html' %}
 
-    <!-- TaskMitra Floating AI Assistant Widget -->
-    <!-- AI Side Drawer Overlay -->
+    <!-- TaskFlixx AI Side Drawer -->
     <div id="ai-drawer-overlay" class="ai-drawer-overlay" onclick="closeAiDrawer()"></div>
 
     <!-- AI Side Drawer Panel -->

@@ -1,0 +1,53 @@
+<!-- Predefined Task Templates Library Modal -->
+<div id="predefined-tasks-modal" class="task-modal" style="display: none;">
+    <div class="modal-backdrop" onclick="closePredefinedModal()"></div>
+    <div class="modal-content" style="max-width: 720px; max-height: 85vh; overflow-y: auto; background: #000000; border: 1px solid #27272a;">
+        <div class="modal-header">
+            <h3><i class="fas fa-magic" style="color: var(--accent-color);"></i> Task Template Library</h3>
+            <button class="close-modal" aria-label="Close" onclick="closePredefinedModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">
+                Browse pre-built task templates and add them directly into your active workspace.
+            </p>
+            
+            <!-- Category Filter Tabs -->
+            <div class="template-category-tabs" id="template-tabs" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
+                <button type="button" class="tab-btn active" data-category="all">All</button>
+                <button type="button" class="tab-btn" data-category="website">🌐 Website</button>
+                <button type="button" class="tab-btn" data-category="development">💻 Dev</button>
+                <button type="button" class="tab-btn" data-category="marketing">📣 Marketing</button>
+                <button type="button" class="tab-btn" data-category="design">🎨 Design</button>
+                <button type="button" class="tab-btn" data-category="operations">⚙️ Operations</button>
+                <button type="button" class="tab-btn" data-category="finance">💰 Finance</button>
+                <button type="button" class="tab-btn" data-category="hr">👥 HR</button>
+                <button type="button" class="tab-btn" data-category="general">📋 General</button>
+            </div>
+
+            <!-- Target Project Selector -->
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label for="predefined-project-select" style="font-size: 0.8rem; color: #a1a1aa; display: block; margin-bottom: 6px;">
+                    <i class="fas fa-folder"></i> Assign added templates to Project:
+                </label>
+                <select id="predefined-project-select" class="form-control" style="background: #000000; border: 1px solid #27272a;">
+                    <option value="">No Project (General)</option>
+                    {% for p in projects %}
+                    <option value="{{ p.id }}">{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Templates Dynamic Grid -->
+            <div id="predefined-tasks-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+                <div style="text-align: center; padding: 30px; color: var(--text-muted); grid-column: 1 / -1;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading templates...
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions form-actions">
+            <button type="button" class="btn-cancel" onclick="closePredefinedModal()">
+                <i class="fas fa-times"></i> Close
+            </button>
+        </div>
+    </div>
+</div>

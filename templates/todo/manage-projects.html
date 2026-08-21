@@ -4,7 +4,7 @@
 {% block title %}Manage Projects - TaskFlixx{% endblock title %}
 
 {% block styles %}
-    <link rel="stylesheet" href="{% static 'todo/css/task-categories.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'todo/css/task-categories.css' %}?v=101">
 {% endblock styles %}
 
 {% block content %}
@@ -14,7 +14,7 @@
         <p class="page-header-subtitle">{{ categories|length }} project{{ categories|length|pluralize }} · Track progress & Kanban workflows</p>
     </div>
     <div class="page-header-right">
-        <button class="invite-btn" id="add-category-btn" type="button" aria-label="Add new project">
+        <button class="invite-btn" type="button" aria-label="Add new project" onclick="openAddProjectModal()">
             <i class="fas fa-plus"></i> Add Project
         </button>
         <a href="{% url 'manage_kanban' %}" class="icon-btn" title="Open Kanban Board">
@@ -26,114 +26,22 @@
     </div>
 </div>
 
-<!-- Container for all project cards -->
+<!-- Project Cards Grid -->
 <div id="category-cards-container">
     {% for category in categories %}
-    <article class="category-card" style="--category-color: {{ category.color }}; cursor: pointer;" onclick="navigateToProjectKanban({{ category.id }})">
-        <div class="category-header">
-            <div class="category-icon" style="background: {{ category.color }}20; color: {{ category.color }}; border-color: {{ category.color }}40;"><i class="fas fa-folder"></i></div>
-            <div class="category-info">
-                <h3 class="category-name">{{ category.name }}</h3>
-                <span class="category-task-count">{{ category.task_count }} Task{{ category.task_count|pluralize }}</span>
-            </div>
-            <div class="category-menu-wrapper" style="position: relative;" onclick="event.stopPropagation();">
-                <button class="task-menu-btn category-options-btn" type="button" aria-label="Project options"><i class="fas fa-ellipsis-v"></i></button>
-                <div class="category-options-dropdown" style="display: none; position: absolute; right: 0; top: calc(100% + 6px); background: #000000; border: 1px solid #27272a; border-radius: 8px; padding: 5px; z-index: 9999; min-width: 150px; box-shadow: 0 12px 30px rgba(0,0,0,0.9);">
-                    <a href="{% url 'manage_kanban' %}?project={{ category.id }}" class="dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #60a5fa; border-radius: 6px; text-decoration: none;"><i class="fas fa-columns"></i> View Kanban</a>
-                    <a href="{% url 'manage_tasks' %}?project={{ category.id }}" class="dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #a1a1aa; border-radius: 6px; text-decoration: none;"><i class="fas fa-list"></i> View Tasks</a>
-                    <button type="button" class="dropdown-item edit-project-trigger-btn" data-id="{{ category.id }}" data-name="{{ category.name }}" data-color="{{ category.color }}" style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #e4e4e7; border-radius: 6px; text-align: left; cursor: pointer;"><i class="fas fa-edit"></i> Edit</button>
-                    <button type="button" class="dropdown-item delete-project-trigger-btn" onclick="confirmDeleteProject({{ category.id }}, '{{ category.name|escapejs }}')" style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #f87171; border-radius: 6px; text-align: left; cursor: pointer;"><i class="fas fa-trash"></i> Delete</button>
-                </div>
-            </div>
-        </div>
-        <div class="category-progress">
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
-                <span style="color: var(--text-muted);">Completion Progress</span>
-                <span style="font-weight: 700; color: {{ category.color }};">{{ category.progress }}%</span>
-            </div>
-            <div class="progress-bar-container">
-                <div class="progress-bar" style="width: {{ category.progress }}%; background-color: {{ category.color }};"></div>
-            </div>
-        </div>
-    </article>
+        {% include 'todo/components/project_card.html' with category=category %}
     {% empty %}
-    <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px; background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
-        <div class="empty-icon" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 12px;"><i class="fas fa-folder-plus"></i></div>
-        <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--highlight-color);">No Projects Yet</h4>
-        <p style="margin: 0 0 16px 0; color: var(--text-muted);">Click "Add Project" to start organizing your tasks into dedicated project boards.</p>
-        <button class="invite-btn" onclick="document.getElementById('add-category-btn').click();" type="button">
-            <i class="fas fa-plus"></i> Create First Project
-        </button>
-    </div>
+        <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px; background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+            <div class="empty-icon" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 12px;">
+                <i class="fas fa-folder-plus"></i>
+            </div>
+            <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--highlight-color);">No Projects Yet</h4>
+            <p style="margin: 0 0 16px 0; color: var(--text-muted);">Click "Add Project" to start organizing your tasks into dedicated project boards.</p>
+            <button class="invite-btn" onclick="openAddProjectModal()" type="button">
+                <i class="fas fa-plus"></i> Create First Project
+            </button>
+        </div>
     {% endfor %}
-</div>
-
-<!-- Add Project Modal -->
-<div id="category-modal" class="task-modal" style="display: none;">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content" style="background: #000000; border: 1px solid #27272a;">
-        <div class="modal-header">
-            <h3><i class="fas fa-folder-plus"></i> Add New Project</h3>
-            <button id="category-modal-close-btn" class="close-modal" aria-label="Close">&times;</button>
-        </div>
-        <form id="category-form" method="post" action="{% url 'project_create' %}">
-            {% csrf_token %}
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="id_name"><i class="fas fa-tag"></i> Project Name *</label>
-                    {{ form.name }}
-                </div>
-                <div class="form-group">
-                    <label for="id_color"><i class="fas fa-palette"></i> Theme Color</label>
-                    {{ form.color }}
-                </div>
-            </div>
-            <div class="modal-actions form-actions">
-                <button type="button" class="btn-cancel" id="category-modal-cancel-btn">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="submit" class="btn-submit">
-                    <i class="fas fa-check"></i> Create Project
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Edit Project Modal -->
-<div id="edit-category-modal" class="task-modal" style="display: none;">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content" style="background: #000000; border: 1px solid #27272a;">
-        <div class="modal-header">
-            <h3><i class="fas fa-edit"></i> Edit Project</h3>
-            <button id="edit-category-modal-close-btn" class="close-modal" aria-label="Close">&times;</button>
-        </div>
-        <form id="edit-category-form" method="post">
-            {% csrf_token %}
-            <input type="hidden" id="edit_project_id" name="project_id">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="edit_project_name"><i class="fas fa-tag"></i> Project Name *</label>
-                    <input type="text" id="edit_project_name" name="name" required class="form-control" style="background: #000000; border: 1px solid #27272a;">
-                </div>
-                <div class="form-group">
-                    <label for="edit_project_color"><i class="fas fa-palette"></i> Theme Color</label>
-                    <input type="color" id="edit_project_color" name="color" class="form-control" style="height: 42px; background: #000000; border: 1px solid #27272a; cursor: pointer;">
-                </div>
-            </div>
-            <div class="modal-actions form-actions">
-                <button type="button" id="edit-project-delete-btn" class="btn-danger" style="margin-right: auto;">
-                    <i class="fas fa-trash"></i> Delete Project
-                </button>
-                <button type="button" class="btn-cancel" id="edit-category-modal-cancel-btn">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="submit" class="btn-submit">
-                    <i class="fas fa-check"></i> Save Changes
-                </button>
-            </div>
-        </form>
-    </div>
 </div>
 {% endblock content %}
 
@@ -143,74 +51,20 @@
         window.location.href = "{% url 'manage_kanban' %}?project=" + projectId;
     }
 
-    function confirmDeleteProject(projectId, projectName) {
-        if (confirm(`Are you sure you want to delete project "${projectName}"? All tasks assigned to this project will become unassigned.`)) {
-            const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-            const formData = new FormData();
-            formData.append('csrfmiddlewaretoken', csrfToken);
-
-            fetch(`/category/${projectId}/delete/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    window.location.reload();
-                }
-            })
-            .catch(() => window.location.reload());
-        }
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
-        // Add Project Modal
-        const addCategoryBtn = document.getElementById('add-category-btn');
-        const categoryModal = document.getElementById('category-modal');
-        const closeModalBtn = document.getElementById('category-modal-close-btn');
-        const cancelModalBtn = document.getElementById('category-modal-cancel-btn');
-
-        if (categoryModal && addCategoryBtn) {
-            const openModal = () => { categoryModal.style.display = 'flex'; };
-            const closeModal = () => { categoryModal.style.display = 'none'; };
-
-            addCategoryBtn.addEventListener('click', openModal);
-            if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-            if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
-
-            categoryModal.addEventListener('click', function(event) {
-                if (event.target === categoryModal || event.target.classList.contains('modal-backdrop')) closeModal();
-            });
-        }
-
-        // Edit Project Modal
-        const editModal = document.getElementById('edit-category-modal');
-        const editCloseBtn = document.getElementById('edit-category-modal-close-btn');
-        const editCancelBtn = document.getElementById('edit-category-modal-cancel-btn');
-        const editForm = document.getElementById('edit-category-form');
-        const editName = document.getElementById('edit_project_name');
-        const editColor = document.getElementById('edit_project_color');
-        const editId = document.getElementById('edit_project_id');
-        const editDeleteBtn = document.getElementById('edit-project-delete-btn');
-
-        if (editDeleteBtn) {
-            editDeleteBtn.addEventListener('click', () => {
-                const id = editId ? editId.value : null;
-                const name = editName ? editName.value : 'Project';
-                if (id) confirmDeleteProject(id, name);
-            });
-        }
-
+        // Wire edit project trigger buttons
         document.querySelectorAll('.edit-project-trigger-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                document.querySelectorAll('.category-options-dropdown').forEach(d => d.style.display = 'none');
                 const id = this.dataset.id;
                 const name = this.dataset.name;
                 const color = this.dataset.color || '#3b82f6';
+                
+                const editModal = document.getElementById('edit-category-modal');
+                const editForm = document.getElementById('edit-category-form');
+                const editName = document.getElementById('edit_project_name');
+                const editColor = document.getElementById('edit_project_color');
+                const editId = document.getElementById('edit_project_id');
 
                 if (editForm) editForm.action = '/category/' + id + '/update/';
                 if (editId) editId.value = id;
@@ -218,42 +72,6 @@
                 if (editColor) editColor.value = color;
                 if (editModal) editModal.style.display = 'flex';
             });
-        });
-
-        if (editModal) {
-            const closeEdit = () => { editModal.style.display = 'none'; };
-            if (editCloseBtn) editCloseBtn.addEventListener('click', closeEdit);
-            if (editCancelBtn) editCancelBtn.addEventListener('click', closeEdit);
-            editModal.addEventListener('click', function(event) {
-                if (event.target === editModal || event.target.classList.contains('modal-backdrop')) closeEdit();
-            });
-        }
-
-        // Project card 3-dot menu toggle
-        document.querySelectorAll('.category-options-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const dropdown = this.nextElementSibling;
-                const isOpen = dropdown && dropdown.style.display === 'block';
-
-                document.querySelectorAll('.category-options-dropdown').forEach(d => d.style.display = 'none');
-
-                if (dropdown && !isOpen) {
-                    dropdown.style.display = 'block';
-                }
-            });
-        });
-
-        document.addEventListener('click', function() {
-            document.querySelectorAll('.category-options-dropdown').forEach(d => d.style.display = 'none');
-        });
-
-        document.addEventListener('keydown', function(event) {
-            if (event.key === "Escape") {
-                if (categoryModal) categoryModal.style.display = 'none';
-                if (editModal) editModal.style.display = 'none';
-                document.querySelectorAll('.category-options-dropdown').forEach(d => d.style.display = 'none');
-            }
         });
     });
 </script>

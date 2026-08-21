@@ -1,0 +1,94 @@
+<div class="stats-overview-component" x-data="{ showProjectBreakdown: false }">
+    <!-- Quick Statistics Cards -->
+    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div class="stat-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Total Tasks</span>
+                <h3 style="margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #ffffff;">{{ total_tasks }}</h3>
+            </div>
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fas fa-tasks"></i>
+            </div>
+        </div>
+
+        <div class="stat-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">In Progress</span>
+                <h3 style="margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #f59e0b;">{{ in_progress_count }}</h3>
+            </div>
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+        </div>
+
+        <div class="stat-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Completed</span>
+                <h3 style="margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #10b981;">{{ done_count }}</h3>
+            </div>
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(16, 185, 129, 0.12); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+
+        <div class="stat-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Overdue</span>
+                <h3 style="margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #ef4444;">{{ overdue_count }}</h3>
+            </div>
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Card with By-Project Toggle (Alpine.js) -->
+    <div class="progress-section-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #ffffff;">
+                    <i class="fas fa-chart-line" style="color: var(--accent-color); margin-right: 6px;"></i> Overall Progress
+                </h4>
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent-color);">{{ completion_rate }}%</span>
+            </div>
+            
+            {% if category_stats %}
+            <button type="button" 
+                    @click="showProjectBreakdown = !showProjectBreakdown" 
+                    class="project-toggle-btn"
+                    style="background: #18181b; border: 1px solid #27272a; color: #a1a1aa; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-layer-group"></i>
+                <span x-text="showProjectBreakdown ? 'Hide Projects' : 'By Project'">By Project</span>
+                <i class="fas fa-chevron-down" :style="showProjectBreakdown ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transition: transform 0.2s;'"></i>
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Global Progress Bar -->
+        <div class="progress-bar-container" style="height: 8px; background: #18181b; border-radius: 999px; overflow: hidden;">
+            <div class="progress-bar-fill" style="height: 100%; width: {{ completion_rate }}%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 999px; transition: width 0.6s ease;"></div>
+        </div>
+
+        <!-- Per-Project Breakdown (Alpine.js show/hide) -->
+        <div x-show="showProjectBreakdown" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             style="margin-top: 18px; padding-top: 16px; border-top: 1px solid #18181b; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            {% for cat in category_stats %}
+            <div class="project-mini-progress" style="background: #09090b; border: 1px solid #18181b; border-radius: 8px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: #f4f4f5; display: flex; align-items: center; gap: 6px;">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ cat.color }};"></span>
+                        {{ cat.name }}
+                    </span>
+                    <span style="font-size: 0.75rem; font-weight: 700; color: {{ cat.color }};">{{ cat.progress }}%</span>
+                </div>
+                <div style="height: 5px; background: #18181b; border-radius: 999px; overflow: hidden;">
+                    <div style="height: 100%; width: {{ cat.progress }}%; background: {{ cat.color }}; border-radius: 999px;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

@@ -21,6 +21,7 @@ urlpatterns = [
     path('task/create/', views.task_create, name='task_create'),
     path('task/<int:pk>/update/', views.task_update, name='task_update'),
     path('task/<int:pk>/delete/', views.task_delete, name='task_delete'),
+    path('task/<int:pk>/toggle/', views.task_toggle_status, name='task_toggle_status'),
 
     # Project / Category CRUD
     path('projects/create/', views.category_create, name='project_create'),

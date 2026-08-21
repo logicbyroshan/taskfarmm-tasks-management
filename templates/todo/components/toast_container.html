@@ -1,0 +1,35 @@
+<!-- Alpine.js Dynamic Toast Notification Hub -->
+<div id="alpine-toast-container" 
+     x-data="{ 
+        toasts: [],
+        addToast(detail) {
+            const id = Date.now() + Math.random();
+            const toast = {
+                id: id,
+                message: detail.message || detail,
+                type: detail.type || 'success',
+                icon: detail.type === 'error' ? 'fa-exclamation-circle' : (detail.type === 'info' ? 'fa-info-circle' : 'fa-check-circle'),
+                color: detail.type === 'error' ? '#ef4444' : (detail.type === 'info' ? '#3b82f6' : '#10b981')
+            };
+            this.toasts.push(toast);
+            setTimeout(() => {
+                this.toasts = this.toasts.filter(t => t.id !== id);
+            }, detail.duration || 3500);
+        }
+     }"
+     @notify.window="addToast($event.detail)"
+     style="position: fixed; bottom: 24px; right: 24px; z-index: 9999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;">
+    <template x-for="t in toasts" :key="t.id">
+        <div class="custom-toast" 
+             x-transition:enter="transition ease-out duration-250"
+             x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-3 scale-95"
+             :style="`background: #000000; border: 1px solid ${t.color}; color: #f4f4f5; padding: 12px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9); display: flex; align-items: center; gap: 10px; pointer-events: auto;`">
+            <i :class="`fas ${t.icon}`" :style="`color: ${t.color}; font-size: 1rem;`"></i>
+            <span x-text="t.message"></span>
+        </div>
+    </template>
+</div>

@@ -4,29 +4,35 @@
 {% block title %}All Tasks - TaskFlixx{% endblock title %}
 
 {% block styles %}
-    <link rel="stylesheet" href="{% static 'todo/css/my-tasks.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'todo/css/my-tasks.css' %}?v=101">
 {% endblock styles %}
 
 {% block content %}
-<!-- Combined Header + Filter Bar -->
 <div class="page-header-bar">
     <div class="page-header-left">
-        <h2><i class="fas fa-list-ul" style="color: var(--accent-color);"></i> All Tasks</h2>
-        <p class="page-header-subtitle">{{ task_count }} task{{ task_count|pluralize }}</p>
+        <h2><i class="fas fa-tasks" style="color: var(--accent-color);"></i> All Tasks</h2>
+        <p class="page-header-subtitle"><span id="task-count-display">{{ task_count }}</span> task{{ task_count|pluralize }} · Filtered view</p>
     </div>
 
-    <form method="GET" action="{% url 'manage_tasks' %}" id="filter-form" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        {% if search_query %}
-        <input type="hidden" name="search" value="{{ search_query }}">
-        {% endif %}
-        <select name="sort" id="sort" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:130px;">
+    <!-- HTMX Live Filter Form -->
+    <form method="GET" 
+          action="{% url 'manage_tasks' %}" 
+          id="filter-form" 
+          hx-get="{% url 'manage_tasks' %}" 
+          hx-target="#tasks-container" 
+          hx-push-url="true" 
+          hx-trigger="change, keyup changed delay:300ms from:#search-input"
+          style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        
+        <select name="sort" id="sort" style="height: 36px; font-size: 0.8rem; min-width: 130px; background: #000000; border: 1px solid #27272a; color: #f4f4f5; border-radius: 6px; padding: 0 10px;">
             <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>↓ Newest</option>
             <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>↑ Oldest</option>
             <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>📅 Due Date</option>
             <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>🔺 Priority</option>
             <option value="title" {% if sort_by == 'title' %}selected{% endif %}>A–Z Title</option>
         </select>
-        <select name="status" id="status" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:130px;">
+
+        <select name="status" id="status" style="height: 36px; font-size: 0.8rem; min-width: 130px; background: #000000; border: 1px solid #27272a; color: #f4f4f5; border-radius: 6px; padding: 0 10px;">
             <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
             <option value="backlog" {% if status_filter == 'backlog' %}selected{% endif %}>Backlog</option>
             <option value="not-started" {% if status_filter == 'not-started' %}selected{% endif %}>To Do</option>
@@ -35,27 +41,30 @@
             <option value="on-hold" {% if status_filter == 'on-hold' %}selected{% endif %}>On Hold</option>
             <option value="canceled" {% if status_filter == 'canceled' %}selected{% endif %}>Canceled</option>
         </select>
-        <select name="priority" id="priority" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:120px;">
+
+        <select name="priority" id="priority" style="height: 36px; font-size: 0.8rem; min-width: 120px; background: #000000; border: 1px solid #27272a; color: #f4f4f5; border-radius: 6px; padding: 0 10px;">
             <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All Priorities</option>
             <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>🔴 High</option>
             <option value="moderate" {% if priority_filter == 'moderate' %}selected{% endif %}>🟡 Moderate</option>
             <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>🟢 Low</option>
         </select>
-        <select name="project" id="project" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:130px;">
+
+        <select name="project" id="project" style="height: 36px; font-size: 0.8rem; min-width: 130px; background: #000000; border: 1px solid #27272a; color: #f4f4f5; border-radius: 6px; padding: 0 10px;">
             <option value="all" {% if project_filter == 'all' %}selected{% endif %}>All Projects</option>
             <option value="none" {% if project_filter == 'none' %}selected{% endif %}>No Project</option>
             {% for proj in projects %}
             <option value="{{ proj.id }}" {% if project_filter == proj.id|stringformat:"s" %}selected{% endif %}>{{ proj.name }}</option>
             {% endfor %}
         </select>
+
         {% if status_filter != 'all' or priority_filter != 'all' or project_filter != 'all' or sort_by != 'newest' or search_query %}
         <a href="{% url 'manage_tasks' %}" class="clear-filters-btn" title="Clear all filters">
-            <i class="fas fa-times"></i> Clear {% if search_query %}"{{ search_query }}"{% endif %}
+            <i class="fas fa-times"></i> Clear
         </a>
         {% endif %}
     </form>
 
-    <div class="page-header-right">
+    <div class="page-header-right" style="display: flex; align-items: center; gap: 8px;">
         <button class="invite-btn" type="button" onclick="openAddTaskModal()">
             <i class="fas fa-plus"></i> Add Task
         </button>
@@ -65,151 +74,63 @@
     </div>
 </div>
 
+<!-- Task List Partial Container (Swapped dynamically by HTMX) -->
+{% include 'todo/components/task_list_partial.html' %}
 
-<!-- Tasks Grid -->
-<div id="my-tasks-grid">
-    {% for task in tasks %}
-    <article 
-        class="my-task-card priority-{{ task.priority }} status-{{ task.status }}" 
-        tabindex="0" 
-        role="button" 
-        aria-label="Edit task: {{ task.title }}"
-        data-task-id="{{ task.id }}"
-        onclick="openEditTaskModal({{ task.id }})">
-        
-        <div class="card-content">
-            <div class="card-title-row">
-                <h3 class="card-title">{{ task.title }}</h3>
-                <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
-            </div>
-            {% if task.description %}
-            <p class="card-description">{{ task.description|truncatewords:15 }}</p>
-            {% endif %}
-        </div>
-        <div class="card-footer">
-            {% if task.category %}
-            <span class="project-badge" style="background-color: {{ task.category.color }}25; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}50; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
-                <i class="fas fa-folder"></i> {{ task.category.name }}
-            </span>
-            {% else %}
-            <span style="font-size: 0.75rem; color: var(--text-muted);">
-                <i class="fas fa-inbox"></i> General
-            </span>
-            {% endif %}
-            <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
-                {% if task.due_date %}
-                <span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fas fa-calendar"></i> {{ task.due_date|date:"d M" }}</span>
-                {% endif %}
-                <span class="status {{ task.status }}">{{ task.get_status_display }}</span>
-            </div>
-        </div>
-    </article>
-    {% empty %}
-    <div class="empty-state" style="grid-column: 1 / -1;">
-        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
-        <h4>No tasks found</h4>
-        {% if status_filter != 'all' or priority_filter != 'all' or project_filter != 'all' %}
-        <p>No tasks match your current filters. <a href="{% url 'manage_tasks' %}">Clear filters</a></p>
-        {% else %}
-        <p>Click <strong>Add Task</strong> to create your first task, or browse <a href="#" onclick="openPredefinedModal(); return false;">task templates</a>.</p>
-        {% endif %}
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Predefined Tasks Modal -->
-<div id="predefined-tasks-modal" class="task-modal" style="display: none;">
-    <div class="modal-backdrop" onclick="closePredefinedModal()"></div>
-    <div class="modal-content" style="max-width: 720px; max-height: 85vh; overflow-y: auto;">
-        <div class="modal-header">
-            <h3><i class="fas fa-magic" style="color: var(--accent-color);"></i> Task Template Library</h3>
-            <button class="close-modal" onclick="closePredefinedModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 16px;">
-                Browse pre-built task templates and add them to your task pool instantly.
-            </p>
-            
-            <!-- Category filter tabs -->
-            <div class="template-category-tabs" id="template-tabs">
-                <button class="tab-btn active" data-category="all">All</button>
-                <button class="tab-btn" data-category="website">🌐 Website</button>
-                <button class="tab-btn" data-category="development">💻 Dev</button>
-                <button class="tab-btn" data-category="marketing">📣 Marketing</button>
-                <button class="tab-btn" data-category="design">🎨 Design</button>
-                <button class="tab-btn" data-category="operations">⚙️ Operations</button>
-                <button class="tab-btn" data-category="finance">💰 Finance</button>
-                <button class="tab-btn" data-category="hr">👥 HR</button>
-                <button class="tab-btn" data-category="general">📋 General</button>
-            </div>
-
-            <!-- Project assignment -->
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="predefined-project-select"><i class="fas fa-folder"></i> Add to Project (optional):</label>
-                <select id="predefined-project-select" class="form-control">
-                    <option value="">No Project</option>
-                    {% for proj in projects %}
-                    <option value="{{ proj.id }}">{{ proj.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Task templates grid -->
-            <div id="predefined-tasks-grid" class="predefined-tasks-grid">
-                <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px; display: block;"></i>
-                    Loading templates...
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Predefined Task Template Modal -->
+{% include 'todo/components/modals/predefined_modal.html' %}
 {% endblock content %}
 
 {% block scripts %}
 <script>
-    // Predefined Tasks Modal
     function openPredefinedModal() {
-        document.getElementById('predefined-tasks-modal').style.display = 'flex';
-        loadPredefinedTasks('all');
+        const modal = document.getElementById('predefined-tasks-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            loadPredefinedTasks('all');
+        }
     }
 
     function closePredefinedModal() {
-        document.getElementById('predefined-tasks-modal').style.display = 'none';
+        const modal = document.getElementById('predefined-tasks-modal');
+        if (modal) modal.style.display = 'none';
     }
 
     function loadPredefinedTasks(category) {
         const grid = document.getElementById('predefined-tasks-grid');
-        grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size:2rem;display:block;margin-bottom:12px;"></i>Loading...</div>';
+        if (!grid) return;
+        grid.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);grid-column:1/-1;"><i class="fas fa-spinner fa-spin"></i> Loading templates...</div>';
 
-        fetch(`/api/predefined-tasks/?category=${category}`)
+        fetch(`/api/predefined-tasks/?category=${encodeURIComponent(category)}`)
             .then(r => r.json())
             .then(data => {
                 if (data.success && data.tasks.length > 0) {
-                    grid.innerHTML = data.tasks.map(task => `
-                        <div class="predefined-task-card" data-id="${task.id}">
-                            <div class="ptask-icon"><i class="${task.icon}"></i></div>
-                            <div class="ptask-content">
-                                <h4 class="ptask-title">${task.title}</h4>
-                                <span class="ptask-category">${task.category_display}</span>
-                                <span class="priority ${task.suggested_priority}">${task.suggested_priority}</span>
+                    grid.innerHTML = data.tasks.map(t => `
+                        <div class="template-card" style="background:#09090b;border:1px solid #18181b;border-radius:8px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
+                            <div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                    <span style="font-size:0.75rem;padding:2px 7px;border-radius:4px;background:#18181b;color:#a1a1aa;">${t.category_display}</span>
+                                    <span class="priority ${t.suggested_priority}" style="font-size:0.7rem;padding:2px 6px;border-radius:4px;">${t.suggested_priority.toUpperCase()}</span>
+                                </div>
+                                <h4 style="font-size:0.875rem;font-weight:600;color:#f4f4f5;margin:0 0 4px 0;">${t.title}</h4>
+                                <p style="font-size:0.775rem;color:#71717a;margin:0;line-height:1.4;">${t.description || ''}</p>
                             </div>
-                            <button type="button" class="ptask-add-btn" onclick="addPredefinedTask(${task.id}, this)">
-                                <i class="fas fa-plus"></i>
+                            <button type="button" class="btn-submit" style="width:100%;padding:6px;font-size:0.75rem;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="addPredefinedTask(${t.id}, this)">
+                                <i class="fas fa-plus"></i> Use Template
                             </button>
                         </div>
                     `).join('');
                 } else {
-                    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">No templates in this category.</div>';
+                    grid.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);grid-column:1/-1;">No templates in this category.</div>';
                 }
             })
             .catch(() => {
-                grid.innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;">Failed to load templates.</div>';
+                grid.innerHTML = '<div style="text-align:center;padding:30px;color:#ef4444;grid-column:1/-1;">Failed to load templates.</div>';
             });
     }
 
     function addPredefinedTask(predefinedId, btn) {
-        const projectId = document.getElementById('predefined-project-select').value;
+        const projectId = document.getElementById('predefined-project-select')?.value;
         const csrfToken = getCsrfToken();
         
         btn.disabled = true;
@@ -227,11 +148,14 @@
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                btn.innerHTML = '<i class="fas fa-check"></i>';
+                btn.innerHTML = '<i class="fas fa-check"></i> Added';
                 btn.style.background = '#10b981';
                 btn.style.borderColor = '#10b981';
+                if (window.showToast) window.showToast('Template added to your task pool!', 'success');
+                // Trigger HTMX refresh of task container if on manage-tasks
+                htmx.trigger('#filter-form', 'change');
                 setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-plus"></i>';
+                    btn.innerHTML = '<i class="fas fa-plus"></i> Use Template';
                     btn.style.background = '';
                     btn.style.borderColor = '';
                     btn.disabled = false;
@@ -247,7 +171,6 @@
         });
     }
 
-    // Tab filtering
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', function() {

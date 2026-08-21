@@ -4,276 +4,103 @@
 {% block title %}Dashboard - TaskFlixx{% endblock title %}
 
 {% block content %}
-<div class="dash-grid">
-    <!-- Left: Stats Row + Recent Tasks -->
-    <section class="dash-left">
-        <!-- Stats Row -->
-        <div class="stats-row">
-            <div class="stat-card stat-total">
-                <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
-                <div class="stat-info">
-                    <span class="stat-num">{{ total_count }}</span>
-                    <span class="stat-label">Total Tasks</span>
-                </div>
-            </div>
-            <div class="stat-card stat-progress">
-                <div class="stat-icon"><i class="fas fa-spinner"></i></div>
-                <div class="stat-info">
-                    <span class="stat-num">{{ in_progress_count }}</span>
-                    <span class="stat-label">In Progress</span>
-                </div>
-            </div>
-            <div class="stat-card stat-done">
-                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                <div class="stat-info">
-                    <span class="stat-num">{{ done_count }}</span>
-                    <span class="stat-label">Completed</span>
-                </div>
-            </div>
-            <div class="stat-card stat-overdue">
-                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                <div class="stat-info">
-                    <span class="stat-num">{{ overdue_count }}</span>
-                    <span class="stat-label">Overdue</span>
-                </div>
+<!-- Quick Stats Overview Component -->
+{% include 'todo/components/stats_overview.html' %}
+
+<div class="dash-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Left Column: Recent Tasks Feed -->
+    <section class="dash-left" aria-labelledby="recent-tasks-heading">
+        <div class="todo-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 id="recent-tasks-heading" style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-clock" style="color: var(--accent-color);"></i> Recent Tasks
+            </h3>
+            <div class="filter-options" style="display: flex; align-items: center; gap: 12px;">
+                <a href="{% url 'manage_tasks' %}" class="view-all-link" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                    View All <i class="fas fa-arrow-right"></i>
+                </a>
+                <button class="invite-btn" type="button" onclick="openAddTaskModal()">
+                    <i class="fas fa-plus" aria-hidden="true"></i> Add Task
+                </button>
             </div>
         </div>
 
-        <!-- Recent Tasks Section -->
-        <section class="to-do-section" aria-labelledby="todo-heading">
-            <div class="todo-header">
-                <h3 id="todo-heading"><i class="fas fa-clock" style="color: var(--accent-color);"></i> Recent Tasks</h3>
-                <div class="filter-options">
-                    <a href="{% url 'manage_tasks' %}" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+        <div id="tasks-container" class="task-cards-container" style="display: flex; flex-direction: column; gap: 12px;">
+            {% for task in recent_tasks %}
+                {% include 'todo/components/task_card.html' with task=task %}
+            {% empty %}
+                <div class="empty-state" style="text-align: center; padding: 40px; background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                    <div class="empty-icon" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 10px;">
+                        <i class="far fa-check-circle"></i>
+                    </div>
+                    <h4 style="margin: 0 0 6px 0; color: #ffffff;">No Active Tasks</h4>
+                    <p style="margin: 0 0 14px 0; color: var(--text-muted); font-size: 0.875rem;">Your queue is clear. Click below to add a task or browse templates.</p>
                     <button class="invite-btn" type="button" onclick="openAddTaskModal()">
-                        <i class="fas fa-plus" aria-hidden="true"></i> Add Task
+                        <i class="fas fa-plus"></i> Create Task
                     </button>
                 </div>
-            </div>
-            
-            <div class="task-list-container">
-                <div id="tasks-container" role="list" aria-label="Task list">
-                    {% for task in recent_tasks %}
-                    <article class="task-card" role="listitem">
-                        <div class="task-header">
-                            <div class="d-inline">
-                                {% csrf_token %}
-                                <input type="checkbox" name="task{{ task.id }}" id="task{{ task.id }}" 
-                                       {% if task.status == 'completed' %}checked{% endif %}
-                                       onchange="toggleTaskComplete({{ task.id }}, this)">
-                            </div>
-                            <label for="task{{ task.id }}">{{ task.title }}</label>
-                            <button type="button" class="task-menu-btn" aria-label="Edit task" onclick="openEditTaskModal({{ task.id }})">
-                                <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                        {% if task.description %}
-                        <p id="task{{ task.id }}-desc" style="margin: 4px 0 8px 28px; font-size: 0.82rem; color: var(--text-muted);">{{ task.description|truncatewords:15 }}</p>
-                        {% endif %}
-                        <div class="task-footer">
-                            {% if task.category %}
-                            <span class="project-badge" style="background-color: {{ task.category.color }}25; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}50;">
-                                <i class="fas fa-folder"></i> {{ task.category.name }}
-                            </span>
-                            {% else %}
-                            <span class="project-badge" style="background-color: #27272a; color: #a1a1aa; border: 1px solid #3f3f46;">
-                                <i class="fas fa-inbox"></i> General
-                            </span>
-                            {% endif %}
-                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
-                            <span class="status {{ task.status }}">{{ task.get_status_display }}</span>
-                            {% if task.due_date %}
-                            <span class="created-on"><i class="fas fa-calendar"></i> {{ task.due_date|date:"d M" }}</span>
-                            {% endif %}
-                        </div>
-                    </article>
-                    {% empty %}
-                    <div class="empty-state">
-                        <i class="far fa-check-circle empty-icon"></i>
-                        <p>No pending tasks! <a href="#" onclick="openAddTaskModal(); return false;">Add one?</a></p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </section>
+            {% endfor %}
+        </div>
     </section>
 
-    <!-- Right Sidebar Content -->
-    <div class="dash-right">
-        <!-- Completion Rate Card with project-wise toggle -->
-        <div class="completion-card">
-            <div class="completion-header">
-                <span id="progress-view-label">Overall Progress</span>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="progress-view-toggle">
-                        <button class="progress-toggle-btn active" id="btn-overall" onclick="switchProgress('overall')">Overall</button>
-                        <button class="progress-toggle-btn" id="btn-projects" onclick="switchProgress('projects')">By Project</button>
-                    </div>
-                    <span class="completion-pct" id="progress-pct-display">{{ completion_rate }}%</span>
-                </div>
-            </div>
-
-            <!-- Overall Progress Bar (default visible) -->
-            <div id="overall-progress-view">
-                <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: {{ completion_rate }}%;"></div>
-                </div>
-                <div class="completion-meta">
-                    <span><i class="fas fa-calendar-day" style="color:#60a5fa;"></i> {{ due_today_count }} due today</span>
-                    <span><i class="fas fa-exclamation-circle" style="color:#f87171;"></i> {{ overdue_count }} overdue</span>
-                </div>
-            </div>
-
-            <!-- Project-wise Progress (hidden by default) -->
-            <div id="project-progress-view" style="display:none;">
-                {% if all_projects_progress %}
-                <div class="project-progress-list">
-                    {% for p in all_projects_progress %}
-                    <div class="project-progress-row">
-                        <div class="project-progress-label">
-                            <span style="display:flex;align-items:center;gap:6px;">
-                                <span style="width:8px;height:8px;border-radius:50%;background:{{ p.color }};display:inline-block;flex-shrink:0;"></span>
-                                {{ p.name }}
-                            </span>
-                            <span style="color:var(--text-muted);">{{ p.completed_count }}/{{ p.task_count }} &nbsp;<strong style="color:{{ p.color }};">{{ p.progress }}%</strong></span>
-                        </div>
-                        <div class="project-progress-bar">
-                            <div class="project-progress-fill" style="width:{{ p.progress }}%;background:{{ p.color }};"></div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:8px 0;">No projects yet. <a href="{% url 'project_create' %}" style="color:var(--accent-color);">Create one</a></p>
-                {% endif %}
-            </div>
-        </div>
-
-
-        <!-- Task Status Overview -->
-        <section class="task-status-cards" aria-labelledby="status-heading">
-            <h3 id="status-heading">Task Status</h3>
-            <div class="status-grid-2x3">
-                <a href="{% url 'manage_tasks' %}?status=backlog" class="status-item" style="text-decoration: none; display: flex;">
-                    <span class="status-label">Backlog</span>
-                    <span class="status-count backlog">{{ backlog_count }}</span>
+    <!-- Right Column: Status Matrix & Projects Quick Access -->
+    <div class="dash-right" style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- 6-State Status Matrix -->
+        <section class="task-status-cards" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+            <h3 style="margin: 0 0 16px 0; font-size: 0.95rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-th-large" style="color: var(--accent-color);"></i> Status Matrix
+            </h3>
+            <div class="status-grid-2x3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <a href="{% url 'manage_tasks' %}?status=backlog" class="status-item" style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #09090b; border: 1px solid #18181b; border-radius: 8px; transition: all 0.2s ease;">
+                    <span class="status-label" style="color: #a1a1aa; font-size: 0.8rem; font-weight: 500;">Backlog</span>
+                    <span class="status-count" style="font-size: 0.85rem; font-weight: 700; color: #94a3b8;">{{ backlog_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=not-started" class="status-item" style="text-decoration: none; display: flex;">
-                    <span class="status-label">To Do</span>
-                    <span class="status-count to-do">{{ to_do_count }}</span>
+                <a href="{% url 'manage_tasks' %}?status=not-started" class="status-item" style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #09090b; border: 1px solid #18181b; border-radius: 8px; transition: all 0.2s ease;">
+                    <span class="status-label" style="color: #a1a1aa; font-size: 0.8rem; font-weight: 500;">To Do</span>
+                    <span class="status-count" style="font-size: 0.85rem; font-weight: 700; color: #60a5fa;">{{ to_do_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=in-progress" class="status-item" style="text-decoration: none; display: flex;">
-                    <span class="status-label">In Progress</span>
-                    <span class="status-count in-progress">{{ in_progress_count }}</span>
+                <a href="{% url 'manage_tasks' %}?status=in-progress" class="status-item" style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #09090b; border: 1px solid #18181b; border-radius: 8px; transition: all 0.2s ease;">
+                    <span class="status-label" style="color: #a1a1aa; font-size: 0.8rem; font-weight: 500;">In Progress</span>
+                    <span class="status-count" style="font-size: 0.85rem; font-weight: 700; color: #f59e0b;">{{ in_progress_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=completed" class="status-item" style="text-decoration: none; display: flex;">
-                    <span class="status-label">Done</span>
-                    <span class="status-count done">{{ done_count }}</span>
+                <a href="{% url 'manage_tasks' %}?status=completed" class="status-item" style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #09090b; border: 1px solid #18181b; border-radius: 8px; transition: all 0.2s ease;">
+                    <span class="status-label" style="color: #a1a1aa; font-size: 0.8rem; font-weight: 500;">Done</span>
+                    <span class="status-count" style="font-size: 0.85rem; font-weight: 700; color: #10b981;">{{ done_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=on-hold" class="status-item" style="text-decoration: none; display: flex;">
-                    <span class="status-label">On Hold</span>
-                    <span class="status-count on-hold">{{ on_hold_count }}</span>
+                <a href="{% url 'manage_tasks' %}?status=on-hold" class="status-item" style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #09090b; border: 1px solid #18181b; border-radius: 8px; transition: all 0.2s ease;">
+                    <span class="status-label" style="color: #a1a1aa; font-size: 0.8rem; font-weight: 500;">On Hold</span>
+                    <span class="status-count" style="font-size: 0.85rem; font-weight: 700; color: #a855f7;">{{ on_hold_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=canceled" class="status-item" style="text-decoration: none; display: flex;">
-                    <span class="status-label">Canceled</span>
-                    <span class="status-count canceled">{{ canceled_count }}</span>
+                <a href="{% url 'manage_tasks' %}?status=canceled" class="status-item" style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #09090b; border: 1px solid #18181b; border-radius: 8px; transition: all 0.2s ease;">
+                    <span class="status-label" style="color: #a1a1aa; font-size: 0.8rem; font-weight: 500;">Canceled</span>
+                    <span class="status-count" style="font-size: 0.85rem; font-weight: 700; color: #ef4444;">{{ canceled_count }}</span>
                 </a>
-            </div>
-        </section>
-
-        <!-- Recently Completed -->
-        <section class="completed-tasks-section" aria-labelledby="completed-heading">
-            <h3 id="completed-heading"><i class="fas fa-check" style="color: #34d399;"></i> Recently Completed</h3>
-            <div id="completed-tasks-container" role="list" aria-label="Completed tasks list">
-                {% for task in recently_completed_tasks %}
-                <article class="completed-task-card" role="listitem">
-                    <div class="task-header">
-                        <input type="checkbox" id="completed-task{{ task.id }}" checked disabled>
-                        <label for="completed-task{{ task.id }}" style="text-decoration: line-through; color: var(--text-muted);">{{ task.title }}</label>
-                    </div>
-                    <div class="task-footer">
-                        <span class="status completed">Done</span>
-                        {% if task.completed_at %}
-                        <span class="created-on">{{ task.completed_at|timesince }} ago</span>
-                        {% endif %}
-                    </div>
-                </article>
-                {% empty %}
-                <p style="text-align: center; color: #666; font-size: 0.85rem; padding: 16px 0;">No tasks completed recently.</p>
-                {% endfor %}
             </div>
         </section>
 
         <!-- Projects Quick Access -->
-        {% if projects %}
-        <section class="projects-quick" aria-labelledby="projects-heading">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 id="projects-heading" style="margin: 0; font-size: 1rem;">Projects</h3>
-                <a href="{% url 'task_categories' %}" style="font-size: 0.8rem; color: var(--accent-color);">View All</a>
+        {% if category_stats %}
+        <section class="projects-quick" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-folder" style="color: var(--accent-color);"></i> Projects
+                </h3>
+                <a href="{% url 'manage_projects' %}" style="font-size: 0.8rem; color: #60a5fa; text-decoration: none;">View All</a>
             </div>
-            {% for project in projects %}
-            <a href="{% url 'manage_kanban' %}?project={{ project.id }}" class="project-quick-card" style="--project-color: {{ project.color }}">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ project.color }}; flex-shrink: 0;"></span>
-                    <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color);">{{ project.name }}</span>
-                </div>
-                <span style="font-size: 0.775rem; color: var(--text-muted);">{{ project.task_count }} task{{ project.task_count|pluralize }}</span>
-            </a>
-            {% endfor %}
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                {% for project in category_stats|slice:":4" %}
+                <a href="{% url 'manage_kanban' %}?project={{ project.id }}" 
+                   class="project-quick-card" 
+                   style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #09090b; border: 1px solid #18181b; border-radius: 8px; text-decoration: none; transition: all 0.2s ease;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ project.color }}; flex-shrink: 0;"></span>
+                        <span style="font-size: 0.825rem; font-weight: 600; color: #f4f4f5;">{{ project.name }}</span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: #a1a1aa;">{{ project.task_count }} task{{ project.task_count|pluralize }}</span>
+                </a>
+                {% endfor %}
+            </div>
         </section>
         {% endif %}
     </div>
 </div>
 {% endblock content %}
-
-{% block scripts %}
-<script>
-    function toggleTaskComplete(taskId, checkboxElem) {
-        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-        const csrfToken = csrfInput ? csrfInput.value : '';
-        const formData = new FormData();
-        formData.append('status', checkboxElem.checked ? 'completed' : 'not-started');
-
-        fetch(`/task/${taskId}/update/`, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const card = checkboxElem.closest('.task-card');
-                if (card && checkboxElem.checked) {
-                    card.style.opacity = '0.4';
-                    card.style.transition = 'all 0.3s ease';
-                    setTimeout(() => card.remove(), 300);
-                }
-            }
-        })
-        .catch(err => console.error('Error toggling task:', err));
-    }
-
-    function switchProgress(view) {
-        const overall = document.getElementById('overall-progress-view');
-        const project = document.getElementById('project-progress-view');
-        const label   = document.getElementById('progress-view-label');
-        const pctEl   = document.getElementById('progress-pct-display');
-        const btnO    = document.getElementById('btn-overall');
-        const btnP    = document.getElementById('btn-projects');
-
-        if (view === 'overall') {
-            overall.style.display = '';
-            project.style.display = 'none';
-            label.textContent = 'Overall Progress';
-            btnO.classList.add('active'); btnP.classList.remove('active');
-            pctEl.style.display = '';
-        } else {
-            overall.style.display = 'none';
-            project.style.display = '';
-            label.textContent = 'Project Progress';
-            btnP.classList.add('active'); btnO.classList.remove('active');
-            pctEl.style.display = 'none';
-        }
-    }
-</script>
-{% endblock scripts %}

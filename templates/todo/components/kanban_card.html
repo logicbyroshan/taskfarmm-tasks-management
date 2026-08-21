@@ -1,0 +1,75 @@
+<div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
+     id="kanban-card-{{ task.id }}" 
+     data-task-id="{{ task.id }}" 
+     draggable="true" 
+     ondragstart="handleDragStart(event)"
+     x-data="{ menuOpen: false }">
+    <div class="kanban-card-top" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+        <span class="status {{ task.status }}">
+            {% if task.status == 'completed' %}DONE{% elif task.status == 'not-started' %}TO DO{% else %}{{ task.status|upper }}{% endif %}
+        </span>
+        <div style="position: relative;" @click.outside="menuOpen = false">
+            <button class="kanban-card-menu-btn" 
+                    type="button" 
+                    @click.stop="menuOpen = !menuOpen" 
+                    aria-label="Card options"
+                    style="background: transparent; border: none; color: #71717a; cursor: pointer; padding: 2px 6px; font-size: 0.8rem;">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="kanban-dropdown-menu" 
+                 x-show="menuOpen" 
+                 x-transition:enter="transition ease-out duration-100"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-75"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 style="display: none; position: absolute; right: 0; top: calc(100% + 4px); background: #000000; border: 1px solid #27272a; border-radius: 8px; padding: 4px; z-index: 99999; min-width: 130px; box-shadow: 0 10px 30px rgba(0,0,0,0.9);">
+                <button type="button" 
+                        class="dropdown-item" 
+                        @click="menuOpen = false; window.openEditTaskModal({{ task.id }})" 
+                        style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 0.8rem; color: #e4e4e7; border-radius: 6px; text-align: left; cursor: pointer;">
+                    <i class="fas fa-edit" style="color: #60a5fa;"></i> Edit
+                </button>
+                <button type="button" 
+                        class="dropdown-item" 
+                        hx-post="{% url 'task_delete' task.id %}" 
+                        hx-confirm="Are you sure you want to delete '{{ task.title|escapejs }}'?" 
+                        hx-target="#kanban-card-{{ task.id }}" 
+                        hx-swap="outerHTML swap:0.3s"
+                        @click="menuOpen = false; setTimeout(() => updateKanbanColumnCounts(), 350);"
+                        style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 0.8rem; color: #f87171; border-radius: 6px; text-align: left; cursor: pointer;">
+                    <i class="fas fa-trash" style="color: #f87171;"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="kanban-card-title {% if task.status == 'completed' %}strike-through{% endif %}" style="font-size: 0.9rem; font-weight: 600; color: #f4f4f5; margin: 8px 0 4px 0;">
+        {{ task.title }}
+    </div>
+
+    {% if task.description %}
+    <div class="kanban-card-desc {% if task.status == 'completed' %}strike-through{% endif %}" style="font-size: 0.78rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+        {{ task.description|striptags }}
+    </div>
+    {% endif %}
+
+    <div class="kanban-card-meta" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+        <span class="priority {{ task.priority }}">
+            {{ task.get_priority_display }}
+        </span>
+
+        {% if task.category %}
+        <span class="project-pill" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: {{ task.category.color }}18; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}35;">
+            {{ task.category.name }}
+        </span>
+        {% endif %}
+
+        {% if task.due_date %}
+        <span class="due-date" style="color: #71717a; display: flex; align-items: center; gap: 3px;">
+            <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
+        </span>
+        {% endif %}
+    </div>
+</div>

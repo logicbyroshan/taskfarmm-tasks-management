@@ -417,25 +417,37 @@ function setupEditTaskModal() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('edit-task-id').value = taskId;
-                document.getElementById('edit-title').value = data.task.title;
-                document.getElementById('edit-description').value = data.task.description || '';
-                document.getElementById('edit-category').value = data.task.category || '';
-                document.getElementById('edit-priority').value = data.task.priority;
-                document.getElementById('edit-status').value = data.task.status;
-                document.getElementById('edit-due_date').value = data.task.due_date || '';
+                const titleInput = document.getElementById('edit_task_title') || document.getElementById('edit-title');
+                const descInput = document.getElementById('edit_task_description') || document.getElementById('edit-description');
+                const catInput = document.getElementById('edit_task_category') || document.getElementById('edit-category');
+                const prioInput = document.getElementById('edit_task_priority') || document.getElementById('edit-priority');
+                const statusInput = document.getElementById('edit_task_status') || document.getElementById('edit-status');
+                const dueInput = document.getElementById('edit_task_due_date') || document.getElementById('edit-due_date');
+                const idInput = document.getElementById('edit-task-id');
+
+                if (titleInput) titleInput.value = data.task.title;
+                if (descInput) descInput.value = data.task.description || '';
+                if (catInput) catInput.value = data.task.category || '';
+                if (prioInput) prioInput.value = data.task.priority;
+                if (statusInput) statusInput.value = data.task.status;
+                if (dueInput) dueInput.value = data.task.due_date || '';
+                if (idInput) idInput.value = taskId;
+
+                editForm.action = `/task/${taskId}/update/`;
                 editModal.style.display = 'flex';
-                document.getElementById('edit-title').focus();
+                if (titleInput) titleInput.focus();
             }
-        }).catch(error => alert('Failed to load task data'));
+        }).catch(error => console.error('Failed to load task data', error));
     };
 
     editForm.addEventListener('submit', (event) => {
         event.preventDefault();
-        const taskId = document.getElementById('edit-task-id').value;
+        const idInput = document.getElementById('edit-task-id');
+        const taskId = idInput ? idInput.value : '';
+        const url = editForm.action || `/task/${taskId}/update/`;
         const formData = new FormData(editForm);
         const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-        fetch(`/task/${taskId}/update/`, { 
+        fetch(url, { 
             method: 'POST', 
             body: formData, 
             headers: { 
@@ -447,15 +459,16 @@ function setupEditTaskModal() {
         .then(data => {
             if (data.success) {
                 closeModal();
+                if (window.showToast) window.showToast('Task updated successfully!', 'success');
                 window.location.reload();
             } else {
-                let errorMessages = 'Please correct the following errors:\n\n';
-                for (const field in data.errors) {
-                    errorMessages += `- ${field}: ${data.errors[field][0]}\n`;
-                }
-                alert(errorMessages);
+                alert('Please check form fields.');
             }
-        }).catch(error => alert('An unexpected error occurred.'));
+        })
+        .catch(error => {
+            closeModal();
+            window.location.reload();
+        });
     });
 }
 

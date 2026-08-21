@@ -1,0 +1,22 @@
+<div id="tasks-container" class="task-cards-container">
+    {% for task in tasks %}
+        {% include 'todo/components/task_card.html' with task=task %}
+    {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px; background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+            <div class="empty-icon" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 12px;">
+                <i class="fas fa-search"></i>
+            </div>
+            <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--highlight-color);">No Tasks Found</h4>
+            <p style="margin: 0 0 16px 0; color: var(--text-muted);">
+                {% if search_query %}
+                No tasks match your search for "{{ search_query }}". Try a different search term or clear filters.
+                {% else %}
+                No tasks match the selected filters. Click "Add Task" to create one.
+                {% endif %}
+            </p>
+            <button class="invite-btn" onclick="openAddTaskModal()" type="button">
+                <i class="fas fa-plus"></i> Create New Task
+            </button>
+        </div>
+    {% endfor %}
+</div>

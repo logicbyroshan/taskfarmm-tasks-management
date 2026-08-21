@@ -1,0 +1,68 @@
+<!-- Edit Task Modal -->
+<div id="edit-task-modal" class="task-modal" style="display: none;">
+    <div class="modal-backdrop" onclick="document.getElementById('edit-task-modal').style.display='none';"></div>
+    <div class="modal-content" style="background: #000000; border: 1px solid #27272a;">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit" style="color: #60a5fa;"></i> Edit Task</h3>
+            <button class="close-modal" aria-label="Close" onclick="document.getElementById('edit-task-modal').style.display='none';">&times;</button>
+        </div>
+        <form id="edit-task-form" class="task-form" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group form-grid-full">
+                    <label for="edit_task_title"><i class="fas fa-heading"></i> Task Title *</label>
+                    <input type="text" id="edit_task_title" name="title" required class="form-control" style="background: #000000; border: 1px solid #27272a;">
+                </div>
+
+                <div class="form-group form-grid-full">
+                    <label for="edit_task_description"><i class="fas fa-align-left"></i> Description</label>
+                    <textarea id="edit_task_description" name="description" rows="4" class="form-control" style="background: #000000; border: 1px solid #27272a;"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_task_category"><i class="fas fa-folder"></i> Project</label>
+                    <select id="edit_task_category" name="category" class="form-control" style="background: #000000; border: 1px solid #27272a;">
+                        <option value="">No Project (General)</option>
+                        {% for project in user.categories.all %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_task_priority"><i class="fas fa-flag"></i> Priority</label>
+                    <select id="edit_task_priority" name="priority" class="form-control" style="background: #000000; border: 1px solid #27272a;">
+                        <option value="high">🔴 High</option>
+                        <option value="moderate">🟡 Moderate</option>
+                        <option value="low">🟢 Low</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_task_status"><i class="fas fa-tasks"></i> Status</label>
+                    <select id="edit_task_status" name="status" class="form-control" style="background: #000000; border: 1px solid #27272a;">
+                        <option value="backlog">Backlog</option>
+                        <option value="not-started">To Do</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Done</option>
+                        <option value="on-hold">On Hold</option>
+                        <option value="canceled">Canceled</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_task_due_date"><i class="fas fa-calendar-alt"></i> Due Date</label>
+                    <input type="date" id="edit_task_due_date" name="due_date" class="form-control" style="background: #000000; border: 1px solid #27272a;">
+                </div>
+            </div>
+            <div class="modal-actions form-actions">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('edit-task-modal').style.display='none';">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
