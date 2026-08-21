@@ -1,255 +1,225 @@
-# TaskMitra API Documentation
+# 📡 TaskFlixx API Documentation
 
-Base URL: `http://127.0.0.1:8000/`
+TaskFlixx provides internal RESTful and AJAX API endpoints designed for real-time frontend interaction, stats aggregation, AI assistance, template management, and full data export.
 
-All AJAX endpoints require the `X-CSRFToken` header and `X-Requested-With: XMLHttpRequest`.
-
----
-
-## Authentication
-
-TaskMitra uses Django session authentication. In development, `DemoAuthMiddleware` auto-creates a session for a demo user. For production, replace with standard Django login.
+**Base URL**: `http://127.0.0.1:8000/` (or your production deployment domain)
 
 ---
 
-## Task Endpoints
+## 🔒 Authentication & Headers
 
-### GET/POST `/task/<id>/update/`
+All AJAX mutation endpoints require:
+- `X-CSRFToken`: Valid Django CSRF token.
+- `X-Requested-With: XMLHttpRequest` header.
+- Authenticated user session.
 
-**GET** — Fetch task data for edit modal.
+---
 
-Response:
+## 📋 Task Endpoints
+
+### 1. Create Task
+- **Endpoint**: `POST /task/create/`
+- **Body**: Form data or JSON (`title`, `description`, `priority`, `status`, `category`, `due_date`)
+- **Response**:
 ```json
 {
   "success": true,
+  "message": "Task created successfully!",
   "task": {
-    "id": 1,
-    "title": "My Task",
-    "description": "...",
-    "priority": "high",
-    "status": "in-progress",
-    "category": 2,
-    "due_date": "2026-09-01"
+    "id": 21,
+    "title": "Build user onboarding tour",
+    "status": "not-started",
+    "priority": "high"
   }
 }
 ```
 
-**POST** — Update task fields. Accepts `multipart/form-data` or JSON.
-
-Body fields: `title`, `description`, `priority`, `status`, `category`, `due_date`
-
-Response:
-```json
-{ "success": true }
-```
-
----
-
-### POST `/task/<id>/delete/`
-
-Delete a task.
-
-Response:
-```json
-{ "success": true }
-```
-
----
-
-### POST `/task/create/`
-
-Create a new task via form submission. Returns redirect on success.
-
----
-
-## Stats API
-
-### GET `/api/stats/`
-
-Returns aggregated task statistics for the current user.
-
-Response:
+### 2. Update Task
+- **Endpoint**: `POST /task/<int:pk>/update/`
+- **Body**: Form data or JSON (`status`, `priority`, `title`, `description`, `category`, `due_date`)
+- **Response**:
 ```json
 {
   "success": true,
-  "total": 10,
-  "completed": 3,
-  "in_progress": 4,
-  "backlog": 1,
-  "on_hold": 0,
-  "canceled": 0,
-  "overdue": 2,
-  "completion_rate": 30
+  "message": "Task updated successfully!"
+}
+```
+
+### 3. Delete Task
+- **Endpoint**: `POST /task/<int:pk>/delete/`
+- **Response**:
+```json
+{
+  "success": true,
+  "message": "Task deleted successfully."
 }
 ```
 
 ---
 
-## Predefined Task Templates
+## 📁 Project / Category Endpoints
 
-### GET `/api/predefined-tasks/`
+### 1. Create Project
+- **Endpoint**: `POST /projects/create/` or `POST /category/create/`
+- **Body**: `name`, `color` (Hex, e.g. `#3b82f6`)
+- **Response**:
+```json
+{
+  "success": true,
+  "message": "Project created successfully!",
+  "category": {
+    "id": 8,
+    "name": "Mobile App Launch",
+    "color": "#3b82f6"
+  }
+}
+```
 
-Returns the list of all predefined task templates. Supports optional `?category=` query filter.
+### 2. Update Project
+- **Endpoint**: `POST /category/<int:pk>/update/`
+- **Body**: `name`, `color`
+- **Response**: `302 Redirect` or JSON confirmation.
 
-Response:
+### 3. Delete Project
+- **Endpoint**: `POST /category/<int:pk>/delete/`
+- **Response**:
+```json
+{
+  "success": true,
+  "message": "Project deleted successfully."
+}
+```
+
+---
+
+## 📊 Analytics & Export APIs
+
+### 1. Real-Time Stats API
+- **Endpoint**: `GET /api/stats/`
+- **Response**:
+```json
+{
+  "success": true,
+  "stats": {
+    "total": 19,
+    "done": 7,
+    "in_progress": 4,
+    "backlog": 3,
+    "on_hold": 1,
+    "canceled": 1,
+    "to_do": 3,
+    "overdue": 0,
+    "completion_rate": 36
+  }
+}
+```
+
+### 2. Full Task Export API
+- **Endpoint**: `GET /api/export/tasks/?format=json` or `GET /api/export/tasks/?format=csv`
+- **JSON Response**:
+```json
+{
+  "success": true,
+  "total": 19,
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Design Figma Mockups",
+      "description": "Create high fidelity dark mode UI screens",
+      "project": "Design System",
+      "priority": "high",
+      "priority_display": "High",
+      "status": "completed",
+      "status_display": "Done",
+      "due_date": "2026-09-01",
+      "created_at": "2026-08-20 14:30:00",
+      "completed_at": "2026-08-21 09:15:00"
+    }
+  ]
+}
+```
+- **CSV Response**: Generates `taskflixx_tasks_export.csv` file download with complete columns.
+
+---
+
+## 🤖 AI Assistant APIs
+
+### 1. AI Task & Project Suggestion
+- **Endpoint**: `POST /api/ai/suggest/`
+- **Body**: `{"prompt": "Launch an ecommerce mobile app"}`
+- **Response**:
+```json
+{
+  "success": true,
+  "title": "E-Commerce Mobile App Launch Plan",
+  "suggestion": "1. Configure push notification services...\n2. Set up payment gateway...\n3. Run App Store review audit...",
+  "description": "Step-by-step launch sequence",
+  "prompt": "Launch an ecommerce mobile app"
+}
+```
+
+### 2. AI Create Task
+- **Endpoint**: `POST /api/ai/create-task/`
+- **Body**: `{"title": "Implement Stripe checkout", "priority": "high", "description": "Add Stripe Elements"}`
+- **Response**:
+```json
+{
+  "success": true,
+  "message": "Task 'Implement Stripe checkout' created successfully!",
+  "task_id": 25,
+  "task_title": "Implement Stripe checkout"
+}
+```
+
+### 3. AI Create Project with Batch Tasks
+- **Endpoint**: `POST /api/ai/create-project/`
+- **Body**: `{"name": "Q3 Sprint", "description": "Sprint tasks", "tasks": ["Task A", "Task B", "Task C"]}`
+- **Response**:
+```json
+{
+  "success": true,
+  "message": "Project 'Q3 Sprint' created with 3 tasks!",
+  "project_id": 9,
+  "project_name": "Q3 Sprint",
+  "tasks_created": [
+    { "id": 26, "title": "Task A" },
+    { "id": 27, "title": "Task B" },
+    { "id": 28, "title": "Task C" }
+  ]
+}
+```
+
+---
+
+## 🪄 Template Library APIs
+
+### 1. Get Predefined Templates
+- **Endpoint**: `GET /api/predefined-tasks/?category=all|website|marketing|design|development|operations|finance|hr|general`
+- **Response**:
 ```json
 {
   "success": true,
   "tasks": [
     {
       "id": 1,
-      "title": "Set Up Domain & Hosting",
-      "description": "...",
-      "category": "Website Launch",
-      "priority": "high",
-      "icon": "fas fa-globe"
+      "title": "Conduct UX audit and usability review",
+      "description": "Evaluate current user flow and identify drop-off points.",
+      "category": "design",
+      "suggested_priority": "high",
+      "icon": "fas fa-search"
     }
   ]
 }
 ```
 
----
-
-### POST `/api/predefined-tasks/add/`
-
-Add a predefined task template to the user's task list.
-
-Body (JSON):
-```json
-{
-  "task_id": 1,
-  "category_id": 3
-}
-```
-
-Response:
+### 2. Add Template to Active Tasks
+- **Endpoint**: `POST /api/predefined-tasks/add/`
+- **Body**: `{"predefined_id": 1}`
+- **Response**:
 ```json
 {
   "success": true,
-  "message": "Task added successfully",
-  "task_id": 42
+  "message": "Task 'Conduct UX audit and usability review' added!",
+  "task_id": 29
 }
 ```
-
----
-
-## AI Assistant Endpoints
-
-### POST `/api/ai/suggest/`
-
-Generate an AI suggestion/plan for a text prompt.
-
-Body (JSON):
-```json
-{ "prompt": "Create a website launch plan" }
-```
-
-Response:
-```json
-{
-  "success": true,
-  "title": "Launch Strategy & Production Readiness",
-  "suggestion": "1. Finalize DNS...\n2. Cross-browser QA...",
-  "description": "...",
-  "prompt": "Create a website launch plan"
-}
-```
-
----
-
-### POST `/api/ai/create-task/`
-
-Create a single task directly from AI suggestion data.
-
-Body (JSON):
-```json
-{
-  "title": "Configure DNS & SSL",
-  "description": "Set up domain records and SSL certificate",
-  "priority": "high",
-  "status": "not-started",
-  "category_id": 2
-}
-```
-
-Response:
-```json
-{
-  "success": true,
-  "message": "Task \"Configure DNS & SSL\" created successfully!",
-  "task_id": 45,
-  "task_title": "Configure DNS & SSL"
-}
-```
-
----
-
-### POST `/api/ai/create-project/`
-
-Create a project (category) and optionally populate it with tasks in one call.
-
-Body (JSON):
-```json
-{
-  "name": "Website Launch Project",
-  "description": "Full website launch plan",
-  "color": "#3b82f6",
-  "tasks": [
-    { "title": "Configure DNS", "priority": "high" },
-    { "title": "Run Lighthouse Audit", "priority": "moderate" },
-    "Write post-launch report"
-  ]
-}
-```
-
-- `tasks` can be an array of strings (title only) or objects with `title` and `priority`.
-- Maximum 10 tasks per call.
-
-Response:
-```json
-{
-  "success": true,
-  "message": "Project \"Website Launch Project\" created with 3 tasks!",
-  "project_id": 7,
-  "project_name": "Website Launch Project",
-  "tasks_created": [
-    { "id": 46, "title": "Configure DNS" },
-    { "id": 47, "title": "Run Lighthouse Audit" },
-    { "id": 48, "title": "Write post-launch report" }
-  ]
-}
-```
-
----
-
-## Settings Endpoints
-
-### POST `/settings/`
-
-Handles multiple form actions via the `action` field:
-
-| `action` value | Effect |
-|---|---|
-| `update_profile` | Update first name, last name, email |
-| `change_password` | Change current user password |
-| `update_preferences` | Save theme, default priority/status to UserProfile |
-| `update_notifications` | Save notification toggle preferences |
-| `export_tasks_json` | Returns tasks as JSON file download |
-| `export_tasks_csv` | Returns tasks as CSV file download |
-| `clear_tasks` | Delete all tasks (keeps projects) |
-| `clear_all_data` | Delete all tasks AND projects |
-
----
-
-## Error Format
-
-All API endpoints return errors in this format:
-
-```json
-{
-  "success": false,
-  "error": "Human-readable error message"
-}
-```
-
-HTTP status codes: `400` (bad request), `403` (forbidden), `404` (not found), `405` (wrong method), `500` (server error).
