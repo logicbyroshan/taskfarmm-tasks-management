@@ -360,6 +360,23 @@
         e.dataTransfer.dropEffect = 'move';
     }
 
+    function updateKanbanColumnCounts() {
+        const statuses = ['backlog', 'not-started', 'in-progress', 'completed', 'on-hold', 'canceled'];
+        statuses.forEach(st => {
+            const container = document.querySelector(`.kanban-cards-container[data-status="${st}"]`);
+            const countBadge = document.getElementById(`count-${st}`);
+            if (container && countBadge) {
+                const cardCount = container.querySelectorAll('.kanban-card').length;
+                countBadge.textContent = cardCount;
+
+                const emptyPlaceholder = container.querySelector('.kanban-empty');
+                if (emptyPlaceholder) {
+                    emptyPlaceholder.style.display = cardCount === 0 ? 'flex' : 'none';
+                }
+            }
+        });
+    }
+
     function handleDrop(e, targetStatus) {
         e.preventDefault();
         const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
@@ -390,9 +407,31 @@
                 const container = document.querySelector(`.kanban-cards-container[data-status="${targetStatus}"]`);
                 if (container && card) {
                     container.appendChild(card);
-                    // Hide empty placeholder if present
-                    const emptyMsg = container.querySelector('.kanban-empty');
-                    if (emptyMsg) emptyMsg.style.display = 'none';
+                    
+                    // Update visual completed state
+                    const titleEl = card.querySelector('.kanban-card-title');
+                    const descEl = card.querySelector('.kanban-card-desc');
+                    const statusSpan = card.querySelector('.kanban-card-top span');
+
+                    if (targetStatus === 'completed') {
+                        card.classList.add('is-completed');
+                        if (titleEl) titleEl.classList.add('strike-through');
+                        if (descEl) descEl.classList.add('strike-through');
+                        if (statusSpan) {
+                            statusSpan.className = 'status completed';
+                            statusSpan.textContent = 'DONE';
+                        }
+                    } else {
+                        card.classList.remove('is-completed');
+                        if (titleEl) titleEl.classList.remove('strike-through');
+                        if (descEl) descEl.classList.remove('strike-through');
+                    }
+
+                    updateKanbanColumnCounts();
+                    if (window.showToast) {
+                        const statusNames = {'backlog':'Backlog', 'not-started':'To Do', 'in-progress':'In Progress', 'completed':'Done', 'on-hold':'On Hold', 'canceled':'Canceled'};
+                        window.showToast(`Task moved to ${statusNames[targetStatus] || targetStatus}!`, 'info');
+                    }
                 }
             }
         })

@@ -32,8 +32,9 @@ urlpatterns = [
     path('api/predefined-tasks/', views.predefined_tasks_api, name='predefined_tasks_api'),
     path('api/predefined-tasks/add/', views.add_predefined_task, name='add_predefined_task'),
 
-    # Stats API
+    # Stats & Export API
     path('api/stats/', views.stats_api, name='stats_api'),
+    path('api/export/tasks/', views.tasks_export_api, name='tasks_export_api'),
 
     # Auth & AI endpoints
     path('api/auth/verify-token/', api_auth.api_verify_token, name='api_verify_token'),

@@ -6,6 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     setupWaveBackground();
     setupMobileMenu();
+    setupGlobalSearch();
     updateDateTime();
     setupAddTaskModal();
     setupEditTaskModal();
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateDateTime, 60000);
 });
 
-// Global expose so onclick="openAddTaskModal()" works from HTML
+// Global expose so onclick="openAddTaskModal()" and "openAddProjectModal()" work from HTML
 window.openAddTaskModal = function() {
     const taskModal = document.getElementById('add-task-modal');
     if (taskModal) {
@@ -26,6 +27,118 @@ window.openAddTaskModal = function() {
         if (titleInput) titleInput.focus();
     }
 };
+
+window.openAddProjectModal = function() {
+    const projModal = document.getElementById('category-modal');
+    if (projModal) {
+        projModal.style.display = 'flex';
+        const nameInput = projModal.querySelector('input[name="name"]');
+        if (nameInput) nameInput.focus();
+    } else {
+        window.location.href = '/categories/';
+    }
+};
+
+/**
+ * Global Toast Notification System
+ */
+window.showToast = function(message, type = 'success', duration = 3500) {
+    let toastContainer = document.getElementById('global-toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'global-toast-container';
+        toastContainer.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 9999999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;';
+        document.body.appendChild(toastContainer);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast toast-${type}`;
+
+    let iconClass = 'fa-check-circle';
+    let borderColor = '#10b981';
+    let iconColor = '#34d399';
+    if (type === 'error') {
+        iconClass = 'fa-exclamation-circle';
+        borderColor = '#ef4444';
+        iconColor = '#f87171';
+    } else if (type === 'info') {
+        iconClass = 'fa-info-circle';
+        borderColor = '#3b82f6';
+        iconColor = '#60a5fa';
+    }
+
+    toast.style.cssText = `
+        background: #000000;
+        border: 1px solid ${borderColor};
+        color: #f4f4f5;
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        pointer-events: auto;
+        opacity: 0;
+        transform: translateY(12px);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    `;
+
+    toast.innerHTML = `<i class="fas ${iconClass}" style="color: ${iconColor}; font-size: 1rem;"></i> <span>${message}</span>`;
+    toastContainer.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    });
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(12px)';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+};
+
+/**
+ * Global Search Bar Handler (Navbar)
+ */
+function setupGlobalSearch() {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+
+    // If currently on manage-tasks page, populate current search query
+    const urlParams = new URLSearchParams(window.location.search);
+    const existingSearch = urlParams.get('search');
+    if (existingSearch) {
+        searchInput.value = existingSearch;
+    }
+
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                window.location.href = `/manage-tasks/?search=${encodeURIComponent(query)}`;
+            } else {
+                if (window.location.pathname.includes('manage-tasks') || window.location.pathname.includes('my-tasks')) {
+                    window.location.href = '/manage-tasks/';
+                }
+            }
+        }
+    });
+
+    const searchIcon = searchInput.parentElement?.querySelector('.fa-search');
+    if (searchIcon) {
+        searchIcon.style.cursor = 'pointer';
+        searchIcon.addEventListener('click', () => {
+            const query = searchInput.value.trim();
+            if (query) {
+                window.location.href = `/manage-tasks/?search=${encodeURIComponent(query)}`;
+            }
+        });
+    }
+}
 
 function setupAlertAutoDismiss() {
     document.querySelectorAll('.auto-dismiss').forEach(alert => {

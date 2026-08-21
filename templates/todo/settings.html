@@ -304,33 +304,24 @@
     }
 
     function exportTasks(format) {
-        // Fetch stats and build a simple data export
-        fetch('/api/stats/')
-            .then(r => r.json())
-            .then(data => {
-                if (format === 'json') {
-                    const blob = new Blob([JSON.stringify(data.stats, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'taskflixx-stats.json';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                } else {
-                    // CSV of stats
-                    const csv = Object.entries(data.stats)
-                        .map(([k, v]) => `${k},${v}`)
-                        .join('\n');
-                    const blob = new Blob([`metric,value\n${csv}`], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'taskflixx-stats.csv';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                }
-            })
-            .catch(() => alert('Export failed. Please try again.'));
+        if (format === 'csv') {
+            window.location.href = '/api/export/tasks/?format=csv';
+        } else {
+            fetch('/api/export/tasks/?format=json')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const blob = new Blob([JSON.stringify(data.tasks, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'taskflixx_tasks_export.json';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    }
+                })
+                .catch(() => alert('Export failed. Please try again.'));
+        }
     }
 </script>
 {% endblock scripts %}

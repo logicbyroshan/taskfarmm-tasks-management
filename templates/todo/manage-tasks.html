@@ -16,6 +16,9 @@
     </div>
 
     <form method="GET" action="{% url 'manage_tasks' %}" id="filter-form" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        {% if search_query %}
+        <input type="hidden" name="search" value="{{ search_query }}">
+        {% endif %}
         <select name="sort" id="sort" onchange="this.form.submit()" style="height:36px;font-size:0.8rem;min-width:130px;">
             <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>↓ Newest</option>
             <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>↑ Oldest</option>
@@ -45,9 +48,9 @@
             <option value="{{ proj.id }}" {% if project_filter == proj.id|stringformat:"s" %}selected{% endif %}>{{ proj.name }}</option>
             {% endfor %}
         </select>
-        {% if status_filter != 'all' or priority_filter != 'all' or project_filter != 'all' or sort_by != 'newest' %}
+        {% if status_filter != 'all' or priority_filter != 'all' or project_filter != 'all' or sort_by != 'newest' or search_query %}
         <a href="{% url 'manage_tasks' %}" class="clear-filters-btn" title="Clear all filters">
-            <i class="fas fa-times"></i> Clear
+            <i class="fas fa-times"></i> Clear {% if search_query %}"{{ search_query }}"{% endif %}
         </a>
         {% endif %}
     </form>

@@ -48,7 +48,7 @@
                     <input type="text" id="search-input" placeholder="Search tasks or projects..." aria-label="Search tasks">
                     <i class="fas fa-search" aria-hidden="true"></i>
                 </div>
-                <a href="{% url 'project_create' %}" class="navbar-new-project-btn" title="Start a new project">
+                <a href="{% url 'manage_projects' %}" class="navbar-new-project-btn" onclick="if(document.getElementById('category-modal')){ event.preventDefault(); openAddProjectModal(); }" title="Manage and create projects">
                     <i class="fas fa-folder-plus"></i>
                     <span>New Project</span>
                 </a>

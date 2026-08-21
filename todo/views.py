@@ -116,9 +116,16 @@ def dashboard(request):
 def manage_tasks(request):
     """
     Displays a grid/list of ALL tasks belonging to the current user (Unorganized view).
-    Supports filtering and sorting via GET params.
+    Supports search, filtering and sorting via GET params.
     """
     tasks = Task.objects.filter(user=request.user)
+
+    # Search Query
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        tasks = tasks.filter(
+            Q(title__icontains=search_query) | Q(description__icontains=search_query)
+        )
 
     # Filtering
     status_filter = request.GET.get('status', 'all')
@@ -155,6 +162,7 @@ def manage_tasks(request):
         'priority_filter': priority_filter,
         'project_filter': project_filter,
         'sort_by': sort_by,
+        'search_query': search_query,
         'task_count': tasks.count(),
         'active_page': 'manage_tasks',
     }
@@ -602,6 +610,52 @@ def stats_api(request):
             'completion_rate': int((done / total) * 100) if total > 0 else 0,
         }
     })
+
+
+@login_required
+def tasks_export_api(request):
+    """Exports all user tasks and projects data as JSON or CSV."""
+    tasks = Task.objects.filter(user=request.user).select_related('category')
+    format_type = request.GET.get('format', 'json').lower()
+
+    if format_type == 'csv':
+        import csv
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="taskflixx_tasks_export.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['ID', 'Title', 'Description', 'Project', 'Priority', 'Status', 'Due Date', 'Created At', 'Completed At'])
+        for t in tasks:
+            writer.writerow([
+                t.id,
+                t.title,
+                t.description or '',
+                t.category.name if t.category else 'General',
+                t.get_priority_display(),
+                t.get_status_display(),
+                t.due_date.strftime('%Y-%m-%d') if t.due_date else '',
+                t.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                t.completed_at.strftime('%Y-%m-%d %H:%M:%S') if t.completed_at else '',
+            ])
+        return response
+
+    tasks_data = [
+        {
+            'id': t.id,
+            'title': t.title,
+            'description': t.description or '',
+            'project': t.category.name if t.category else 'General',
+            'priority': t.priority,
+            'priority_display': t.get_priority_display(),
+            'status': t.status,
+            'status_display': t.get_status_display(),
+            'due_date': t.due_date.strftime('%Y-%m-%d') if t.due_date else None,
+            'created_at': t.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'completed_at': t.completed_at.strftime('%Y-%m-%d %H:%M:%S') if t.completed_at else None,
+        }
+        for t in tasks
+    ]
+    return JsonResponse({'success': True, 'tasks': tasks_data, 'total': len(tasks_data)})
 
 
 # ==============================================================================
