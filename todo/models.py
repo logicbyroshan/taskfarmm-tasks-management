@@ -43,6 +43,7 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)  # Will store rich HTML content
     is_predefined = models.BooleanField(default=False)  # Tracks if task came from a template
+    checklist = models.JSONField(default=list, blank=True)  # Trello-style subtasks [{id, text, completed}]
 
     priority = models.CharField(
         max_length=10,
@@ -73,6 +74,22 @@ class Task(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class TaskComment(models.Model):
+    """
+    Activity stream comments for Trello-style card discussions.
+    """
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_comments')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.task.title}"
 
 
 class PreDefinedTask(models.Model):

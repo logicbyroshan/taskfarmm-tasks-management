@@ -5,15 +5,44 @@
 
 {% block styles %}
 <style>
-/* 6-Column Kanban Horizontal Layout */
+/* Horizontal Scrollable Kanban Container */
+.kanban-board-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 20px;
+    margin-top: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #3b82f6 #09090b;
+}
+
+.kanban-board-scroll-wrapper::-webkit-scrollbar {
+    height: 10px;
+}
+
+.kanban-board-scroll-wrapper::-webkit-scrollbar-track {
+    background: #09090b;
+    border-radius: 6px;
+    border: 1px solid #18181b;
+}
+
+.kanban-board-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #27272a;
+    border-radius: 6px;
+    border: 2px solid #09090b;
+}
+
+.kanban-board-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #3b82f6;
+}
+
+/* 6-Column Fixed-Width Grid */
 .kanban-board-6col {
     display: grid;
-    grid-template-columns: repeat(6, minmax(290px, 1fr));
+    grid-template-columns: repeat(6, 320px);
     gap: 16px;
-    align-items: start;
-    width: 100%;
-    min-width: max-content;
-    padding-bottom: 24px;
+    width: max-content;
+    min-width: 100%;
 }
 
 .kanban-column {
@@ -22,8 +51,8 @@
     border-radius: var(--radius-md);
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 160px);
-    min-height: 520px;
+    height: calc(100vh - 180px);
+    min-height: 540px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     overflow: hidden;
 }
@@ -76,6 +105,30 @@
     width: 0px !important;
     display: none !important;
 }
+
+.kanban-card {
+    background: #09090b;
+    border: 1px solid #18181b;
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kanban-card:hover {
+    transform: translateY(-2px);
+    border-color: #3b82f6;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.kanban-card.is-completed {
+    opacity: 0.65;
+}
+
+.kanban-card.is-completed .kanban-card-title {
+    text-decoration: line-through;
+    color: #71717a;
+}
 </style>
 {% endblock styles %}
 
@@ -87,10 +140,12 @@
             {% if selected_project %}
                 Kanban: <span style="color: {{ selected_project.color }};">{{ selected_project.name }}</span>
             {% else %}
-                Manage Kanban (All Projects)
+                Manage Kanban
             {% endif %}
         </h2>
-        <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.875rem;">Drag and drop cards across columns or use status controls.</p>
+        <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.875rem;">
+            Single project board · Click any card to open full Trello details or drag across columns.
+        </p>
     </div>
 
     <div class="kanban-actions" style="display: flex; align-items: center; gap: 14px;">
@@ -98,7 +153,6 @@
         <div class="project-filter-box" style="display: flex; align-items: center; gap: 8px;">
             <label for="kanban-project-select" style="font-size: 0.825rem; font-weight: 600; color: var(--text-muted);"><i class="fas fa-folder"></i> Project:</label>
             <select id="kanban-project-select" onchange="switchKanbanProject(this.value)" style="height: 38px; min-width: 170px; background: #000000; border: 1px solid #27272a; color: #f4f4f5; border-radius: 6px; padding: 0 10px;">
-                <option value="" {% if not selected_project_id %}selected{% endif %}>📁 All Projects</option>
                 {% for project in all_projects %}
                 <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>
                     📁 {{ project.name }} ({{ project.task_count }})
@@ -113,118 +167,289 @@
     </div>
 </div>
 
-<div class="kanban-board-6col">
-    <!-- 1. Backlog Column -->
-    <div class="kanban-column" id="column-backlog" data-status="backlog">
-        <div class="column-header">
-            <div class="column-title">
-                <span class="status-dot backlog"></span>
-                <h3>Backlog</h3>
-                <span class="task-count" id="count-backlog">{{ backlog_tasks.count }}</span>
+<!-- Horizontal Scrolling Board Wrapper -->
+<div class="kanban-board-scroll-wrapper" id="kanban-board-scroll-wrapper">
+    <div class="kanban-board-6col">
+        <!-- 1. Backlog Column -->
+        <div class="kanban-column" id="column-backlog" data-status="backlog">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="status-dot backlog"></span>
+                    <h3>Backlog</h3>
+                    <span class="task-count" id="count-backlog">{{ backlog_tasks.count }}</span>
+                </div>
+                <button class="icon-btn" onclick="openAddTaskModalWithStatus('backlog')" title="Add task to Backlog"><i class="fas fa-plus"></i></button>
             </div>
-            <button class="icon-btn" onclick="openAddTaskModalWithStatus('backlog')" title="Add task to Backlog"><i class="fas fa-plus"></i></button>
+            <div class="kanban-cards-container" data-status="backlog" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'backlog')">
+                {% for task in backlog_tasks %}
+                    <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
+                         id="kanban-card-{{ task.id }}" 
+                         data-task-id="{{ task.id }}" 
+                         draggable="true" 
+                         ondragstart="handleDragStart(event)" 
+                         onclick="openTrelloModal({{ task.id }})">
+                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="status {{ task.status }}">BACKLOG</span>
+                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        </div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        {% if task.description %}
+                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                            {{ task.description|striptags }}
+                        </div>
+                        {% endif %}
+                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                            {% if task.checklist %}
+                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-square"></i> {{ task.checklist|length }}
+                            </span>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                                <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="kanban-empty" id="empty-backlog"><i class="far fa-clipboard"></i><p>No tasks</p></div>
+                {% endfor %}
+            </div>
         </div>
-        <div class="kanban-cards-container" data-status="backlog" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'backlog')">
-            {% for task in backlog_tasks %}
-                {% include 'todo/components/kanban_card.html' with task=task %}
-            {% empty %}
-                <div class="kanban-empty" id="empty-backlog"><i class="far fa-clipboard"></i><p>No tasks</p></div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- 2. To Do Column -->
-    <div class="kanban-column" id="column-to-do" data-status="not-started">
-        <div class="column-header">
-            <div class="column-title">
-                <span class="status-dot to-do"></span>
-                <h3>To Do</h3>
-                <span class="task-count" id="count-not-started">{{ to_do_tasks.count }}</span>
+        <!-- 2. To Do Column -->
+        <div class="kanban-column" id="column-to-do" data-status="not-started">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="status-dot to-do"></span>
+                    <h3>To Do</h3>
+                    <span class="task-count" id="count-not-started">{{ to_do_tasks.count }}</span>
+                </div>
+                <button class="icon-btn" onclick="openAddTaskModalWithStatus('not-started')" title="Add task to To Do"><i class="fas fa-plus"></i></button>
             </div>
-            <button class="icon-btn" onclick="openAddTaskModalWithStatus('not-started')" title="Add task to To Do"><i class="fas fa-plus"></i></button>
+            <div class="kanban-cards-container" data-status="not-started" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'not-started')">
+                {% for task in to_do_tasks %}
+                    <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
+                         id="kanban-card-{{ task.id }}" 
+                         data-task-id="{{ task.id }}" 
+                         draggable="true" 
+                         ondragstart="handleDragStart(event)" 
+                         onclick="openTrelloModal({{ task.id }})">
+                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="status {{ task.status }}">TO DO</span>
+                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        </div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        {% if task.description %}
+                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                            {{ task.description|striptags }}
+                        </div>
+                        {% endif %}
+                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                            {% if task.checklist %}
+                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-square"></i> {{ task.checklist|length }}
+                            </span>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                                <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="kanban-empty" id="empty-not-started"><i class="far fa-list-alt"></i><p>No tasks</p></div>
+                {% endfor %}
+            </div>
         </div>
-        <div class="kanban-cards-container" data-status="not-started" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'not-started')">
-            {% for task in to_do_tasks %}
-                {% include 'todo/components/kanban_card.html' with task=task %}
-            {% empty %}
-                <div class="kanban-empty" id="empty-not-started"><i class="far fa-list-alt"></i><p>No tasks</p></div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- 3. In Progress Column -->
-    <div class="kanban-column" id="column-in-progress" data-status="in-progress">
-        <div class="column-header">
-            <div class="column-title">
-                <span class="status-dot in-progress"></span>
-                <h3>In Progress</h3>
-                <span class="task-count" id="count-in-progress">{{ in_progress_tasks.count }}</span>
+        <!-- 3. In Progress Column -->
+        <div class="kanban-column" id="column-in-progress" data-status="in-progress">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="status-dot in-progress"></span>
+                    <h3>In Progress</h3>
+                    <span class="task-count" id="count-in-progress">{{ in_progress_tasks.count }}</span>
+                </div>
+                <button class="icon-btn" onclick="openAddTaskModalWithStatus('in-progress')" title="Add task to In Progress"><i class="fas fa-plus"></i></button>
             </div>
-            <button class="icon-btn" onclick="openAddTaskModalWithStatus('in-progress')" title="Add task to In Progress"><i class="fas fa-plus"></i></button>
+            <div class="kanban-cards-container" data-status="in-progress" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'in-progress')">
+                {% for task in in_progress_tasks %}
+                    <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
+                         id="kanban-card-{{ task.id }}" 
+                         data-task-id="{{ task.id }}" 
+                         draggable="true" 
+                         ondragstart="handleDragStart(event)" 
+                         onclick="openTrelloModal({{ task.id }})">
+                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="status {{ task.status }}">IN PROGRESS</span>
+                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        </div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        {% if task.description %}
+                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                            {{ task.description|striptags }}
+                        </div>
+                        {% endif %}
+                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                            {% if task.checklist %}
+                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-square"></i> {{ task.checklist|length }}
+                            </span>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                                <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="kanban-empty" id="empty-in-progress"><i class="fas fa-spinner"></i><p>No tasks</p></div>
+                {% endfor %}
+            </div>
         </div>
-        <div class="kanban-cards-container" data-status="in-progress" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'in-progress')">
-            {% for task in in_progress_tasks %}
-                {% include 'todo/components/kanban_card.html' with task=task %}
-            {% empty %}
-                <div class="kanban-empty" id="empty-in-progress"><i class="fas fa-spinner"></i><p>No tasks</p></div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- 4. Done Column -->
-    <div class="kanban-column" id="column-completed" data-status="completed">
-        <div class="column-header">
-            <div class="column-title">
-                <span class="status-dot completed"></span>
-                <h3>Done</h3>
-                <span class="task-count" id="count-completed">{{ done_tasks.count }}</span>
+        <!-- 4. Done Column -->
+        <div class="kanban-column" id="column-completed" data-status="completed">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="status-dot completed"></span>
+                    <h3>Done</h3>
+                    <span class="task-count" id="count-completed">{{ done_tasks.count }}</span>
+                </div>
+                <button class="icon-btn" onclick="openAddTaskModalWithStatus('completed')" title="Add task to Done"><i class="fas fa-plus"></i></button>
             </div>
-            <button class="icon-btn" onclick="openAddTaskModalWithStatus('completed')" title="Add task to Done"><i class="fas fa-plus"></i></button>
+            <div class="kanban-cards-container" data-status="completed" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'completed')">
+                {% for task in done_tasks %}
+                    <div class="kanban-card is-completed" 
+                         id="kanban-card-{{ task.id }}" 
+                         data-task-id="{{ task.id }}" 
+                         draggable="true" 
+                         ondragstart="handleDragStart(event)" 
+                         onclick="openTrelloModal({{ task.id }})">
+                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="status completed">DONE</span>
+                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        </div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #71717a; text-decoration: line-through; margin-bottom: 4px;">{{ task.title }}</div>
+                        {% if task.description %}
+                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #71717a; text-decoration: line-through; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                            {{ task.description|striptags }}
+                        </div>
+                        {% endif %}
+                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                            {% if task.checklist %}
+                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-square"></i> {{ task.checklist|length }}
+                            </span>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                                <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="kanban-empty" id="empty-completed"><i class="far fa-check-circle"></i><p>No tasks</p></div>
+                {% endfor %}
+            </div>
         </div>
-        <div class="kanban-cards-container" data-status="completed" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'completed')">
-            {% for task in done_tasks %}
-                {% include 'todo/components/kanban_card.html' with task=task %}
-            {% empty %}
-                <div class="kanban-empty" id="empty-completed"><i class="far fa-check-circle"></i><p>No tasks</p></div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- 5. On Hold Column -->
-    <div class="kanban-column" id="column-on-hold" data-status="on-hold">
-        <div class="column-header">
-            <div class="column-title">
-                <span class="status-dot on-hold"></span>
-                <h3>On Hold</h3>
-                <span class="task-count" id="count-on-hold">{{ on_hold_tasks.count }}</span>
+        <!-- 5. On Hold Column -->
+        <div class="kanban-column" id="column-on-hold" data-status="on-hold">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="status-dot on-hold"></span>
+                    <h3>On Hold</h3>
+                    <span class="task-count" id="count-on-hold">{{ on_hold_tasks.count }}</span>
+                </div>
+                <button class="icon-btn" onclick="openAddTaskModalWithStatus('on-hold')" title="Add task to On Hold"><i class="fas fa-plus"></i></button>
             </div>
-            <button class="icon-btn" onclick="openAddTaskModalWithStatus('on-hold')" title="Add task to On Hold"><i class="fas fa-plus"></i></button>
+            <div class="kanban-cards-container" data-status="on-hold" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'on-hold')">
+                {% for task in on_hold_tasks %}
+                    <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
+                         id="kanban-card-{{ task.id }}" 
+                         data-task-id="{{ task.id }}" 
+                         draggable="true" 
+                         ondragstart="handleDragStart(event)" 
+                         onclick="openTrelloModal({{ task.id }})">
+                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="status on-hold">ON HOLD</span>
+                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        </div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        {% if task.description %}
+                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                            {{ task.description|striptags }}
+                        </div>
+                        {% endif %}
+                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                            {% if task.checklist %}
+                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-square"></i> {{ task.checklist|length }}
+                            </span>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                                <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="kanban-empty" id="empty-on-hold"><i class="far fa-pause-circle"></i><p>No tasks</p></div>
+                {% endfor %}
+            </div>
         </div>
-        <div class="kanban-cards-container" data-status="on-hold" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'on-hold')">
-            {% for task in on_hold_tasks %}
-                {% include 'todo/components/kanban_card.html' with task=task %}
-            {% empty %}
-                <div class="kanban-empty" id="empty-on-hold"><i class="far fa-pause-circle"></i><p>No tasks</p></div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- 6. Canceled Column -->
-    <div class="kanban-column" id="column-canceled" data-status="canceled">
-        <div class="column-header">
-            <div class="column-title">
-                <span class="status-dot canceled"></span>
-                <h3>Canceled</h3>
-                <span class="task-count" id="count-canceled">{{ canceled_tasks.count }}</span>
+        <!-- 6. Canceled Column -->
+        <div class="kanban-column" id="column-canceled" data-status="canceled">
+            <div class="column-header">
+                <div class="column-title">
+                    <span class="status-dot canceled"></span>
+                    <h3>Canceled</h3>
+                    <span class="task-count" id="count-canceled">{{ canceled_tasks.count }}</span>
+                </div>
+                <button class="icon-btn" onclick="openAddTaskModalWithStatus('canceled')" title="Add task to Canceled"><i class="fas fa-plus"></i></button>
             </div>
-            <button class="icon-btn" onclick="openAddTaskModalWithStatus('canceled')" title="Add task to Canceled"><i class="fas fa-plus"></i></button>
-        </div>
-        <div class="kanban-cards-container" data-status="canceled" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'canceled')">
-            {% for task in canceled_tasks %}
-                {% include 'todo/components/kanban_card.html' with task=task %}
-            {% empty %}
-                <div class="kanban-empty" id="empty-canceled"><i class="far fa-times-circle"></i><p>No tasks</p></div>
-            {% endfor %}
+            <div class="kanban-cards-container" data-status="canceled" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'canceled')">
+                {% for task in canceled_tasks %}
+                    <div class="kanban-card" 
+                         id="kanban-card-{{ task.id }}" 
+                         data-task-id="{{ task.id }}" 
+                         draggable="true" 
+                         ondragstart="handleDragStart(event)" 
+                         onclick="openTrelloModal({{ task.id }})">
+                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="status canceled">CANCELED</span>
+                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        </div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        {% if task.description %}
+                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                            {{ task.description|striptags }}
+                        </div>
+                        {% endif %}
+                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                            {% if task.checklist %}
+                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-check-square"></i> {{ task.checklist|length }}
+                            </span>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                                <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="kanban-empty" id="empty-canceled"><i class="far fa-times-circle"></i><p>No tasks</p></div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>
@@ -305,16 +530,16 @@
 
                     if (targetStatus === 'completed') {
                         card.classList.add('is-completed');
-                        if (titleEl) titleEl.classList.add('strike-through');
-                        if (descEl) descEl.classList.add('strike-through');
+                        if (titleEl) { titleEl.style.textDecoration = 'line-through'; titleEl.style.color = '#71717a'; }
+                        if (descEl) { descEl.style.textDecoration = 'line-through'; descEl.style.color = '#71717a'; }
                         if (statusSpan) {
                             statusSpan.className = 'status completed';
                             statusSpan.textContent = 'DONE';
                         }
                     } else {
                         card.classList.remove('is-completed');
-                        if (titleEl) titleEl.classList.remove('strike-through');
-                        if (descEl) descEl.classList.remove('strike-through');
+                        if (titleEl) { titleEl.style.textDecoration = 'none'; titleEl.style.color = '#ffffff'; }
+                        if (descEl) { descEl.style.textDecoration = 'none'; descEl.style.color = '#a1a1aa'; }
                     }
 
                     updateKanbanColumnCounts();

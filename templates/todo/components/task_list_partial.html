@@ -1,22 +1,52 @@
-<div id="tasks-container" class="task-cards-container">
+<div id="my-tasks-grid">
     {% for task in tasks %}
-        {% include 'todo/components/task_card.html' with task=task %}
-    {% empty %}
-        <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px; background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
-            <div class="empty-icon" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 12px;">
-                <i class="fas fa-search"></i>
+    <article 
+        class="my-task-card priority-{{ task.priority }} status-{{ task.status }}" 
+        tabindex="0" 
+        role="button" 
+        aria-label="Edit task: {{ task.title }}"
+        data-task-id="{{ task.id }}"
+        onclick="openTrelloModal({{ task.id }})"
+        style="cursor: pointer;">
+        
+        <div class="card-content">
+            <div class="card-title-row">
+                <h3 class="card-title" style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #ffffff;">{{ task.title }}</h3>
+                <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
             </div>
-            <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--highlight-color);">No Tasks Found</h4>
-            <p style="margin: 0 0 16px 0; color: var(--text-muted);">
-                {% if search_query %}
-                No tasks match your search for "{{ search_query }}". Try a different search term or clear filters.
-                {% else %}
-                No tasks match the selected filters. Click "Add Task" to create one.
-                {% endif %}
+            {% if task.description %}
+            <p class="card-description" style="margin: 6px 0 0 0; font-size: 0.825rem; color: #a1a1aa; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ task.description|striptags }}
             </p>
-            <button class="invite-btn" onclick="openAddTaskModal()" type="button">
-                <i class="fas fa-plus"></i> Create New Task
-            </button>
+            {% endif %}
         </div>
+        <div class="card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 10px; border-top: 1px solid #18181b;">
+            {% if task.category %}
+            <span class="project-badge" style="background-color: {{ task.category.color }}20; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}40; font-size: 0.725rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
+                <i class="fas fa-folder"></i> {{ task.category.name }}
+            </span>
+            {% else %}
+            <span style="font-size: 0.725rem; color: var(--text-muted);">
+                <i class="fas fa-inbox"></i> General
+            </span>
+            {% endif %}
+            <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                {% if task.due_date %}
+                <span style="font-size: 0.725rem; color: var(--text-muted);"><i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}</span>
+                {% endif %}
+                <span class="status {{ task.status }}">{{ task.get_status_display }}</span>
+            </div>
+        </div>
+    </article>
+    {% empty %}
+    <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px; background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+        <div class="empty-icon" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 12px;"><i class="fas fa-inbox"></i></div>
+        <h3 style="font-size: 1.1rem; color: #ffffff; margin: 0 0 8px 0;">No tasks found</h3>
+        {% if status_filter != 'all' or priority_filter != 'all' or project_filter != 'all' %}
+        <p style="color: var(--text-muted); margin-bottom: 14px;">No tasks match your current filters. <a href="{% url 'manage_tasks' %}" style="color: #60a5fa;">Clear filters</a></p>
+        {% else %}
+        <p style="color: var(--text-muted); margin-bottom: 14px;">Click <strong>Add Task</strong> to create your first task, or browse <a href="#" onclick="openPredefinedModal(); return false;" style="color: #60a5fa;">task templates</a>.</p>
+        {% endif %}
+    </div>
     {% endfor %}
 </div>

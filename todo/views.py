@@ -14,10 +14,11 @@ from django.contrib.auth.models import User
 # ----------------- Database and Querying Imports -----------------
 from django.db.models import Count, Q
 from django.utils import timezone
+from django.utils.timesince import timesince
 import json
 
 # ----------------- Local Application Imports -----------------
-from .models import Task, Category, UserProfile, PreDefinedTask
+from .models import Task, Category, UserProfile, PreDefinedTask, TaskComment
 from .forms import TaskForm, CategoryForm, UserUpdateForm, UserProfileForm, PasswordUpdateForm
 
 
@@ -299,30 +300,45 @@ def settings_page(request):
 
 @login_required
 def logout_view(request):
-    """Logs out the user and redirects to dashboard (demo mode will auto-login again)."""
+    """Logs out the user and redirects to dashboard."""
     auth_logout(request)
     return redirect('dashboard')
 
 
 # ==============================================================================
-#  TASK CRUD
+#  TASK CRUD & TRELLO MODAL ENDPOINTS
 # ==============================================================================
 
 @login_required
 def task_detail(request, pk):
-    """Returns task data as JSON for the edit modal."""
+    """Returns task detail view or full JSON for Trello modal."""
     task = get_object_or_404(Task, pk=pk, user=request.user)
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        comments_data = [
+            {
+                'id': c.id,
+                'user': c.user.username,
+                'content': c.content,
+                'created_at': c.created_at.strftime('%d %b %Y, %H:%M'),
+                'time_ago': timesince(c.created_at) + ' ago',
+            }
+            for c in task.comments.all()
+        ]
         task_data = {
             'id': task.id,
             'title': task.title,
             'description': task.description or '',
             'category': task.category.id if task.category else '',
-            'category_name': task.category.name if task.category else '',
+            'category_name': task.category.name if task.category else 'General',
+            'category_color': task.category.color if task.category else '#71717a',
             'priority': task.priority,
+            'priority_display': task.get_priority_display(),
             'status': task.status,
+            'status_display': task.get_status_display(),
             'due_date': task.due_date.strftime('%Y-%m-%d') if task.due_date else '',
-            'created_at': task.created_at.strftime('%d %b %Y'),
+            'created_at': task.created_at.strftime('%d %b %Y, %H:%M'),
+            'checklist': task.checklist or [],
+            'comments': comments_data,
         }
         return JsonResponse({'success': True, 'task': task_data})
     context = {
@@ -359,10 +375,37 @@ def task_create(request):
 
 @login_required
 def task_update(request, pk):
-    """Updates an existing task (full form or quick status update)."""
+    """Updates an existing task (full form or quick status/title update)."""
     task = get_object_or_404(Task, pk=pk, user=request.user)
 
     if request.method == 'POST':
+        # Handle JSON body (e.g. from Trello modal live edit)
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body)
+                if 'title' in data and data['title'].strip():
+                    task.title = data['title'].strip()
+                if 'description' in data:
+                    task.description = data['description']
+                if 'status' in data and data['status'] in Task.Status.values:
+                    task.status = data['status']
+                if 'priority' in data and data['priority'] in Task.Priority.values:
+                    task.priority = data['priority']
+                if 'category' in data:
+                    cat_id = data['category']
+                    if cat_id:
+                        task.category = Category.objects.filter(pk=cat_id, user=request.user).first()
+                    else:
+                        task.category = None
+                if 'due_date' in data:
+                    task.due_date = data['due_date'] if data['due_date'] else None
+                if 'checklist' in data:
+                    task.checklist = data['checklist']
+                task.save()
+                return JsonResponse({'success': True, 'message': 'Task updated successfully!'})
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
         new_status = request.POST.get('status')
         # Quick status-only update (e.g., from Kanban drag-drop or dashboard checkbox)
         if new_status and 'title' not in request.POST:
@@ -385,19 +428,84 @@ def task_update(request, pk):
                 return JsonResponse({'success': False, 'errors': form.errors})
             return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
-    # GET request: return task data as JSON for populating edit modal
+    # GET request: return complete task data for populating Trello modal
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        comments_data = [
+            {
+                'id': c.id,
+                'user': c.user.username,
+                'content': c.content,
+                'created_at': c.created_at.strftime('%d %b %Y, %H:%M'),
+                'time_ago': timesince(c.created_at) + ' ago',
+            }
+            for c in task.comments.all()
+        ]
         task_data = {
+            'id': task.id,
             'title': task.title,
             'description': task.description or '',
             'category': task.category.id if task.category else '',
+            'category_name': task.category.name if task.category else 'General',
+            'category_color': task.category.color if task.category else '#71717a',
             'priority': task.priority,
+            'priority_display': task.get_priority_display(),
             'status': task.status,
+            'status_display': task.get_status_display(),
             'due_date': task.due_date.strftime('%Y-%m-%d') if task.due_date else '',
+            'created_at': task.created_at.strftime('%d %b %Y, %H:%M'),
+            'checklist': task.checklist or [],
+            'comments': comments_data,
         }
         return JsonResponse({'success': True, 'task': task_data})
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+
+@login_required
+@require_http_methods(['POST'])
+def task_add_comment(request, pk):
+    """Adds a new activity comment to a task."""
+    task = get_object_or_404(Task, pk=pk, user=request.user)
+    try:
+        data = json.loads(request.body)
+        content = data.get('content', '').strip()
+    except Exception:
+        content = request.POST.get('content', '').strip()
+
+    if not content:
+        return JsonResponse({'success': False, 'error': 'Comment content cannot be empty.'}, status=400)
+
+    comment = TaskComment.objects.create(
+        task=task,
+        user=request.user,
+        content=content
+    )
+
+    return JsonResponse({
+        'success': True,
+        'comment': {
+            'id': comment.id,
+            'user': comment.user.username,
+            'content': comment.content,
+            'created_at': comment.created_at.strftime('%d %b %Y, %H:%M'),
+            'time_ago': 'Just now',
+        }
+    })
+
+
+@login_required
+@require_http_methods(['POST'])
+def task_update_checklist(request, pk):
+    """Updates the Trello-style subtasks/checklist for a task."""
+    task = get_object_or_404(Task, pk=pk, user=request.user)
+    try:
+        data = json.loads(request.body)
+        checklist = data.get('checklist', [])
+        task.checklist = checklist
+        task.save(update_fields=['checklist'])
+        return JsonResponse({'success': True, 'checklist': task.checklist})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 @login_required
