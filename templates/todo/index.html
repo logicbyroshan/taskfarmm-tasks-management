@@ -11,12 +11,12 @@
     <!-- Left Column: Recent Tasks Feed -->
     <section class="dash-left" aria-labelledby="recent-tasks-heading">
         <div class="todo-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 id="recent-tasks-heading" style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-clock" style="color: var(--accent-color);"></i> Recent Tasks
-            </h3>
+            <h2 id="recent-tasks-heading" style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-clock" style="color: var(--accent-color);" aria-hidden="true"></i> Recent Tasks
+            </h2>
             <div class="filter-options" style="display: flex; align-items: center; gap: 12px;">
                 <a href="{% url 'manage_tasks' %}" class="view-all-link" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 4px;">
-                    View All <i class="fas fa-arrow-right"></i>
+                    View All <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
                 <button class="invite-btn" type="button" onclick="openAddTaskModal()">
                     <i class="fas fa-plus" aria-hidden="true"></i> Add Task
@@ -30,12 +30,12 @@
             {% empty %}
                 <div class="empty-state" style="text-align: center; padding: 40px; background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
                     <div class="empty-icon" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 10px;">
-                        <i class="far fa-check-circle"></i>
+                        <i class="far fa-check-circle" aria-hidden="true"></i>
                     </div>
-                    <h4 style="margin: 0 0 6px 0; color: #ffffff;">No Active Tasks</h4>
+                    <h3 style="margin: 0 0 6px 0; color: #ffffff; font-size: 1rem;">No Active Tasks</h3>
                     <p style="margin: 0 0 14px 0; color: var(--text-muted); font-size: 0.875rem;">Your queue is clear. Click below to add a task or browse templates.</p>
                     <button class="invite-btn" type="button" onclick="openAddTaskModal()">
-                        <i class="fas fa-plus"></i> Create Task
+                        <i class="fas fa-plus" aria-hidden="true"></i> Create Task
                     </button>
                 </div>
             {% endfor %}
@@ -45,10 +45,10 @@
     <!-- Right Column: Status Matrix & Projects Quick Access -->
     <div class="dash-right" style="display: flex; flex-direction: column; gap: 20px;">
         <!-- 6-State Status Matrix -->
-        <section class="task-status-cards" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
-            <h3 style="margin: 0 0 16px 0; font-size: 0.95rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-th-large" style="color: var(--accent-color);"></i> Status Matrix
-            </h3>
+        <section class="task-status-cards" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;" aria-labelledby="status-matrix-heading">
+            <h2 id="status-matrix-heading" style="margin: 0 0 16px 0; font-size: 0.95rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-th-large" style="color: var(--accent-color);" aria-hidden="true"></i> Status Matrix
+            </h2>
             <div class="status-grid-2x3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <a href="{% url 'manage_tasks' %}?status=backlog" class="status-item" style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #09090b; border: 1px solid #18181b; border-radius: 8px; transition: all 0.2s ease;">
                     <span class="status-label" style="color: #a1a1aa; font-size: 0.8rem; font-weight: 500;">Backlog</span>
@@ -79,11 +79,11 @@
 
         <!-- Projects Quick Access -->
         {% if category_stats %}
-        <section class="projects-quick" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+        <section class="projects-quick" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;" aria-labelledby="projects-quick-heading">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <h3 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-folder" style="color: var(--accent-color);"></i> Projects
-                </h3>
+                <h2 id="projects-quick-heading" style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-folder" style="color: var(--accent-color);" aria-hidden="true"></i> Projects
+                </h2>
                 <a href="{% url 'manage_projects' %}" style="font-size: 0.8rem; color: #60a5fa; text-decoration: none;">View All</a>
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">

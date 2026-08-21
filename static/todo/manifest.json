@@ -1,0 +1,18 @@
+{
+  "name": "TaskFlixx - Smart Task & Project Management",
+  "short_name": "TaskFlixx",
+  "description": "Ultra-fast, OLED pitch-black task and project orchestration platform with 6-column Kanban and AI assistant.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/todo/images/logo.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

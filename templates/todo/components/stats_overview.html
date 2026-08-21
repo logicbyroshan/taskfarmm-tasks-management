@@ -4,40 +4,40 @@
         <div class="stat-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
             <div>
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Total Tasks</span>
-                <h3 style="margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #ffffff;">{{ total_tasks }}</h3>
+                <span class="stat-num" style="display: block; margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #ffffff;">{{ total_tasks }}</span>
             </div>
             <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                <i class="fas fa-tasks"></i>
+                <i class="fas fa-tasks" aria-hidden="true"></i>
             </div>
         </div>
 
         <div class="stat-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
             <div>
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">In Progress</span>
-                <h3 style="margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #f59e0b;">{{ in_progress_count }}</h3>
+                <span class="stat-num" style="display: block; margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #f59e0b;">{{ in_progress_count }}</span>
             </div>
             <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                <i class="fas fa-spinner fa-spin"></i>
+                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
             </div>
         </div>
 
         <div class="stat-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
             <div>
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Completed</span>
-                <h3 style="margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #10b981;">{{ done_count }}</h3>
+                <span class="stat-num" style="display: block; margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #10b981;">{{ done_count }}</span>
             </div>
             <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(16, 185, 129, 0.12); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                <i class="fas fa-check-circle"></i>
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
             </div>
         </div>
 
         <div class="stat-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
             <div>
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Overdue</span>
-                <h3 style="margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #ef4444;">{{ overdue_count }}</h3>
+                <span class="stat-num" style="display: block; margin: 4px 0 0 0; font-size: 1.6rem; font-weight: 700; color: #ef4444;">{{ overdue_count }}</span>
             </div>
             <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                <i class="fas fa-exclamation-triangle"></i>
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
             </div>
         </div>
     </div>
@@ -46,9 +46,9 @@
     <div class="progress-section-card" style="background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 24px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #ffffff;">
-                    <i class="fas fa-chart-line" style="color: var(--accent-color); margin-right: 6px;"></i> Overall Progress
-                </h4>
+                <h2 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #ffffff;">
+                    <i class="fas fa-chart-line" style="color: var(--accent-color); margin-right: 6px;" aria-hidden="true"></i> Overall Progress
+                </h2>
                 <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent-color);">{{ completion_rate }}%</span>
             </div>
             
@@ -57,9 +57,9 @@
                     @click="showProjectBreakdown = !showProjectBreakdown" 
                     class="project-toggle-btn"
                     style="background: #18181b; border: 1px solid #27272a; color: #a1a1aa; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-layer-group"></i>
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
                 <span x-text="showProjectBreakdown ? 'Hide Projects' : 'By Project'">By Project</span>
-                <i class="fas fa-chevron-down" :style="showProjectBreakdown ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transition: transform 0.2s;'"></i>
+                <i class="fas fa-chevron-down" :style="showProjectBreakdown ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transition: transform 0.2s;'" aria-hidden="true"></i>
             </button>
             {% endif %}
         </div>

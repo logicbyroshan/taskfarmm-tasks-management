@@ -3,46 +3,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     
-    <title>{% block title %}TaskFlixx{% endblock title %}</title>
+    <title>{% block title %}TaskFlixx - Smart Task & Project Management{% endblock title %}</title>
     
-    <meta name="description" content="TaskFlixx - A modern project & task manager with predefined task templates and AI assistant">
+    <meta name="description" content="TaskFlixx - Next-generation OLED pitch-black task and project orchestration platform with 6-column Kanban and AI assistant.">
     <meta name="author" content="TaskFlixx">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="http://127.0.0.1:8000/">
     
-    <meta name="theme-color" content="#3b82f6">
-    <meta name="msapplication-TileColor" content="#3b82f6">
+    <!-- Open Graph & Social Cards -->
+    <meta property="og:title" content="TaskFlixx - Smart Task & Project Management">
+    <meta property="og:description" content="Ultra-fast, OLED pitch-black task and project orchestration platform with 6-column Kanban and AI assistant.">
+    <meta property="og:image" content="{% static 'todo/images/logo.png' %}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- PWA & Mobile Web App -->
+    <meta name="theme-color" content="#000000">
+    <meta name="msapplication-TileColor" content="#000000">
+    <link rel="manifest" href="{% static 'todo/manifest.json' %}">
     
     <link rel="icon" type="image/png" href="{% static 'todo/images/logo.png' %}">
     <link rel="shortcut icon" type="image/png" href="{% static 'todo/images/logo.png' %}">
     <link rel="apple-touch-icon" href="{% static 'todo/images/logo.png' %}">
+    <link rel="preload" as="image" href="{% static 'todo/images/logo.png' %}" type="image/png" fetchpriority="high">
 
-    <!-- Google Fonts -->
+    <!-- Preconnect & Asynchronous Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+    </noscript>
+
+    <!-- FontAwesome (Non-render-blocking) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    </noscript>
 
     <!-- CSS Links -->
-    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=101">
-    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=101">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=102">
+    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=102">
     
-    <!-- HTMX & Alpine.js -->
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <!-- HTMX & Alpine.js (Deferred for zero render-blocking) -->
+    <script defer src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script defer src="https://unpkg.com/alpinejs@3.14.3/dist/cdn.min.js"></script>
 
     {% block styles %}{% endblock styles %}
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     <!-- Dynamic Ambient Dot Wave Canvas Background -->
-    <canvas id="bg-wave-canvas" class="bg-wave-canvas" aria-hidden="true"></canvas>
+    <canvas id="bg-wave-canvas" class="bg-wave-canvas" aria-hidden="true" style="contain: strict; will-change: transform;"></canvas>
 
     <div class="container">
         <!-- Main Navigation Header -->
         <header class="navbar" role="banner">
             <div class="navbar-left">
-                <img src="{% static 'todo/images/logo.png' %}" alt="TaskFlixx Logo" class="logo-img">
-                <a href="{% url 'dashboard' %}" style="text-decoration: none;">
+                <img src="{% static 'todo/images/logo.png' %}" alt="TaskFlixx Logo" class="logo-img" width="36" height="36" fetchpriority="high">
+                <a href="{% url 'dashboard' %}" style="text-decoration: none;" aria-label="TaskFlixx Home">
                     <h1 class="logo">Task<span>Flixx</span></h1>
                 </a>
             </div>
@@ -53,7 +74,7 @@
                     <i class="fas fa-search" aria-hidden="true"></i>
                 </div>
                 <a href="{% url 'manage_projects' %}" class="navbar-new-project-btn" onclick="if(document.getElementById('category-modal')){ event.preventDefault(); openAddProjectModal(); }" title="Manage and create projects">
-                    <i class="fas fa-folder-plus"></i>
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i>
                     <span>New Project</span>
                 </a>
                 <div class="date-day" role="status" aria-live="polite" id="live-date">
@@ -72,9 +93,9 @@
                 <div class="messages-container">
                     {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} auto-dismiss">
-                        <i class="fas fa-{% if 'success' in message.tags %}check-circle{% elif 'error' in message.tags %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                        <i class="fas fa-{% if 'success' in message.tags %}check-circle{% elif 'error' in message.tags %}exclamation-circle{% else %}info-circle{% endif %}" aria-hidden="true"></i>
                         {{ message }}
-                        <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+                        <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Dismiss alert">&times;</button>
                     </div>
                     {% endfor %}
                 </div>
@@ -99,17 +120,17 @@
     <aside id="ai-side-drawer" class="ai-side-drawer" aria-label="AI Assistant Drawer" role="complementary">
         <div class="ai-drawer-header">
             <div class="ai-drawer-title">
-                <span class="ai-drawer-icon"><i class="fas fa-robot"></i></span>
+                <span class="ai-drawer-icon"><i class="fas fa-robot" aria-hidden="true"></i></span>
                 <div>
-                    <h3>TaskFlixx AI</h3>
-                    <span>Intelligent task assistant</span>
+                    <h2 style="font-size: 1.1rem; margin: 0; font-weight: 700; color: #ffffff;">TaskFlixx AI</h2>
+                    <span style="font-size: 0.75rem; color: #a1a1aa;">Intelligent task assistant</span>
                 </div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <a href="{% url 'ai_assistant' %}" class="icon-btn" title="Open full AI page" style="text-decoration:none;">
-                    <i class="fas fa-expand-alt"></i>
+                <a href="{% url 'ai_assistant' %}" class="icon-btn" title="Open full AI page" style="text-decoration:none;" aria-label="Open full AI page">
+                    <i class="fas fa-expand-alt" aria-hidden="true"></i>
                 </a>
-                <button class="close-modal" type="button" onclick="closeAiDrawer()" aria-label="Close">&times;</button>
+                <button class="close-modal" type="button" onclick="closeAiDrawer()" aria-label="Close AI Drawer">&times;</button>
             </div>
         </div>
 
@@ -119,37 +140,37 @@
                 <p class="ai-section-label">Quick Actions</p>
                 <div class="ai-prompt-chips">
                     <button type="button" class="ai-chip" onclick="setAiDrawerPrompt('Generate a website launch plan with key tasks')">
-                        <i class="fas fa-rocket"></i> Launch Plan
+                        <i class="fas fa-rocket" aria-hidden="true"></i> Launch Plan
                     </button>
                     <button type="button" class="ai-chip" onclick="setAiDrawerPrompt('Break down: Implement user authentication into subtasks')">
-                        <i class="fas fa-sitemap"></i> Breakdown Tasks
+                        <i class="fas fa-sitemap" aria-hidden="true"></i> Breakdown Tasks
                     </button>
                     <button type="button" class="ai-chip" onclick="setAiDrawerPrompt('Create a marketing campaign execution plan')">
-                        <i class="fas fa-bullhorn"></i> Marketing Plan
+                        <i class="fas fa-bullhorn" aria-hidden="true"></i> Marketing Plan
                     </button>
                     <button type="button" class="ai-chip" onclick="setAiDrawerPrompt('Suggest tasks for setting up a new software project')">
-                        <i class="fas fa-code"></i> Dev Setup
+                        <i class="fas fa-code" aria-hidden="true"></i> Dev Setup
                     </button>
                 </div>
             </div>
 
             <!-- Prompt Input -->
             <div class="ai-drawer-section">
-                <p class="ai-section-label">Ask AI</p>
+                <label for="ai-drawer-prompt" class="ai-section-label" style="display: block;">Ask AI</label>
                 <textarea id="ai-drawer-prompt" class="form-control" rows="3"
                     placeholder="e.g. Create a 5-step plan to launch my SaaS product..."></textarea>
                 <button type="button" class="btn-submit" style="width:100%; margin-top: 10px;" onclick="generateAiDrawerResponse()">
-                    <i class="fas fa-wand-magic-sparkles"></i> Generate Suggestion
+                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> Generate Suggestion
                 </button>
             </div>
 
             <!-- AI Response Box -->
             <div id="ai-drawer-response" class="ai-drawer-response" style="display:none;">
                 <div class="ai-drawer-response-header">
-                    <span><i class="fas fa-lightbulb"></i> AI Suggestion</span>
+                    <span><i class="fas fa-lightbulb" aria-hidden="true"></i> AI Suggestion</span>
                     <div style="display: flex; gap: 6px;">
                         <button type="button" class="ai-chip" style="padding: 4px 10px; font-size: 0.72rem;" onclick="applyAiDrawerToTask()">
-                            <i class="fas fa-plus"></i> Add as Task
+                            <i class="fas fa-plus" aria-hidden="true"></i> Add as Task
                         </button>
                     </div>
                 </div>
@@ -160,27 +181,26 @@
             <div class="ai-drawer-section" style="margin-top: auto;">
                 <p class="ai-section-label">Go Deeper</p>
                 <a href="{% url 'ai_assistant' %}" class="ai-drawer-deep-link">
-                    <i class="fas fa-robot" style="color: #3b82f6;"></i>
+                    <i class="fas fa-robot" style="color: #3b82f6;" aria-hidden="true"></i>
                     <div>
                         <strong>Full AI Assistant</strong>
                         <span>Create projects & tasks automatically</span>
                     </div>
-                    <i class="fas fa-arrow-right" style="margin-left: auto; color: var(--text-muted);"></i>
+                    <i class="fas fa-arrow-right" style="margin-left: auto; color: var(--text-muted);" aria-hidden="true"></i>
                 </a>
                 <a href="{% url 'manage_tasks' %}" class="ai-drawer-deep-link">
-                    <i class="fas fa-magic" style="color: #8b5cf6;"></i>
+                    <i class="fas fa-magic" style="color: #8b5cf6;" aria-hidden="true"></i>
                     <div>
                         <strong>Task Templates</strong>
                         <span>Browse 39+ pre-built templates</span>
                     </div>
-                    <i class="fas fa-arrow-right" style="margin-left: auto; color: var(--text-muted);"></i>
+                    <i class="fas fa-arrow-right" style="margin-left: auto; color: var(--text-muted);" aria-hidden="true"></i>
                 </a>
             </div>
         </div>
     </aside>
 
-
-    <script src="{% static 'todo/js/script.js' %}?v=102"></script>
+    <script defer src="{% static 'todo/js/script.js' %}?v=103"></script>
     {% block scripts %}{% endblock scripts %}
 </body>
 </html>

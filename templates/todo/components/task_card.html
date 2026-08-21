@@ -65,9 +65,9 @@
 
     <!-- Task Body (Title & Description) -->
     <div class="task-body" style="margin: 12px 0 14px 0;">
-        <h4 class="task-title {% if task.status == 'completed' %}strike-through{% endif %}" style="margin: 0 0 6px 0; font-size: 0.95rem; font-weight: 600; color: #ffffff;">
+        <h3 class="task-title {% if task.status == 'completed' %}strike-through{% endif %}" style="margin: 0 0 6px 0; font-size: 0.95rem; font-weight: 600; color: #ffffff;">
             {{ task.title }}
-        </h4>
+        </h3>
         {% if task.description %}
         <p class="task-desc {% if task.status == 'completed' %}strike-through{% endif %}" style="margin: 0; font-size: 0.825rem; color: #a1a1aa; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
             {{ task.description|striptags }}
