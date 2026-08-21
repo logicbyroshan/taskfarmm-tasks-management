@@ -1,6 +1,6 @@
 /* 
 ==============================================
-TASK CATEGORIES PAGE STYLES
+TASK CATEGORIES & PROJECTS PAGE STYLES — Pitch Black OLED
 ==============================================
 */
 
@@ -15,26 +15,29 @@ TASK CATEGORIES PAGE STYLES
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 18px;
+    position: relative;
+    z-index: 10;
 }
 
 .category-card {
-    background: rgba(255, 255, 255, 0.025);
+    background: #000000;
     border-radius: var(--radius-lg);
     padding: 20px;
     border: 1px solid var(--border-color);
     border-top: 4px solid var(--category-color, var(--accent-color));
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     gap: 16px;
     transition: var(--transition);
+    position: relative;
 }
 
 .category-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-    border-color: rgba(59, 130, 246, 0.3);
-    background: rgba(255, 255, 255, 0.04);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+    border-color: rgba(59, 130, 246, 0.4);
+    background: #060608;
 }
 
 .category-header {
@@ -46,7 +49,7 @@ TASK CATEGORIES PAGE STYLES
 .category-icon {
     font-size: 1.25rem;
     color: var(--category-color, var(--accent-color));
-    background: rgba(255, 255, 255, 0.05);
+    background: #000000;
     border: 1px solid var(--border-color);
     width: 46px;
     height: 46px;
@@ -90,13 +93,13 @@ TASK CATEGORIES PAGE STYLES
 }
 
 .progress-bar-container {
-    background: rgba(255, 255, 255, 0.08);
+    background: #111111;
     border-radius: var(--radius-full);
-    height: 10px;
+    height: 8px;
     width: 100%;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid #1e1e1e;
 }
 
 .progress-bar {

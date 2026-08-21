@@ -55,7 +55,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     position: relative;
     display: flex;
     align-items: center;
-    background: #18181b;
+    background: #000000;
     border-radius: var(--radius-md);
     padding: 0 12px;
     border: 1px solid var(--border-color);
@@ -167,7 +167,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 }
 
 .sidebar-nav a:hover {
-    background: #18181b;
+    background: #0c0c0c;
     color: var(--highlight-color);
 }
 
@@ -212,7 +212,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 }
 
 .sidebar-settings-link a:hover {
-    background: #18181b;
+    background: #0c0c0c;
     color: var(--highlight-color);
 }
 
@@ -268,7 +268,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
-    background: #18181b;
+    background: #000000;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
     width: 100%;
@@ -350,7 +350,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px;
-    background: #18181b;
+    background: #000000;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
 }
@@ -399,10 +399,10 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 
 /* GLASSMORPHISM MODERN UI EFFECT — Pitch Black Theme */
 .sidebar, .navbar, .kanban-header, .kanban-column, .task-card, .task-status-cards, .completed-tasks-section, .category-card, .to-do-section, .modal-content, .filter-bar, .my-task-card, .settings-card {
-    background: #070709 !important;
+    background: #000000 !important;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid #1a1a1e !important;
+    border: 1px solid #1e1e1e !important;
 }
 
 /* to-do-section gets NO extra box-shadow */
@@ -464,7 +464,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     align-items: center;
     padding: 14px 16px;
     border-bottom: 1px solid var(--border-color);
-    background: #18181b;
+    background: #000000;
 }
 
 .column-title {
@@ -494,12 +494,13 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 .status-dot.canceled { background: #a1a1aa; }
 
 .task-count {
-    background: #27272a;
+    background: #111111;
     color: var(--text-muted);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 2px 8px;
     border-radius: var(--radius-full);
+    border: 1px solid #222222;
 }
 
 .kanban-cards-container {
@@ -512,7 +513,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 }
 
 .kanban-card {
-    background: #18181b;
+    background: #000000;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 14px;
@@ -524,8 +525,8 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 
 .kanban-card:hover {
     border-color: var(--border-color-hover);
-    background: #202024;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    background: #080808;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
 .kanban-card-top {
@@ -720,6 +721,11 @@ select option {
     position: relative;
     display: inline-block;
     min-width: 130px;
+    z-index: 20;
+}
+
+.custom-select-wrapper.open {
+    z-index: 99999 !important;
 }
 
 .custom-select-trigger {
@@ -727,7 +733,7 @@ select option {
     padding: 0 12px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
-    background: #18181b;
+    background: #000000;
     color: var(--text-color);
     font-size: 0.85rem;
     font-weight: 500;
@@ -742,7 +748,7 @@ select option {
 
 .custom-select-trigger:hover {
     border-color: var(--border-color-hover);
-    background: #27272a;
+    background: #0d0d0d;
 }
 
 .custom-select-trigger i {
@@ -760,14 +766,15 @@ select option {
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
-    right: 0;
     min-width: 100%;
-    background: #18181b;
-    border: 1px solid var(--border-color-hover);
+    width: max-content;
+    max-width: 280px;
+    background: #000000 !important;
+    border: 1px solid #2a2a2a !important;
     border-radius: var(--radius-md);
     padding: 5px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-    z-index: 1050;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95);
+    z-index: 999999 !important;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-4px);
@@ -775,6 +782,8 @@ select option {
     display: flex;
     flex-direction: column;
     gap: 3px;
+    max-height: 280px;
+    overflow-y: auto !important;
 }
 
 .custom-select-wrapper.open .custom-select-options {
@@ -796,7 +805,7 @@ select option {
 }
 
 .custom-option:hover {
-    background: rgba(59, 130, 246, 0.15);
+    background: #121212;
     color: #ffffff;
 }
 
@@ -1177,22 +1186,24 @@ select option {
 /* Custom Dropdown Z-Index & Overflow Fixes */
 .custom-select-wrapper {
     position: relative;
-    z-index: 100;
+    z-index: 20;
+}
+
+.custom-select-wrapper.open {
+    z-index: 99999 !important;
 }
 
 .custom-select-options {
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
-    right: 0;
-    z-index: 9999 !important;
-    background: rgba(18, 18, 24, 0.95) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    min-width: 100%;
+    z-index: 999999 !important;
+    background: #000000 !important;
+    border: 1px solid #2a2a2a !important;
     border-radius: var(--radius-md);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
-    max-height: 220px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95);
+    max-height: 280px;
     overflow-y: auto;
 }
 
@@ -1423,12 +1434,16 @@ select option {
     align-items: center;
     flex-shrink: 0;
     padding: 14px 20px;
-    background: rgba(18, 18, 24, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: #000000 !important;
+    border: 1px solid #1e1e1e !important;
     border-radius: var(--radius-lg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    position: relative;
+    z-index: 50;
+}
+
+.page-header-bar:has(.custom-select-wrapper.open) {
+    z-index: 1000 !important;
 }
 
 .page-header-left {
@@ -2841,13 +2856,15 @@ select.form-control {
     align-items: center;
     justify-content: space-between;
     padding: 14px 20px;
-    background: #09090b;
-    border: 1px solid #1a1a1e;
+    background: #000000 !important;
+    border: 1px solid #1e1e1e !important;
     border-radius: var(--radius-lg);
     margin-bottom: 16px;
     width: 100%;
     box-sizing: border-box;
     flex-shrink: 0;
+    position: relative;
+    z-index: 50;
 }
 
 .page-header-left h2 {

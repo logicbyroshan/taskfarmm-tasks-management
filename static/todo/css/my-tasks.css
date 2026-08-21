@@ -10,11 +10,13 @@ MY TASKS PAGE STYLES
     align-items: center;
     justify-content: space-between;
     padding: 12px 18px;
-    background: var(--card-bg);
+    background: #000000;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     margin-bottom: 16px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 40;
 }
 
 .filter-options {
@@ -40,10 +42,12 @@ MY TASKS PAGE STYLES
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 16px;
+    position: relative;
+    z-index: 10;
 }
 
 .my-task-card {
-    background: #0a0a0c;
+    background: #000000;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 16px;
@@ -62,10 +66,10 @@ MY TASKS PAGE STYLES
 
 .my-task-card:hover, .my-task-card:focus {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
     border-color: rgba(59, 130, 246, 0.4);
     outline: none;
-    background: #111115;
+    background: #060608;
 }
 
 /* Priority Indicator Borders */

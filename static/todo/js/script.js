@@ -4,6 +4,7 @@
 // ==============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    setupWaveBackground();
     setupMobileMenu();
     updateDateTime();
     setupAddTaskModal();
@@ -105,11 +106,16 @@ function setupCustomDropdowns() {
         // Toggle dropdown open state
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();
+            const isCurrentlyOpen = wrapper.classList.contains('open');
+
             // Close other open dropdowns
             document.querySelectorAll('.custom-select-wrapper.open').forEach(other => {
-                if (other !== wrapper) other.classList.remove('open');
+                other.classList.remove('open');
             });
-            wrapper.classList.toggle('open');
+
+            if (!isCurrentlyOpen) {
+                wrapper.classList.add('open');
+            }
         });
 
         // Insert wrapper next to original select
@@ -539,3 +545,138 @@ function getCsrfToken() {
     }
     return cookieValue;
 }
+
+/**
+ * Dynamic Ambient Dot Wave Canvas
+ * Creates a fluid, shimmering wave ripple flowing across a fixed matrix of dots.
+ * The dots stay in their grid positions while multi-harmonic wave physics dynamically
+ * modulate their vertical elevation, radius, and luminous cyan/blue glow over time.
+ */
+function setupWaveBackground() {
+    const canvas = document.getElementById('bg-wave-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let animationFrameId = null;
+    let startTime = performance.now();
+
+    // Mouse interaction tracking
+    let mouse = {
+        x: -9999,
+        y: -9999,
+        targetX: -9999,
+        targetY: -9999,
+        radius: 200,
+        active: false
+    };
+
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.scale(dpr, dpr);
+    }
+
+    window.addEventListener('resize', resize, { passive: true });
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.targetX = e.clientX;
+        mouse.targetY = e.clientY;
+        mouse.active = true;
+    }, { passive: true });
+
+    window.addEventListener('mouseleave', () => {
+        mouse.active = false;
+    }, { passive: true });
+
+    resize();
+
+    const dotSpacing = 28; // Grid step in px
+
+    function render(now) {
+        // Stop rendering if page/tab is hidden to save CPU/battery
+        if (document.hidden) {
+            animationFrameId = requestAnimationFrame(render);
+            return;
+        }
+
+        const t = (now - startTime) * 0.001; // Time in seconds
+
+        // Smooth mouse position lerping
+        if (mouse.active) {
+            mouse.x += (mouse.targetX - mouse.x) * 0.08;
+            mouse.y += (mouse.targetY - mouse.y) * 0.08;
+        } else {
+            mouse.x += (-9999 - mouse.x) * 0.08;
+            mouse.y += (-9999 - mouse.y) * 0.08;
+        }
+
+        ctx.clearRect(0, 0, width, height);
+
+        const cols = Math.ceil(width / dotSpacing) + 2;
+        const rows = Math.ceil(height / dotSpacing) + 2;
+
+        // Draw dots with travelling fluid waves across the grid
+        for (let j = 0; j < rows; j++) {
+            const y0 = j * dotSpacing;
+
+            for (let i = 0; i < cols; i++) {
+                const x0 = i * dotSpacing;
+
+                // Multi-harmonic traveling wave formulas
+                const wave1 = Math.sin(x0 * 0.0045 + y0 * 0.003 - t * 1.4);
+                const wave2 = Math.cos(x0 * 0.0035 - y0 * 0.0045 + t * 1.0);
+                const wave3 = Math.sin((x0 + y0) * 0.0025 - t * 0.7);
+
+                // Combined wave elevation normalized (-1.0 to 1.0)
+                let elevation = (wave1 * 0.45 + wave2 * 0.35 + wave3 * 0.20);
+
+                // Interactive mouse wave disturbance
+                if (mouse.active) {
+                    const dx = x0 - mouse.x;
+                    const dy = y0 - mouse.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        const factor = (1 - dist / mouse.radius);
+                        elevation += Math.sin(dist * 0.04 - t * 4.5) * factor * 0.5;
+                    }
+                }
+
+                // Vertical undulating wave displacement (dots remain anchored, wave passes through)
+                const y = y0 + elevation * 5.5;
+                const x = x0 + Math.cos(y0 * 0.003 + t * 0.6) * 1.5;
+
+                // Radius expands on wave crests, contracts in troughs
+                const normElev = Math.max(0, Math.min(1, (elevation + 1) * 0.5)); // 0.0 to 1.0
+                const radius = 1.0 + normElev * 1.3;
+
+                // Alpha glow: dimmer in troughs, vibrant luminous glow on wave crests
+                const alpha = 0.12 + normElev * 0.38;
+
+                // Color shifts from deep royal blue at troughs to radiant cyan-blue at crests
+                const r = Math.round(59 + normElev * 37);    // 59 -> 96
+                const g = Math.round(130 + normElev * 35);   // 130 -> 165
+                const b = Math.round(246 + normElev * 9);    // 246 -> 255
+
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+                ctx.fill();
+            }
+        }
+
+        animationFrameId = requestAnimationFrame(render);
+    }
+
+    animationFrameId = requestAnimationFrame(render);
+}
+

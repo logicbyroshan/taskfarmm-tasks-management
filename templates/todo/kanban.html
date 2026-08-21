@@ -3,12 +3,10 @@
 
 {% block styles %}
 <style>
-/* Lock page-level vertical scrollbar on Kanban page */
-.main-content {
+/* Kanban Board Layout: Zero vertical scrollbars, horizontal scrollbar only on board */
+.main-content, .content-area {
     overflow-y: hidden !important;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 100px);
+    overflow-x: hidden !important;
 }
 
 .kanban-board-6col {
@@ -16,30 +14,46 @@
     overflow-y: hidden !important;
     flex: 1;
     min-height: 0;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
+    scrollbar-width: thin !important;
+    scrollbar-color: #3b82f6 rgba(15, 23, 42, 0.7) !important;
+    -ms-overflow-style: auto !important;
 }
 
 .kanban-board-6col::-webkit-scrollbar {
-    height: 8px;
+    width: 0px !important;
+    height: 7px !important;
+    display: block !important;
 }
 
 .kanban-board-6col::-webkit-scrollbar-track {
-    background: #070709;
-    border-radius: 4px;
+    display: block !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+    border-radius: 9999px !important;
+    margin: 0 4px !important;
 }
 
 .kanban-board-6col::-webkit-scrollbar-thumb {
-    background: #27272a;
-    border-radius: 4px;
+    display: block !important;
+    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%) !important;
+    border-radius: 9999px !important;
 }
 
 .kanban-board-6col::-webkit-scrollbar-thumb:hover {
-    background: #3b82f6;
+    background: linear-gradient(90deg, #60a5fa 0%, #93c5fd 100%) !important;
 }
 
 .kanban-cards-container {
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.kanban-cards-container::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
+    display: none !important;
 }
 </style>
 {% endblock styles %}

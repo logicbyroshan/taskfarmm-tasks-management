@@ -23,45 +23,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS Links -->
-    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=100">
-    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=100">
+    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=101">
+    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=101">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* Smooth Wavy Background Movement Loop */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: -40px;
-            background-image: radial-gradient(rgba(59, 130, 246, 0.28) 1.5px, transparent 1.5px);
-            background-size: 32px 32px;
-            pointer-events: none;
-            z-index: 0;
-            animation: wavyDotsMovement 12s ease-in-out infinite alternate;
-        }
-
-        @keyframes wavyDotsMovement {
-            0% {
-                background-position: 0px 0px;
-                transform: translateY(0px) scale(1);
-            }
-            33% {
-                background-position: 32px 16px;
-                transform: translateY(-8px) scale(1.01);
-            }
-            66% {
-                background-position: 64px 32px;
-                transform: translateY(8px) scale(0.99);
-            }
-            100% {
-                background-position: 0px 64px;
-                transform: translateY(0px) scale(1);
-            }
-        }
-    </style>
     
     {% block styles %}{% endblock styles %}
 </head>
 <body>
+    <!-- Dynamic Ambient Dot Wave Canvas Background -->
+    <canvas id="bg-wave-canvas" class="bg-wave-canvas" aria-hidden="true"></canvas>
+
     <div class="container">
         <!-- Main Navigation Header -->
         <header class="navbar" role="banner">
@@ -345,7 +316,7 @@
     </aside>
 
 
-    <script src="{% static 'todo/js/script.js' %}?v=8"></script>
+    <script src="{% static 'todo/js/script.js' %}?v=102"></script>
     {% block scripts %}{% endblock scripts %}
 </body>
 </html>

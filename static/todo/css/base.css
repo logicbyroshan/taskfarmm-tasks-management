@@ -1,17 +1,17 @@
 :root {
     --primary-bg: #000000;
-    --secondary-bg: #0a0a0a;
+    --secondary-bg: #000000;
     --navbar-bg: #000000;
-    --card-bg: #0a0a0a;
-    --card-hover-bg: #111111;
+    --card-bg: #000000;
+    --card-hover-bg: #050505;
     --text-color: #f4f4f5;
     --text-muted: #a1a1aa;
     --accent-color: #3b82f6;
     --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     --accent-glow: rgba(59, 130, 246, 0.25);
     --highlight-color: #ffffff;
-    --border-color: #1a1a1a;
-    --border-color-hover: #2a2a2a;
+    --border-color: #1e1e1e;
+    --border-color-hover: #2e2e2e;
     --completed-color: #10b981;
     --in-progress-color: #3b82f6;
     --not-started-color: #ef4444;
@@ -141,7 +141,7 @@ a:focus-visible {
 }
 
 .icon-btn {
-    background: #18181b;
+    background: #000000;
     border: 1px solid var(--border-color);
     color: var(--text-muted);
     cursor: pointer;
@@ -157,7 +157,7 @@ a:focus-visible {
 }
 
 .icon-btn:hover {
-    background: #27272a;
+    background: #0d0d0d;
     color: var(--highlight-color);
     border-color: var(--border-color-hover);
 }
@@ -179,7 +179,7 @@ a:focus-visible {
 }
 
 .task-menu-btn:hover {
-    background: #27272a;
+    background: #141414;
     color: var(--highlight-color);
 }
 
@@ -277,28 +277,121 @@ a:focus-visible {
         width: 36px;
         height: 36px;
         border-radius: var(--radius-md);
-        background: #18181b;
+        background: #000000;
         border: 1px solid var(--border-color);
         cursor: pointer;
         color: var(--text-color);
     }
 }
 
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+/* ==============================================================================
+   GLOBAL DROPDOWN STACKING & Z-INDEX SYSTEM
+   ============================================================================== */
+.custom-select-wrapper {
+    position: relative;
+    display: inline-block;
+    z-index: 20;
 }
 
-::-webkit-scrollbar-track {
-    background: transparent;
+.custom-select-wrapper.open {
+    z-index: 99999 !important;
 }
 
-::-webkit-scrollbar-thumb {
-    background: #27272a;
-    border-radius: var(--radius-full);
+.custom-select-options {
+    z-index: 999999 !important;
+    background: #000000 !important;
+    border: 1px solid #2a2a2a !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
+.page-header-bar, .filter-bar, .kanban-header {
+    position: relative;
+    z-index: 40;
+}
+
+.page-header-bar:has(.custom-select-wrapper.open),
+.filter-bar:has(.custom-select-wrapper.open) {
+    z-index: 1000 !important;
+}
+
+/* Ambient Dynamic Wave Background Canvas */
+.bg-wave-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ==============================================================================
+   GLOBAL SCROLLBAR SYSTEM: ZERO VERTICAL SCROLLBARS EVERYWHERE
+   ONLY HORIZONTAL SCROLLBAR ON KANBAN BOARD
+   ============================================================================== */
+
+/* 1. Global Reset: Hide all scrollbars across all elements (Firefox, IE, Edge) */
+html, body, *, *::before, *::after {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+/* 2. WebKit / Chromium (Chrome, Safari, Edge): Hide all scrollbars by default */
+*::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
+    display: none !important;
+    background: transparent !important;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-thumb {
+    display: none !important;
+    background: transparent !important;
+}
+
+/* 3. Explicit Exception: ONLY Horizontal Scrollbar on Kanban Board */
+.kanban-board-6col {
+    scrollbar-width: thin !important;
+    scrollbar-color: #3b82f6 rgba(15, 23, 42, 0.7) !important;
+    -ms-overflow-style: auto !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+
+.kanban-board-6col::-webkit-scrollbar {
+    width: 0px !important;
+    height: 7px !important;
+    display: block !important;
+}
+
+.kanban-board-6col::-webkit-scrollbar-track {
+    display: block !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+    border-radius: 9999px !important;
+    margin: 0 4px !important;
+}
+
+.kanban-board-6col::-webkit-scrollbar-thumb {
+    display: block !important;
+    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%) !important;
+    border-radius: 9999px !important;
+    transition: background 0.2s ease !important;
+}
+
+.kanban-board-6col::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #60a5fa 0%, #93c5fd 100%) !important;
+}
+
+/* Ensure individual kanban columns do NOT show vertical scrollbars */
+.kanban-cards-container {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.kanban-cards-container::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
+    display: none !important;
 }

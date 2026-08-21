@@ -1,60 +1,48 @@
-# TaskMitra — Smart Task Management Platform
+# TaskFlixx — Smart Task Management Platform
 
-> A premium, full-stack Django task manager with AI-powered automation, Kanban boards, project tracking, and real-time progress dashboards.
+> A premium, full-stack Django task management platform featuring an ambient fluid wave background, pure black OLED theme, Kanban boards, AI assistant, project tracking, and live productivity metrics.
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-3b82f6?style=flat-square&logo=python)
-![Django](https://img.shields.io/badge/Django-4.2-green?style=flat-square&logo=django)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3b82f6?style=flat-square&logo=python)
+![Django](https://img.shields.io/badge/Django-5.2-green?style=flat-square&logo=django)
 ![License](https://img.shields.io/badge/License-MIT-a78bfa?style=flat-square)
 
 ---
 
-## ✨ Features
+## ✨ Key Features & Architecture
 
-### 🏠 Dashboard
-- Live stats: Total / In Progress / Completed / Overdue task counts
-- **Overall Progress** bar with **By-Project toggle** — see per-project completion %
-- Recent tasks list with inline check-to-complete
-- Clickable Task Status grid (Backlog → Canceled) linking to filtered views
-- Recently Completed tasks panel
-- Projects quick-access cards
+### 🌌 Dynamic Ambient Wave Background
+- **60fps Fluid Wave Canvas Engine (`#bg-wave-canvas`)**: Mathematically animated multi-harmonic travelling wave harmonics across a fixed matrix of dots with interactive cursor ripples and luminous cyan-blue wave crests.
+
+### 🖤 Pure Pitch-Black OLED Aesthetic
+- Pure `#000000` background across all cards, containers, headers, sidebars, and modals with crisp, high-contrast borders and zero mismatched color tints.
+
+### 🚫 Zero-Vertical-Scrollbar Design
+- Clean, scrollbar-free interface globally across all pages, sidebars, and columns, with horizontal scrolling exclusively on the 6-column Kanban board.
+
+### 🔝 Unified Header Bars & Floating Dropdowns
+- Standardized `.page-header-bar` across All Tasks, Manage Projects, and Kanban with quick action buttons (`Add Project`, `Kanban`, `Add Task`).
+- High `z-index` floating dropdowns that open seamlessly on top of cards and tables without clipping.
+
+### 🏠 Live Dashboard
+- Real-time counters: Backlog / To Do / In Progress / Done / On Hold / Canceled.
+- Completion progress bars with per-project toggles.
+- Recent and completed task feeds with instant 1-click status updates.
 
 ### 📋 All Tasks (Manage Tasks)
-- Server-side filtering: Status / Priority / Project / Sort
-- Task count badge
-- **Predefined Task Template Library** — 39+ curated templates across 8 categories
-- Inline edit & delete via AJAX modal
+- Multi-parameter filtering: Status, Priority, Project, and Sort Order.
+- **Predefined Task Template Library**: 39+ curated templates across 8 categories.
+- Inline edit and delete modal workflows.
 
-### 📌 Kanban Board
-- 6-column Kanban: Backlog · To Do · In Progress · Done · On Hold · Canceled
-- Project filter dropdown
-- Drag-and-drop ready card layout
-- Move-to-status quick actions
+### 📌 6-Column Kanban Board
+- Columns: Backlog · To Do · In Progress · Done · On Hold · Canceled.
+- Project switcher and drag-and-drop card interaction.
 
-### 🤖 AI Assistant
-- **Floating AI button** on every page opens a **slide-in side drawer**
-  - Quick-action chips (Launch Plan, Breakdown, Marketing, Dev Setup)
-  - Free-form prompt input
-  - "Add as Task" — pre-fills the New Task modal with AI output
-  - Deep-link to the full AI page
-- **Dedicated AI Assistant Page** (`/ai-assistant/`)
-  - 4 action cards: Create Project, Generate Tasks, Break Down Work, Launch Plan
-  - Output modes: Suggest → view first, Auto-Create Tasks, Auto-Create Project + Tasks
-  - 8 quick-prompt chips for common workflows
-  - Bulk task creation (up to 8 tasks at once)
-  - Project auto-creation with task list
+### 🤖 AI Assistant & Slide-In Drawer
+- Global floating AI drawer on every page for instant task planning.
+- Dedicated AI Assistant page (`/ai-assistant/`) with bulk project and task creation.
 
-### ⚙️ Settings
-- Profile edit (name, email)
-- Password change
-- Theme & default priority/status preferences (saved to DB)
-- Notification toggles (Task Reminders, Due Date Alerts, App Updates)
-- Stats overview (Total, Completed, In Progress, Overdue)
-- Data Export: JSON / CSV
-- Danger Zone: Clear All Tasks, Clear All Data
-
-### 🗂️ Projects
-- Create, edit, delete projects with custom color
-- Task counts and progress per project
+### ⚙️ Settings & Data Portability
+- Profile management, theme modes, notifications, data export (JSON/CSV), and database reset utilities.
 
 ---
 
@@ -62,12 +50,12 @@
 
 | Layer       | Technology |
 |-------------|------------|
-| Backend     | Django 4.2 + SQLite (dev) |
-| Frontend    | Vanilla HTML/CSS/JS — no frameworks |
-| Fonts       | Plus Jakarta Sans (Google Fonts) |
-| Icons       | Font Awesome 6 |
-| Background  | Vanta.js Dots |
-| Auth        | DemoAuthMiddleware (dev) → swap for `django.contrib.auth` in prod |
+| **Backend** | Python 3.11 + Django 5.2 (SQLite dev DB) |
+| **Frontend**| Vanilla HTML5 / CSS3 / JavaScript (No framework overhead) |
+| **Fonts**   | Plus Jakarta Sans & Inter (Google Fonts) |
+| **Icons**   | Font Awesome 6 |
+| **Visuals** | High-performance HTML5 2D Canvas Wave Mesh |
+| **Auth**    | DemoAuthMiddleware (Local dev) + External Auth API ready |
 
 ---
 
