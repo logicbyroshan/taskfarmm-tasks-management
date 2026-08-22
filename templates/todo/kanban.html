@@ -5,17 +5,27 @@
 
 {% block styles %}
 <style>
-/* Horizontal Scrollable Kanban Container */
+/* Kanban Viewport Fit (No page scroll, scrollbar pinned at bottom) */
+.content-area {
+    overflow: hidden !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+}
+
 .kanban-board-scroll-wrapper {
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 16px;
-    margin-top: 6px;
+    flex: 1;
+    height: calc(100vh - 160px);
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 12px;
+    margin-top: 0;
     scrollbar-width: thin;
-    scrollbar-color: #3b82f6 #09090b;
+    scrollbar-color: #3b82f6 #121316;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     display: block;
@@ -26,39 +36,41 @@
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar-track {
-    background: #09090b;
+    background: #121316;
     border-radius: 4px;
-    border: 1px solid #18181b;
+    border: 1px solid #22272b;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar-thumb {
-    background: #27272a;
+    background: #333c43;
     border-radius: 4px;
-    border: 1px solid #09090b;
+    border: 1px solid #16181d;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar-thumb:hover {
     background: #3b82f6;
 }
 
-/* 6-Column Grid — exact width matching 6 columns with no trailing empty gap */
+/* 6-Column Flex Row — exact 310px per column with 100% column height */
 .kanban-board-6col {
-    display: grid;
-    grid-template-columns: repeat(6, 310px);
+    display: flex;
     gap: 14px;
     width: max-content;
-    padding-right: 8px;
+    height: 100%;
+    padding-right: 14px;
     box-sizing: border-box;
 }
 
 .kanban-column {
-    background: #000000;
-    border: 1px solid #18181b;
-    border-radius: var(--radius-md);
+    width: 310px;
+    flex-shrink: 0;
+    background: #101214;
+    border: 1px solid #22272b;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 180px);
-    min-height: 540px;
+    height: 100%;
+    max-height: 100%;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     overflow: hidden;
 }
