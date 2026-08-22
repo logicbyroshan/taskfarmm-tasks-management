@@ -96,43 +96,81 @@
                     </div>
                 </div>
 
-                <!-- Action Pills Bar (+ Add, Labels, Dates, Checklist, Members) -->
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: 28px;">
-                    <button type="button" class="trello-pill-action" onclick="cycleTrelloStatus()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-plus" style="font-size: 0.75rem;"></i> Add
-                    </button>
-                    <button type="button" class="trello-pill-action" onclick="toggleTrelloStatusDropdown(event)" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-tag" style="font-size: 0.75rem; color: #579dff;"></i> Labels
-                    </button>
-                    <button type="button" class="trello-pill-action" onclick="openTrelloDatePicker()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <!-- Action Pills Bar (+ Add, Labels, Dates, Checklist, Members) - Left Aligned -->
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: 0;">
+                    
+                    <!-- 1. + Add Button & Dropdown Menu -->
+                    <div style="position: relative;">
+                        <button type="button" class="trello-pill-action" onclick="toggleTrelloAddMenu(event)" style="background: #22272b; color: #dee4ea; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
+                            <i class="fas fa-plus" style="font-size: 0.75rem; color: #579dff;"></i> Add
+                        </button>
+                        <div id="trello-add-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 6px; padding: 6px 0; min-width: 175px; z-index: 2800; box-shadow: 0 10px 25px rgba(0,0,0,0.7);">
+                            <div style="padding: 4px 12px; font-size: 0.725rem; font-weight: 700; color: #8c9bab; text-transform: uppercase;">Add to Card</div>
+                            <div class="trello-dropdown-item" onclick="focusTrelloChecklist(); closeTrelloMenus();" style="padding: 7px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fas fa-check-square" style="color: #579dff; width: 14px;"></i> Checklist</div>
+                            <div class="trello-dropdown-item" onclick="openTrelloDatePicker(); closeTrelloMenus();" style="padding: 7px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="far fa-clock" style="color: #579dff; width: 14px;"></i> Dates</div>
+                            <div class="trello-dropdown-item" onclick="toggleTrelloLabelsPopup(event)" style="padding: 7px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fas fa-tag" style="color: #579dff; width: 14px;"></i> Labels</div>
+                            <div class="trello-dropdown-item" onclick="toggleTrelloMembersPopup(event)" style="padding: 7px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user-friends" style="color: #579dff; width: 14px;"></i> Members</div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Labels Button & Popover -->
+                    <div style="position: relative;">
+                        <button type="button" class="trello-pill-action" onclick="toggleTrelloLabelsPopup(event)" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
+                            <i class="fas fa-tag" style="font-size: 0.75rem; color: #579dff;"></i> Labels
+                        </button>
+                        <div id="trello-labels-popup" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 10px; min-width: 210px; z-index: 2800; box-shadow: 0 12px 30px rgba(0,0,0,0.8);">
+                            <div style="padding-bottom: 6px; margin-bottom: 8px; border-bottom: 1px solid #2e353b; font-size: 0.75rem; font-weight: 700; color: #dee4ea; display: flex; align-items: center; justify-content: space-between;">
+                                <span>Labels / Priority</span>
+                                <i class="fas fa-times" onclick="closeTrelloMenus()" style="cursor: pointer; color: #8c9bab; font-size: 0.8rem;"></i>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                <div onclick="selectTrelloPriority('high', '🔴 High'); closeTrelloMenus();" style="background: rgba(239, 68, 68, 0.18); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span> High Priority
+                                </div>
+                                <div onclick="selectTrelloPriority('moderate', '🟡 Moderate'); closeTrelloMenus();" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fde68a; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></span> Moderate Priority
+                                </div>
+                                <div onclick="selectTrelloPriority('low', '🟢 Low'); closeTrelloMenus();" style="background: rgba(34, 197, 94, 0.18); border: 1px solid #22c55e; color: #86efac; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></span> Low Priority
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Dates Button -->
+                    <button type="button" class="trello-pill-action" onclick="openTrelloDatePicker()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
                         <i class="far fa-clock" style="font-size: 0.8rem; color: #579dff;"></i> Dates
                     </button>
-                    <button type="button" class="trello-pill-action" onclick="focusTrelloChecklist()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+
+                    <!-- 4. Checklist Button -->
+                    <button type="button" class="trello-pill-action" onclick="focusTrelloChecklist()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
                         <i class="fas fa-check-square" style="font-size: 0.8rem; color: #579dff;"></i> Checklist
                     </button>
-                    <button type="button" class="trello-pill-action" onclick="toggleTrelloMembersPopup(event)" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-user-friends" style="font-size: 0.8rem; color: #579dff;"></i> Members
-                    </button>
+
+                    <!-- 5. Members Button & Popup -->
+                    <div style="position: relative;">
+                        <button type="button" class="trello-pill-action" onclick="toggleTrelloMembersPopup(event)" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
+                            <i class="fas fa-user-friends" style="font-size: 0.8rem; color: #579dff;"></i> Members
+                        </button>
+                        <div id="trello-members-popup" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 12px; width: 230px; z-index: 2800; box-shadow: 0 14px 40px rgba(0,0,0,0.85);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #282e33; padding-bottom: 6px;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: #dee4ea;">Assign Members</span>
+                                <button type="button" onclick="closeTrelloMembersPopup()" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; font-size: 0.9rem;"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div id="trello-members-checkbox-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Members Dropdown Popup -->
-                <div id="trello-members-popup" style="display: none; position: absolute; top: 120px; right: 28px; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 12px; width: 230px; z-index: 2800; box-shadow: 0 14px 40px rgba(0,0,0,0.85);">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #282e33; padding-bottom: 6px;">
-                        <span style="font-size: 0.8rem; font-weight: 700; color: #dee4ea;">Assign Members</span>
-                        <button type="button" onclick="closeTrelloMembersPopup()" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; font-size: 0.9rem;"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div id="trello-members-checkbox-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
-                        <!-- Dynamically populated -->
-                    </div>
-                </div>
-
-                <!-- Labels & Dates Badges Row (if active) -->
-                <div id="trello-metadata-badges-row" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; margin-left: 28px;">
+                <!-- Labels & Dates Badges Row (if active) - Left Aligned -->
+                <div id="trello-metadata-badges-row" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-left: 0;">
                     <div id="trello-labels-container" style="display: none;">
-                        <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px;">Labels</span>
+                        <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px;">Label / Priority</span>
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <span id="trello-label-badge" style="background: #216e4e; color: #ffffff; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer;" onclick="cycleTrelloStatus()">
-                                in progress
+                            <span id="trello-label-badge" style="background: #216e4e; color: #ffffff; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer;" onclick="toggleTrelloLabelsPopup(event)">
+                                Moderate
                             </span>
                         </div>
                     </div>

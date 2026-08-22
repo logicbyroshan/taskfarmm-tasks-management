@@ -562,6 +562,16 @@ window.openTrelloModal = function(taskId) {
 
                 updateTrelloStatusBadge(data.task.status);
                 updateTrelloCompleteIcon(data.task.status === 'completed');
+                updateTrelloDueDateText(data.task.due_date || '');
+
+                const labelsContainer = document.getElementById('trello-labels-container');
+                const labelBadge = document.getElementById('trello-label-badge');
+                if (labelsContainer) labelsContainer.style.display = 'block';
+                if (labelBadge) {
+                    labelBadge.textContent = pInfo.text;
+                    const colorMap = { 'high': '#ef4444', 'moderate': '#f59e0b', 'low': '#22c55e' };
+                    labelBadge.style.background = colorMap[data.task.priority] || '#216e4e';
+                }
 
                 if (data.task.checklist && data.task.checklist.length > 0) {
                     if (checklistSec) checklistSec.style.display = 'block';
@@ -786,14 +796,27 @@ window.selectTrelloPriority = function(priority, label) {
     const select = document.getElementById('trello-priority-select');
     if (select) select.value = priority;
     saveTrelloTaskField('priority', priority);
-    closeAllTrelloDropdowns();
+
+    // Sync active Label / Priority badge
+    const labelsContainer = document.getElementById('trello-labels-container');
+    const labelBadge = document.getElementById('trello-label-badge');
+    if (labelsContainer) labelsContainer.style.display = 'block';
+    if (labelBadge) {
+        labelBadge.textContent = p.text;
+        const colorMap = { 'high': '#ef4444', 'moderate': '#f59e0b', 'low': '#22c55e' };
+        labelBadge.style.background = colorMap[priority] || '#216e4e';
+    }
+
+    closeTrelloMenus();
 };
 
 function closeAllTrelloDropdowns() {
     const menus = [
         'trello-project-dropdown-menu',
         'trello-status-dropdown-menu',
-        'trello-priority-dropdown-menu'
+        'trello-priority-dropdown-menu',
+        'trello-add-dropdown-menu',
+        'trello-labels-popup'
     ];
     menus.forEach(id => {
         const el = document.getElementById(id);
@@ -801,11 +824,36 @@ function closeAllTrelloDropdowns() {
     });
 }
 
+window.toggleTrelloAddMenu = function(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('trello-add-dropdown-menu');
+    const isShown = menu && menu.style.display === 'block';
+    closeTrelloMenus();
+    if (menu && !isShown) menu.style.display = 'block';
+};
+
+window.toggleTrelloLabelsPopup = function(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('trello-labels-popup');
+    const isShown = menu && menu.style.display === 'block';
+    closeTrelloMenus();
+    if (menu && !isShown) menu.style.display = 'block';
+};
+
+window.closeTrelloMenus = function() {
+    closeAllTrelloDropdowns();
+    closeTrelloMembersPopup();
+};
+
 document.addEventListener('click', function(e) {
     if (!e.target.closest('#trello-project-pill-btn') &&
         !e.target.closest('#trello-status-pill-btn') &&
-        !e.target.closest('#trello-priority-pill-btn')) {
-        closeAllTrelloDropdowns();
+        !e.target.closest('#trello-priority-pill-btn') &&
+        !e.target.closest('#trello-add-dropdown-menu') &&
+        !e.target.closest('#trello-labels-popup') &&
+        !e.target.closest('#trello-members-popup') &&
+        !e.target.closest('.trello-pill-action')) {
+        closeTrelloMenus();
     }
 });
 
@@ -1093,14 +1141,17 @@ window.openTrelloDatePicker = function() {
 
 window.updateTrelloDueDateText = function(dateStr) {
     const textEl = document.getElementById('trello-due-date-text');
-    if (!textEl) return;
+    const datesContainer = document.getElementById('trello-dates-container');
     if (!dateStr) {
-        textEl.textContent = 'Aug 24';
+        if (datesContainer) datesContainer.style.display = 'none';
         return;
     }
-    const d = new Date(dateStr);
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    textEl.textContent = `${months[d.getMonth()]} ${d.getDate()}`;
+    if (datesContainer) datesContainer.style.display = 'block';
+    if (textEl) {
+        const d = new Date(dateStr);
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        textEl.textContent = `${months[d.getMonth()]} ${d.getDate()}`;
+    }
 };
 
 window.saveTrelloTaskField = function(field, value) {
