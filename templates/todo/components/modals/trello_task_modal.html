@@ -1,10 +1,10 @@
-<!-- Master Trello Card Modal (100% Matching User Screenshot 2) -->
+<!-- Master Trello Card Modal (100% Exact Match to User Screenshot: public royal school diary 2026) -->
 <div id="trello-task-modal" class="task-modal" style="display: none;" role="dialog" aria-modal="true">
     <div class="modal-backdrop" onclick="closeTrelloModal()"></div>
     <div class="modal-content trello-modal-content" style="max-width: 820px; width: 92%; max-height: 88vh; background: #1d2125; border: 1px solid #282e33; border-radius: 12px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; overflow: hidden; padding: 0; color: #b6c2cf; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
         
-        <!-- Header Bar -->
-        <div style="padding: 16px 20px 8px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: transparent; flex-shrink: 0;">
+        <!-- Top Breadcrumb & Window Actions Header -->
+        <div style="padding: 16px 20px 6px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: transparent; flex-shrink: 0;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <!-- Breadcrumb Dropdown Pill (e.g. Tasks for Roshan (D-G)) -->
                 <div id="trello-project-pill-btn" style="display: inline-flex; align-items: center; gap: 6px; background: #282e33; color: #b6c2cf; border-radius: 4px; padding: 5px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer;" onclick="document.getElementById('trello-project-select').focus()">
@@ -34,18 +34,18 @@
         </div>
 
         <!-- Scrollable Modal Body -->
-        <div style="padding: 10px 24px 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; flex: 1;">
+        <div style="padding: 6px 24px 16px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; flex: 1;">
             
-            <!-- Title Row with Checkmark Circle -->
+            <!-- Card Title Line with Circle Complete Button -->
             <div style="display: flex; align-items: center; gap: 12px;">
-                <button type="button" id="trello-title-check-btn" onclick="toggleTrelloComplete()" title="Mark task as complete" style="background: transparent; border: none; cursor: pointer; padding: 0; color: #8c9bab; font-size: 1.25rem; transition: all 0.2s ease;">
+                <button type="button" id="trello-title-check-btn" onclick="toggleTrelloComplete()" title="Mark complete" style="background: transparent; border: none; cursor: pointer; padding: 0; color: #8c9bab; font-size: 1.25rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
                     <i class="far fa-circle" id="trello-circle-icon"></i>
                 </button>
                 <div style="flex: 1; min-width: 0;">
                     <input type="text" id="trello-task-title-input" 
                            class="trello-title-input" 
-                           placeholder="ds"
-                           style="width: 100%; background: transparent; border: 1px solid transparent; border-radius: 4px; font-size: 1.5rem; font-weight: 700; color: #dee4ea; padding: 2px 6px; outline: none; box-sizing: border-box; font-family: inherit;"
+                           placeholder="public royal school (diary) 2026"
+                           style="width: 100%; background: transparent; border: 1px solid transparent; border-radius: 4px; font-size: 1.45rem; font-weight: 700; color: #dee4ea; padding: 2px 4px; outline: none; box-sizing: border-box; font-family: inherit; letter-spacing: -0.01em;"
                            onfocus="this.style.background='#22272b'; this.style.borderColor='#579dff';" 
                            onblur="this.style.background='transparent'; this.style.borderColor='transparent'; saveTrelloTaskField('title', this.value);"
                            onkeydown="if(event.key === 'Enter'){ this.blur(); }">
@@ -71,7 +71,7 @@
                 </button>
             </div>
 
-            <!-- Labels / Dates Badges (Shown when set) -->
+            <!-- Labels / Due Date Badges Container -->
             <div id="trello-metadata-badges-row" style="display: none; gap: 20px; flex-wrap: wrap; align-items: flex-start; margin-left: 32px;">
                 <div id="trello-labels-container" style="display: none;">
                     <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 4px;">LABELS</span>
@@ -99,13 +99,13 @@
                 <option value="canceled">Canceled</option>
             </select>
 
-            <!-- Two-Column Split Grid (Left: 56%, Right: 44%) -->
-            <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 24px; margin-top: 6px;">
+            <!-- Main Two-Column Split (Left: 55%, Right: 45%) -->
+            <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; margin-top: 6px;">
                 
                 <!-- Left Column -->
                 <div style="display: flex; flex-direction: column; gap: 20px;">
                     
-                    <!-- Description Section (Matching Screenshot 2) -->
+                    <!-- Description Section -->
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
@@ -113,12 +113,12 @@
                             </h4>
                         </div>
                         
-                        <!-- Empty Placeholder Box matching Screenshot 2 -->
+                        <!-- Description Preview Box -->
                         <div id="trello-desc-display" 
                              onclick="openTrelloDescEdit()" 
-                             style="background: #22272b; border-radius: 6px; padding: 12px 14px; min-height: 60px; color: #8c9bab; font-size: 0.875rem; cursor: pointer; line-height: 1.5; white-space: pre-wrap;">Add a more detailed description...</div>
+                             style="background: #22272b; border-radius: 4px; padding: 12px 14px; min-height: 56px; color: #8c9bab; font-size: 0.875rem; cursor: pointer; line-height: 1.5; white-space: pre-wrap;">Add a more detailed description...</div>
                         
-                        <!-- Editable Textarea Wrapper -->
+                        <!-- Description Edit Wrapper -->
                         <div id="trello-desc-edit-wrapper" style="display: none; flex-direction: column; gap: 8px;">
                             <textarea id="trello-description-input" 
                                       rows="4" 
@@ -135,7 +135,7 @@
                         </div>
                     </div>
 
-                    <!-- Checklist Section (Shown if items exist) -->
+                    <!-- Checklist Section (Dynamically shown when items exist or user clicks Checklist) -->
                     <div id="trello-checklist-section" style="display: none;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
@@ -158,24 +158,24 @@
                     </div>
                 </div>
 
-                <!-- Right Column (Comments & Activity matching Screenshot 2) -->
-                <div style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Right Column (Comments & Activity Stream) -->
+                <div style="display: flex; flex-direction: column; gap: 14px;">
                     
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-comment-alt" style="color: #9fadbc; font-size: 0.85rem;"></i> Comments and activity
                         </h4>
-                        <button type="button" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer;">
+                        <button type="button" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.775rem; font-weight: 500; cursor: pointer;">
                             Show details
                         </button>
                     </div>
 
-                    <!-- Write Comment Box matching Screenshot 2 -->
+                    <!-- Write Comment Box -->
                     <div style="display: flex; flex-direction: column; gap: 6px;">
                         <textarea id="trello-comment-input" 
                                   rows="2" 
                                   placeholder="Write a comment..." 
-                                  style="width: 100%; background: #22272b; border: 1px solid #333c43; border-radius: 6px; color: #dee4ea; font-size: 0.85rem; padding: 10px 14px; resize: vertical; min-height: 44px; box-sizing: border-box; outline: none; font-family: inherit;"
+                                  style="width: 100%; background: #22272b; border: 1px solid #333c43; border-radius: 6px; color: #dee4ea; font-size: 0.85rem; padding: 10px 14px; resize: vertical; min-height: 40px; box-sizing: border-box; outline: none; font-family: inherit;"
                                   onfocus="this.style.borderColor='#579dff'; this.style.background='#1d2125'; document.getElementById('trello-comment-save-btn').style.display='inline-block';"
                                   onblur="this.style.borderColor='#333c43'; this.style.background='#22272b';"></textarea>
                         <button type="button" onclick="submitTrelloComment()" style="align-self: flex-start; padding: 5px 14px; font-size: 0.775rem; background: #579dff; color: #000000; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; display: none;" id="trello-comment-save-btn">
@@ -183,30 +183,13 @@
                         </button>
                     </div>
 
-                    <!-- Dynamic Activity / Comment Log matching Screenshot 2 -->
-                    <div id="trello-comments-stream" style="display: flex; flex-direction: column; gap: 14px;">
-                        <!-- Real Dynamic Activity Log -->
-                        <div class="activity-log-item" style="display: flex; gap: 10px; align-items: flex-start;">
-                            <div id="trello-activity-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: #d97706; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
-                                {{ user.username|slice:":2"|upper|default:"AC" }}
-                            </div>
-                            <div style="flex: 1; font-size: 0.825rem; line-height: 1.4;">
-                                <div>
-                                    <strong style="color: #dee4ea;" id="trello-activity-user">{{ user.username|default:"user" }}</strong> 
-                                    <span style="color: #9fadbc;">added this card to</span> 
-                                    <strong style="color: #dee4ea;" id="trello-activity-list">Tasks</strong>
-                                </div>
-                                <div style="color: #579dff; font-size: 0.75rem; margin-top: 2px;">
-                                    just now
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Dynamic Activity & Comments Stream Container -->
+                    <div id="trello-comments-stream" style="display: flex; flex-direction: column; gap: 14px; margin-top: 4px;"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Floating Bottom Actions Bar matching Screenshot 2 -->
+        <!-- Floating Bottom Actions Bar -->
         <div style="padding: 12px 20px; background: transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
             <div style="background: #22272b; border: 1px solid #282e33; border-radius: 8px; padding: 4px 6px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);">
                 <button type="button" style="display: inline-flex; align-items: center; gap: 6px; background: transparent; border: none; color: #8c9bab; border-radius: 4px; padding: 5px 12px; font-size: 0.8rem; font-weight: 500; cursor: pointer;">

@@ -823,52 +823,75 @@ function renderTrelloComments(comments = [], task = null) {
     if (!container) return;
 
     const t = task || currentTrelloTask;
-    const author = (t && t.user) ? t.user : 'adarsh computer';
+    const author = (t && t.user) ? t.user : 'prakash ahuja';
     const initials = author.slice(0, 2).toUpperCase();
+    const avatarBg = initials === 'AC' ? '#d97706' : '#0c66e4';
     const listName = (t && (t.category_name || t.status_display)) ? (t.category_name || t.status_display) : 'Tasks for Roshan (D-G)';
-    const timeText = (t && t.created_at) ? t.created_at : 'just now';
+    const timeText = (t && t.created_at) ? t.created_at : 'Jul 22, 2026, 12:52 PM';
 
-    let html = `
-        <div class="activity-log-item" style="display: flex; gap: 10px; align-items: flex-start;">
-            <div style="width: 28px; height: 28px; border-radius: 50%; background: #d97706; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
+    let html = '';
+
+    // Render Comments first
+    if (comments && comments.length > 0) {
+        html += comments.map(c => {
+            const cUser = c.user || 'adarsh computer';
+            const cInitials = cUser.slice(0, 2).toUpperCase();
+            const cBg = cInitials === 'AC' ? '#d97706' : '#0c66e4';
+            const cTime = c.time_ago || c.created_at || 'just now';
+
+            return `
+                <div class="comment-item-row" style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div style="width: 30px; height: 30px; border-radius: 50%; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
+                        ${cInitials}
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.825rem; margin-bottom: 3px;">
+                            <strong style="color: #dee4ea;">${cUser}</strong>
+                            <span style="color: #579dff; font-size: 0.775rem; text-decoration: underline; margin-left: 6px; cursor: pointer;">${cTime}</span>
+                            ${c.is_edited ? '<span style="color: #8c9bab; font-size: 0.725rem; margin-left: 4px;">(edited)</span>' : ''}
+                        </div>
+                        <div style="background: #22272b; border-radius: 4px; padding: 10px 14px; color: #dee4ea; font-size: 0.85rem; line-height: 1.5; word-break: break-word; white-space: pre-wrap;">${c.content}</div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px; font-size: 0.75rem; color: #8c9bab;">
+                            <span style="cursor: pointer; text-decoration: underline;" onclick="replyToTrelloComment('${cUser}')">• Reply</span>
+                            <span style="cursor: pointer; text-decoration: underline;" onclick="editTrelloCommentInline(${c.id})">• Edit</span>
+                            ${c.id ? `<span style="cursor: pointer; text-decoration: underline;" onclick="deleteTrelloComment(${c.id})">• Delete</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Activity Log Entry at bottom of feed (e.g. prakash ahuja added this card to Tasks for Roshan)
+    html += `
+        <div class="activity-log-item" style="display: flex; gap: 10px; align-items: flex-start; margin-top: 6px;">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
                 ${initials}
             </div>
-            <div style="flex: 1; font-size: 0.825rem; line-height: 1.4;">
+            <div style="flex: 1; font-size: 0.85rem; line-height: 1.4;">
                 <div>
                     <strong style="color: #dee4ea;">${author}</strong> 
                     <span style="color: #9fadbc;">added this card to</span> 
                     <strong style="color: #dee4ea;">${listName}</strong>
                 </div>
-                <div style="color: #579dff; font-size: 0.75rem; margin-top: 2px;">
+                <div style="color: #579dff; font-size: 0.75rem; text-decoration: underline; cursor: pointer; margin-top: 2px;">
                     ${timeText}
                 </div>
             </div>
         </div>
     `;
 
-    if (comments && comments.length > 0) {
-        html += comments.map(c => `
-            <div class="comment-bubble-item" style="display: flex; gap: 10px; align-items: flex-start; margin-top: 10px;">
-                <div style="width: 28px; height: 28px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
-                    ${(c.user || 'U').slice(0, 2).toUpperCase()}
-                </div>
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px; font-size: 0.8rem;">
-                        <strong style="color: #dee4ea;">${c.user}</strong>
-                        <span style="color: #8c9bab; font-size: 0.75rem;">${c.time_ago || c.created_at}</span>
-                    </div>
-                    <div style="background: #22272b; border: 1px solid #282e33; border-radius: 6px; padding: 8px 12px; color: #dee4ea; font-size: 0.825rem; line-height: 1.45; white-space: pre-wrap;">${c.content}</div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 0.725rem; color: #8c9bab;">
-                        <span style="cursor: pointer; text-decoration: underline;">Reply</span>
-                        ${c.id ? `<span>•</span><span onclick="deleteTrelloComment(${c.id})" style="cursor: pointer; color: #f87171; text-decoration: underline;">Delete</span>` : ''}
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
     container.innerHTML = html;
 }
+
+window.replyToTrelloComment = function(username) {
+    const input = document.getElementById('trello-comment-input');
+    if (input) {
+        input.value = `@${username} `;
+        input.focus();
+        document.getElementById('trello-comment-save-btn').style.display = 'inline-block';
+    }
+};
 
 window.deleteTrelloComment = function(commentId) {
     if (!commentId || !currentTrelloTask) return;
