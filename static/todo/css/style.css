@@ -139,36 +139,25 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), padding 0.22s ease;
 }
 
-.sidebar-toggle-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 8px;
-    padding-bottom: 2px;
-}
-
-.sidebar-toggle-btn {
-    background: #16181d;
-    border: 1px solid #282e33;
-    color: #8c9bab;
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
+.navbar-logo-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 0.725rem;
+    gap: 8px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    text-decoration: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.sidebar-toggle-btn:hover {
-    background: #1f2328;
-    color: #579dff;
-    border-color: #579dff;
+.navbar-logo-btn:hover {
+    opacity: 0.88;
+    transform: scale(1.02);
 }
 
-.sidebar-toggle-btn .toggle-icon {
-    transition: transform 0.22s ease;
+.navbar-logo-btn:active {
+    transform: scale(0.97);
 }
 
 /* Collapsed Sidebar (Icon-Only Mode) */

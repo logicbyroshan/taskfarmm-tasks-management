@@ -1,12 +1,6 @@
 <aside class="sidebar" role="navigation" aria-label="Main navigation">
     {% if user.is_authenticated %}
     
-    <div class="sidebar-toggle-row">
-        <button type="button" id="sidebar-toggle-btn" class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Toggle Sidebar (Collapse to icons)">
-            <i class="fas fa-chevron-left toggle-icon"></i>
-        </button>
-    </div>
-
     <nav class="sidebar-nav">
         <ul role="list">
             <li class="{% if active_page == 'dashboard' %}active{% endif %}">

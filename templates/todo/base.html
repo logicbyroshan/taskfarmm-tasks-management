@@ -63,10 +63,14 @@
         <!-- Main Navigation Header -->
         <header class="navbar" role="banner">
             <div class="navbar-left">
-                <img src="{% static 'todo/images/logo.png' %}" alt="TaskFlixx Logo" class="logo-img" width="36" height="36" fetchpriority="high">
-                <a href="{% url 'dashboard' %}" style="text-decoration: none;" aria-label="TaskFlixx Home">
-                    <h1 class="logo">Task<span>Flixx</span></h1>
-                </a>
+                <button type="button" 
+                        class="navbar-logo-btn" 
+                        onclick="toggleSidebarCollapse()" 
+                        title="Toggle Sidebar (Collapse to icons / Expand)"
+                        style="background: transparent; border: none; padding: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; outline: none;">
+                    <img src="{% static 'todo/images/logo.png' %}" alt="TaskFlixx Logo" class="logo-img" width="36" height="36" fetchpriority="high">
+                    <h1 class="logo" style="margin: 0; user-select: none;">Task<span>Flixx</span></h1>
+                </button>
             </div>
             <div class="navbar-right">
                 <div class="search-bar" role="search">
