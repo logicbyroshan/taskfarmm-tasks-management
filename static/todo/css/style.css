@@ -296,7 +296,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     flex-direction: column;
     gap: 20px;
     overflow-y: auto;
-    overflow-x: auto;
+    overflow-x: hidden;
     height: 100%;
     box-sizing: border-box;
 }

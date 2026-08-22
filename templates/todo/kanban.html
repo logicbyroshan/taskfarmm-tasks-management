@@ -10,44 +10,45 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    overflow-x: scroll !important;
+    overflow-x: auto;
     overflow-y: hidden;
-    padding-bottom: 24px;
-    margin-top: 10px;
+    padding-bottom: 16px;
+    margin-top: 6px;
     scrollbar-width: thin;
     scrollbar-color: #3b82f6 #09090b;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
     display: block;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar {
-    height: 10px;
+    height: 8px;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar-track {
     background: #09090b;
-    border-radius: 6px;
+    border-radius: 4px;
     border: 1px solid #18181b;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar-thumb {
     background: #27272a;
-    border-radius: 6px;
-    border: 2px solid #09090b;
+    border-radius: 4px;
+    border: 1px solid #09090b;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar-thumb:hover {
     background: #3b82f6;
 }
 
-/* 6-Column Fixed-Width Grid */
+/* 6-Column Grid — exact width matching 6 columns with no trailing empty gap */
 .kanban-board-6col {
     display: grid;
-    grid-template-columns: repeat(6, 320px);
-    gap: 16px;
+    grid-template-columns: repeat(6, 310px);
+    gap: 14px;
     width: max-content;
-    min-width: calc(6 * 320px + 5 * 16px);
-    padding-right: 24px;
+    padding-right: 8px;
+    box-sizing: border-box;
 }
 
 .kanban-column {
@@ -575,22 +576,28 @@
         }, 100);
     }
 
-    // Enable smooth mouse wheel horizontal panning over Kanban board
+    // Enable gentle, smooth mouse wheel horizontal panning over Kanban board
     document.addEventListener('DOMContentLoaded', function() {
         const scrollWrapper = document.querySelector('.kanban-board-scroll-wrapper');
         if (scrollWrapper) {
             scrollWrapper.addEventListener('wheel', function(e) {
+                // If scrolling inside an individual column's cards container that has room to scroll vertically
                 const innerCards = e.target.closest('.kanban-cards-container');
                 if (innerCards && innerCards.scrollHeight > innerCards.clientHeight) {
                     const atTop = innerCards.scrollTop === 0 && e.deltaY < 0;
                     const atBottom = (innerCards.scrollHeight - innerCards.scrollTop <= innerCards.clientHeight + 2) && e.deltaY > 0;
                     if (!atTop && !atBottom) {
-                        return; // Allow vertical scrolling inside column when not at edges
+                        return; // Let vertical column scroll happen naturally
                     }
                 }
+
                 if (e.deltaY !== 0) {
                     e.preventDefault();
-                    scrollWrapper.scrollLeft += e.deltaY * 1.5;
+                    const step = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 70);
+                    scrollWrapper.scrollBy({
+                        left: step,
+                        behavior: 'smooth'
+                    });
                 }
             }, { passive: false });
         }
