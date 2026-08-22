@@ -8,20 +8,10 @@
             
             <!-- Left Side: Project, List & Priority Dropdowns -->
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <!-- Project Pill -->
-                <div style="position: relative;">
-                    <button type="button" id="trello-project-pill-btn" onclick="toggleTrelloProjectDropdown(event)" style="height: 32px; display: inline-flex; align-items: center; gap: 6px; background: #22272b; color: #dee4ea; border: 1px solid #2e353b; border-radius: 4px; padding: 0 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; box-sizing: border-box;">
-                        <i class="fas fa-folder" style="color: #579dff; font-size: 0.75rem;"></i>
-                        <span id="trello-project-text">General</span>
-                        <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab; margin-left: 2px;"></i>
-                    </button>
-                    <div id="trello-project-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 6px; padding: 6px 0; min-width: 180px; z-index: 2500; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                        <div style="padding: 4px 12px; font-size: 0.725rem; font-weight: 700; color: #8c9bab; text-transform: uppercase;">Project</div>
-                        <div class="trello-dropdown-item" onclick="selectTrelloProject('', 'General')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📁 General</div>
-                        {% for p in all_projects %}
-                        <div class="trello-dropdown-item" onclick="selectTrelloProject('{{ p.id }}', '{{ p.name }}')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📁 {{ p.name }}</div>
-                        {% endfor %}
-                    </div>
+                <!-- Static Project Badge (Task always belongs to its parent project) -->
+                <div id="trello-project-pill-badge" style="height: 32px; display: inline-flex; align-items: center; gap: 6px; background: rgba(59, 130, 246, 0.12); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 4px; padding: 0 12px; font-size: 0.825rem; font-weight: 600; box-sizing: border-box; user-select: none;" title="Current Project">
+                    <i class="fas fa-folder" style="color: #60a5fa; font-size: 0.75rem;"></i>
+                    <span id="trello-project-text">General</span>
                 </div>
 
                 <!-- Kanban List / Column Pill -->
