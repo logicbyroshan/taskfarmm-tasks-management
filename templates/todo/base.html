@@ -46,8 +46,8 @@
     </noscript>
 
     <!-- CSS Links -->
-    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=105">
-    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=105">
+    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=110">
+    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=110">
     
     <!-- HTMX & Alpine.js (Deferred for zero render-blocking) -->
     <script defer src="https://unpkg.com/htmx.org@1.9.12"></script>
@@ -84,31 +84,6 @@
                 </a>
                 <div class="date-day" role="status" aria-live="polite" id="live-date">
                     <span>Loading...</span>
-                </div>
-
-                <!-- User Profile Menu -->
-                <div class="user-switcher-dropdown" style="position: relative;">
-                    <button type="button" id="user-switcher-btn" onclick="toggleUserSwitcherMenu(event)" style="display: flex; align-items: center; gap: 8px; background: #1c2b41; border: 1px solid #1f3b64; border-radius: 999px; padding: 4px 12px 4px 6px; color: #dee4ea; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
-                        <div style="width: 26px; height: 26px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700;">
-                            {{ user.username|slice:":2"|upper|default:"ME" }}
-                        </div>
-                        <span>{{ user.username }}</span>
-                        <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab;"></i>
-                    </button>
-                    <div id="user-switcher-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 6px 0; min-width: 180px; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
-                        <div style="padding: 8px 14px; font-size: 0.825rem; font-weight: 600; color: #dee4ea; border-bottom: 1px solid #282e33; margin-bottom: 4px;">
-                            <div style="font-size: 0.725rem; color: #8c9bab;">Signed in as</div>
-                            <strong>{{ user.username }}</strong>
-                        </div>
-                        <a href="{% url 'settings' %}" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; color: #dee4ea; text-decoration: none; font-size: 0.825rem;">
-                            <i class="fas fa-cog" style="color: #579dff;"></i> Profile Settings
-                        </a>
-                        <div style="border-top: 1px solid #282e33; margin-top: 4px; padding-top: 4px;">
-                            <a href="{% url 'logout' %}" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; color: #f87171; text-decoration: none; font-size: 0.825rem;">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </div>
         </header>
@@ -232,7 +207,7 @@
         </div>
     </aside>
 
-    <script defer src="{% static 'todo/js/script.js' %}?v=103"></script>
+    <script defer src="{% static 'todo/js/script.js' %}?v=110"></script>
     {% block scripts %}{% endblock scripts %}
 </body>
 </html>

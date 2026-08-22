@@ -2112,8 +2112,40 @@ function setupWaveBackground() {
 
     const dotSpacing = 28; // Grid step in px
 
+    // Cool color palette spectrum (RGB stops):
+    const coolPalette = [
+        [20, 184, 166],   // Aquamarine Teal (#14b8a6)
+        [6, 182, 212],    // Electric Cyan (#06b6d4)
+        [56, 189, 248],   // Neon Sky Blue (#38bdf8)
+        [37, 99, 235],    // Deep Sapphire (#2563eb)
+        [99, 102, 241],   // Vivid Indigo (#6366f1)
+        [139, 92, 246]    // Cool Violet (#8b5cf6)
+    ];
+
+    function getCoolGradientColor(phase, brightness) {
+        const p = ((phase % 1) + 1) % 1;
+        const idx = p * (coolPalette.length - 1);
+        const i1 = Math.floor(idx);
+        const i2 = Math.min(coolPalette.length - 1, i1 + 1);
+        const frac = idx - i1;
+
+        const c1 = coolPalette[i1];
+        const c2 = coolPalette[i2];
+
+        let r = Math.round(c1[0] + (c2[0] - c1[0]) * frac);
+        let g = Math.round(c1[1] + (c2[1] - c1[1]) * frac);
+        let b = Math.round(c1[2] + (c2[2] - c1[2]) * frac);
+
+        if (brightness > 0.5) {
+            const boost = (brightness - 0.5) * 50;
+            r = Math.min(255, Math.round(r + boost * 0.7));
+            g = Math.min(255, Math.round(g + boost * 0.9));
+            b = Math.min(255, Math.round(b + boost));
+        }
+        return { r, g, b };
+    }
+
     function render(now) {
-        // Stop rendering if page/tab is hidden to save CPU/battery
         if (document.hidden) {
             animationFrameId = requestAnimationFrame(render);
             return;
@@ -2135,7 +2167,7 @@ function setupWaveBackground() {
         const cols = Math.ceil(width / dotSpacing) + 2;
         const rows = Math.ceil(height / dotSpacing) + 2;
 
-        // Draw dots with travelling fluid waves across the grid
+        // Draw dots with flowing cool-gradient waves across the grid
         for (let j = 0; j < rows; j++) {
             const y0 = j * dotSpacing;
 
@@ -2149,6 +2181,7 @@ function setupWaveBackground() {
 
                 // Combined wave elevation normalized (-1.0 to 1.0)
                 let elevation = (wave1 * 0.45 + wave2 * 0.35 + wave3 * 0.20);
+                let mouseGlow = 0;
 
                 // Interactive mouse wave disturbance
                 if (mouse.active) {
@@ -2157,29 +2190,29 @@ function setupWaveBackground() {
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < mouse.radius) {
                         const factor = (1 - dist / mouse.radius);
-                        elevation += Math.sin(dist * 0.04 - t * 4.5) * factor * 0.5;
+                        elevation += Math.sin(dist * 0.04 - t * 4.5) * factor * 0.6;
+                        mouseGlow = factor;
                     }
                 }
 
-                // Vertical undulating wave displacement (dots remain anchored, wave passes through)
-                const y = y0 + elevation * 5.5;
+                // Vertical undulating wave displacement
+                const y = y0 + elevation * 6.5;
                 const x = x0 + Math.cos(y0 * 0.003 + t * 0.6) * 1.5;
 
-                // Radius expands on wave crests, contracts in troughs
+                // Radius & Elevation normalization
                 const normElev = Math.max(0, Math.min(1, (elevation + 1) * 0.5)); // 0.0 to 1.0
-                const radius = 1.0 + normElev * 1.3;
+                const radius = 1.0 + normElev * 1.5 + mouseGlow * 0.8;
 
-                // Alpha glow: dimmer in troughs, vibrant luminous glow on wave crests
-                const alpha = 0.12 + normElev * 0.38;
+                // Dynamic cool gradient color calculation based on spatial flow and phase
+                const colorPhase = (x0 * 0.0006 + y0 * 0.0004 + t * 0.07 + normElev * 0.2);
+                const rgb = getCoolGradientColor(colorPhase, normElev);
 
-                // Color shifts from deep royal blue at troughs to radiant cyan-blue at crests
-                const r = Math.round(59 + normElev * 37);    // 59 -> 96
-                const g = Math.round(130 + normElev * 35);   // 130 -> 165
-                const b = Math.round(246 + normElev * 9);    // 246 -> 255
+                // Alpha glow: dimmer in troughs, vibrant radiant cool glow on wave crests
+                const alpha = Math.min(0.75, 0.14 + normElev * 0.48 + mouseGlow * 0.25);
 
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha.toFixed(3)})`;
                 ctx.fill();
             }
         }
