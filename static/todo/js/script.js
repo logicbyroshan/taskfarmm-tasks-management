@@ -1420,16 +1420,14 @@ function renderTrelloChecklist(items) {
     if (fillBar) fillBar.style.width = `${pct}%`;
 
     container.innerHTML = items.map((item, idx) => `
-        <div class="checklist-item-row" id="chk-item-${item.id || idx}" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; background: #181b1f; border: 1px solid #24292e; border-radius: 6px; transition: all 0.15s ease;">
-            <label style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; margin: 0; min-width: 0;">
-                <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTrelloChecklistItem('${item.id || idx}', this.checked)" style="width: 16px; height: 16px; min-width: 16px; cursor: pointer; accent-color: #579dff; border-radius: 3px;">
-                <span id="chk-text-${item.id || idx}" style="font-size: 0.85rem; color: ${item.completed ? '#8c9bab' : '#dee4ea'}; text-decoration: ${item.completed ? 'line-through' : 'none'}; word-break: break-word; line-height: 1.4;">${escapeHtml(item.text)}</span>
+        <div class="checklist-item-row" id="chk-item-${item.id || idx}" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; background: #16181d; border: 1px solid #22272b; border-radius: 4px; transition: all 0.15s ease;">
+            <label style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; margin: 0; min-width: 0;">
+                <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTrelloChecklistItem('${item.id || idx}', this.checked)" style="width: 15px; height: 15px; min-width: 15px; cursor: pointer; accent-color: #579dff; margin: 0;">
+                <span id="chk-text-${item.id || idx}" style="font-size: 0.825rem; color: ${item.completed ? '#8c9bab' : '#dee4ea'}; text-decoration: ${item.completed ? 'line-through' : 'none'}; word-break: break-word; line-height: 1.35;">${escapeHtml(item.text)}</span>
             </label>
-            <div style="display: flex; align-items: center; gap: 4px;">
-                <button type="button" onclick="deleteTrelloChecklistItem('${item.id || idx}')" title="Delete item" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; padding: 4px 6px; font-size: 0.8rem; border-radius: 4px; transition: color 0.15s ease;" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#8c9bab'">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
+            <button type="button" onclick="deleteTrelloChecklistItem('${item.id || idx}')" title="Delete item" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; padding: 2px 4px; font-size: 0.75rem; border-radius: 3px; transition: color 0.15s ease;" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#8c9bab'">
+                <i class="fas fa-trash-alt"></i>
+            </button>
         </div>
     `).join('');
 }
@@ -1515,7 +1513,7 @@ function renderTrelloComments(comments = [], task = null) {
 
     // Render Comments only in the scrollable stream
     if (comments && comments.length > 0) {
-        html += '<div style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto;">';
+        html += '<div style="display: flex; flex-direction: column; gap: 6px; flex: 1; overflow-y: auto;">';
         html += comments.map(c => {
             const cUser = c.user || 'User';
             const cInitials = cUser.slice(0, 2).toUpperCase();
@@ -1523,31 +1521,31 @@ function renderTrelloComments(comments = [], task = null) {
             const cTime = c.time_ago || c.created_at || 'Just now';
 
             return `
-                <div class="comment-item-row" id="comment-row-${c.id}" style="display: flex; flex-direction: column; gap: 6px; background: #16181d; border: 1px solid #22272b; border-radius: 6px; padding: 10px 12px;">
+                <div class="comment-item-row" id="comment-row-${c.id}" style="display: flex; flex-direction: column; gap: 4px; background: #16181d; border: 1px solid #22272b; border-radius: 6px; padding: 8px 10px;">
                     <!-- Highlighted Comment Body -->
-                    <div id="comment-bubble-${c.id}" style="color: #ffffff; font-size: 0.9rem; font-weight: 500; line-height: 1.5; word-break: break-word; white-space: pre-wrap;">${escapeHtml(c.content)}</div>
+                    <div id="comment-bubble-${c.id}" style="color: #ffffff; font-size: 0.875rem; font-weight: 500; line-height: 1.4; word-break: break-word; white-space: pre-wrap;">${escapeHtml(c.content)}</div>
                     
                     <!-- Bottom Row: Actions on Left, Avatar + User + Time on Right -->
-                    <div id="comment-footer-${c.id}" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; padding-top: 6px; border-top: 1px solid #1f2328; font-size: 0.725rem;">
+                    <div id="comment-footer-${c.id}" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 1px; padding-top: 4px; border-top: 1px solid #1f2328; font-size: 0.7rem;">
                         <!-- Left: Actions -->
-                        <div id="comment-actions-${c.id}" style="display: flex; align-items: center; gap: 6px; color: #8c9bab;">
-                            <span style="cursor: pointer; color: #8c9bab; font-size: 0.725rem; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="replyToTrelloComment('${cUser}')">Reply</span>
-                            <span style="color: #2e353b; font-size: 0.65rem;">•</span>
-                            <span style="cursor: pointer; color: #8c9bab; font-size: 0.725rem; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="editTrelloCommentInline(${c.id})">Edit</span>
+                        <div id="comment-actions-${c.id}" style="display: flex; align-items: center; gap: 5px; color: #8c9bab;">
+                            <span style="cursor: pointer; color: #8c9bab; font-size: 0.7rem; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="replyToTrelloComment('${cUser}')">Reply</span>
+                            <span style="color: #2e353b; font-size: 0.6rem;">•</span>
+                            <span style="cursor: pointer; color: #8c9bab; font-size: 0.7rem; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="editTrelloCommentInline(${c.id})">Edit</span>
                             ${c.id ? `
-                            <span style="color: #2e353b; font-size: 0.65rem;">•</span>
-                            <span style="cursor: pointer; color: #ef4444; font-size: 0.725rem; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'" onclick="deleteTrelloComment(${c.id})">Delete</span>` : ''}
+                            <span style="color: #2e353b; font-size: 0.6rem;">•</span>
+                            <span style="cursor: pointer; color: #ef4444; font-size: 0.7rem; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'" onclick="deleteTrelloComment(${c.id})">Delete</span>` : ''}
                         </div>
 
                         <!-- Right: Profile Avatar BEFORE Username & Time -->
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <div style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 4px; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <div style="width: 18px; height: 18px; min-width: 18px; min-height: 18px; max-width: 18px; max-height: 18px; border-radius: 4px; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
                                 ${cInitials}
                             </div>
                             <div style="display: flex; align-items: center; gap: 4px;">
-                                <strong style="color: #9fadbc; font-size: 0.725rem; font-weight: 600;">${cUser}</strong>
-                                <span style="color: #6b7785; font-size: 0.7rem;">${cTime}</span>
-                                ${c.is_edited ? '<span style="color: #579dff; font-size: 0.65rem; font-style: italic; margin-left: 3px;">(edited)</span>' : ''}
+                                <strong style="color: #9fadbc; font-size: 0.7rem; font-weight: 600;">${cUser}</strong>
+                                <span style="color: #6b7785; font-size: 0.675rem;">${cTime}</span>
+                                ${c.is_edited ? '<span style="color: #579dff; font-size: 0.625rem; font-style: italic; margin-left: 2px;">(edited)</span>' : ''}
                             </div>
                         </div>
                     </div>
@@ -1574,19 +1572,20 @@ window.editTrelloCommentInline = function(commentId) {
     if (!comment) return;
 
     const bubble = document.getElementById(`comment-bubble-${commentId}`);
-    const actions = document.getElementById(`comment-actions-${commentId}`);
+    const footer = document.getElementById(`comment-footer-${commentId}`);
     if (!bubble) return;
 
-    if (actions) actions.style.display = 'none';
+    if (footer) footer.style.display = 'none';
 
     bubble.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
             <textarea id="edit-comment-input-${commentId}" 
-                      style="width: 100%; background: #121417; border: 1px solid #579dff; border-radius: 6px; color: #dee4ea; font-size: 0.85rem; padding: 8px 10px; resize: vertical; min-height: 48px; box-sizing: border-box; outline: none; font-family: inherit;"
-                      onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); saveEditedTrelloComment(${commentId}); }">${comment.content}</textarea>
-            <div style="display: flex; gap: 6px;">
-                <button type="button" onclick="saveEditedTrelloComment(${commentId})" style="background: #579dff; color: #000000; font-size: 0.75rem; font-weight: 700; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer;">Save</button>
-                <button type="button" onclick="cancelEditTrelloComment(${commentId})" style="background: transparent; color: #8c9bab; font-size: 0.75rem; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">Cancel</button>
+                      rows="2"
+                      style="width: 100%; background: #121417; border: 1px solid #579dff; border-radius: 4px; color: #dee4ea; font-size: 0.85rem; padding: 6px 8px; resize: vertical; min-height: 42px; box-sizing: border-box; outline: none; font-family: inherit; line-height: 1.4;"
+                      onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); saveEditedTrelloComment(${commentId}); }">${escapeHtml(comment.content)}</textarea>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <button type="button" onclick="saveEditedTrelloComment(${commentId})" style="background: #579dff; color: #000000; font-size: 0.725rem; font-weight: 700; border: none; border-radius: 4px; padding: 3px 10px; cursor: pointer; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='1'">Save</button>
+                <button type="button" onclick="cancelEditTrelloComment(${commentId})" style="background: transparent; color: #8c9bab; font-size: 0.725rem; border: none; border-radius: 4px; padding: 3px 6px; cursor: pointer;" onmouseenter="this.style.color='#dee4ea'" onmouseleave="this.style.color='#8c9bab'">Cancel</button>
             </div>
         </div>
     `;
