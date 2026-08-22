@@ -2,13 +2,27 @@
 todo/autocorrect.py
 
 Intelligent multi-lingual spell check, auto-correction, and grammar normalization
-engine supporting English, Hindi (transliterated), and Hinglish.
+engine powered by OpenHinglish (shankarmishra/openhinglish) and custom phonetic/lexical
+dictionaries for English, Hindi (transliterated), and Hinglish.
 
-Fixes common typos, phonetic mistakes, letter swaps, and casing across task titles,
-descriptions, comments, and project notes.
+Fixes common typos, phonetic mistakes, shorthand expansions, letter swaps, and casing
+across task titles, descriptions, comments, and project notes.
 """
 
 import re
+import logging
+
+logger = logging.getLogger('todo')
+
+# Check OpenHinglish availability
+try:
+    import openhinglish
+    from openhinglish import normalize as openhinglish_normalize
+    OPENHINGLISH_AVAILABLE = True
+except ImportError:
+    OPENHINGLISH_AVAILABLE = False
+    openhinglish_normalize = None
+
 
 # Comprehensive dictionary of typo to correct replacement (English & Hinglish)
 COMMON_REPLACEMENTS = {
@@ -48,6 +62,20 @@ COMMON_REPLACEMENTS = {
     r'\bkaam\b': 'kaam',
     r'\bpending hai\b': 'pending hai',
     r'\bdone ho gya\b': 'done ho gaya',
+
+    # Shorthand & Slang Expansions
+    r'\bintv\b': 'interview',
+    r'\bmsg\b': 'message',
+    r'\btmrw\b': 'tomorrow',
+    r'\btmr\b': 'tomorrow',
+    r'\byday\b': 'yesterday',
+    r'\bpls\b': 'please',
+    r'\bplz\b': 'please',
+    r'\basap\b': 'ASAP',
+    r'\bdoc\b': 'document',
+    r'\bdocs\b': 'documents',
+    r'\bppt\b': 'presentation',
+    r'\bppts\b': 'presentations',
 
     # Common Task & Project Typos (English)
     r'\btaks\b': 'task',
@@ -147,16 +175,42 @@ COMMON_REPLACEMENTS = {
 def autocorrect_text(text: str) -> dict:
     """
     Performs intelligent multi-lingual spell correction and normalizes text.
+    Combines OpenHinglish deterministic normalization with custom task rules.
     Preserves numbers, URLs, and punctuation while fixing misspelled English and Hinglish words.
     """
     if not text:
-        return {'original': '', 'corrected': '', 'changed': False}
+        return {
+            'original': '',
+            'corrected': '',
+            'changed': False,
+            'hinglish_display': '',
+            'devanagari_tts': '',
+            'engine': 'openhinglish+rules',
+        }
 
     cleaned = text
+    hinglish_display = ''
+    devanagari_tts = ''
 
-    # Step 1: Apply targeted regex replacements with case preservation
+    # Step 1: OpenHinglish normalizer pass (if available)
+    if OPENHINGLISH_AVAILABLE and openhinglish_normalize is not None:
+        try:
+            oh_res = openhinglish_normalize(cleaned)
+            if oh_res:
+                hinglish_display = getattr(oh_res, 'display', '')
+                devanagari_tts = getattr(oh_res, 'tts', '')
+                # Extract shorthand expansions (e.g., intv -> interview)
+                for tok in getattr(oh_res, 'tokens', []):
+                    cat_name = getattr(getattr(tok, 'category', None), 'name', '')
+                    surface = getattr(tok, 'surface', '')
+                    display_form = getattr(tok, 'display_form', '')
+                    if cat_name == 'ENGLISH' and surface and display_form and surface.lower() != display_form.lower():
+                        cleaned = re.sub(r'\b' + re.escape(surface) + r'\b', display_form, cleaned, flags=re.IGNORECASE)
+        except Exception as e:
+            logger.warning('OpenHinglish normalization notice: %s', e)
+
+    # Step 2: Apply targeted regex replacements with case preservation
     for pattern, replacement in COMMON_REPLACEMENTS.items():
-        # Match case-insensitively but match capitalization style
         def make_replace(match):
             m_text = match.group(0)
             if m_text.isupper():
@@ -167,17 +221,17 @@ def autocorrect_text(text: str) -> dict:
 
         cleaned = re.sub(pattern, make_replace, cleaned, flags=re.IGNORECASE)
 
-    # Step 2: Fix multiple consecutive spaces
+    # Step 3: Fix multiple consecutive spaces
     cleaned = re.sub(r'[ \t]+', ' ', cleaned)
 
-    # Step 3: Normalize colons (remove space before colon, ensure space after colon)
+    # Step 4: Normalize colons (remove space before colon, ensure space after colon)
     cleaned = re.sub(r'\s+:\s*', ': ', cleaned)
     cleaned = re.sub(r':([A-Za-z0-9])', r': \1', cleaned)
 
-    # Step 4: Fix duplicate punctuation like ,, or .. (except ...)
+    # Step 5: Fix duplicate punctuation like ,, or .. (except ...)
     cleaned = re.sub(r',{2,}', ',', cleaned)
 
-    # Step 5: Capitalize the first letter if it starts with lowercase letter
+    # Step 6: Capitalize the first letter if it starts with lowercase letter
     if cleaned and cleaned[0].islower():
         cleaned = cleaned[0].upper() + cleaned[1:]
 
@@ -185,4 +239,7 @@ def autocorrect_text(text: str) -> dict:
         'original': text,
         'corrected': cleaned.strip(),
         'changed': cleaned.strip() != text.strip(),
+        'hinglish_display': hinglish_display,
+        'devanagari_tts': devanagari_tts,
+        'engine': 'openhinglish+rules',
     }

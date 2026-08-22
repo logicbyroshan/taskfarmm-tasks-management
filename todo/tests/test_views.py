@@ -265,7 +265,7 @@ class ViewTests(TestCase):
     def test_autocorrect_api(self):
         res = self.client.post(
             reverse('api_autocorrect'),
-            data=json.dumps({'text': 'FLex print krna hai Sned to : Gopal Ji'}),
+            data=json.dumps({'text': 'FLex print krna hai Sned to : Gopal Ji, intv kal h'}),
             content_type='application/json'
         )
         self.assertEqual(res.status_code, 200)
@@ -273,4 +273,5 @@ class ViewTests(TestCase):
         self.assertTrue(data['success'])
         self.assertIn('karna', data['corrected'].lower())
         self.assertIn('send to:', data['corrected'].lower())
+        self.assertIn('interview', data['corrected'].lower())
         self.assertTrue(data['changed'])
