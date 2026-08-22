@@ -133,6 +133,32 @@ class TaskComment(models.Model):
         return f"Comment by {self.user.username} on {self.task.title}"
 
 
+class TaskAttachment(models.Model):
+    """
+    Uploaded files and paste-to-upload attachments (PDFs, images, documents) associated with a Task.
+    """
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='attachments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_attachments')
+    file = models.FileField(upload_to='task_attachments/%Y/%m/')
+    filename = models.CharField(max_length=255)
+    file_size = models.PositiveIntegerField(default=0)  # bytes
+    file_type = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['task', 'created_at'], name='task_attach_created_idx'),
+        ]
+
+    def __str__(self):
+        return f"{self.filename} ({self.task.title})"
+
+    def is_image(self):
+        ext = self.filename.split('.')[-1].lower() if '.' in self.filename else ''
+        return ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'] or self.file_type.startswith('image/')
+
+
 class PreDefinedTask(models.Model):
     """
     A library of pre-defined task templates that users can pick from

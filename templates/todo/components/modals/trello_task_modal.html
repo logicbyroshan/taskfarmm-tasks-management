@@ -99,23 +99,29 @@
                         </button>
                         <div id="trello-add-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 6px; padding: 6px 0; min-width: 175px; z-index: 2800; box-shadow: 0 10px 25px rgba(0,0,0,0.7);">
                             <div style="padding: 4px 12px; font-size: 0.725rem; font-weight: 700; color: #8c9bab; text-transform: uppercase;">Add to Card</div>
+                            <div class="trello-dropdown-item" onclick="triggerTrelloAttachment(); closeTrelloMenus();" style="padding: 7px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fas fa-paperclip" style="color: #579dff; width: 14px;"></i> Attachment</div>
                             <div class="trello-dropdown-item" onclick="focusTrelloChecklist(); closeTrelloMenus();" style="padding: 7px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fas fa-check-square" style="color: #579dff; width: 14px;"></i> Checklist</div>
                             <div class="trello-dropdown-item" onclick="openTrelloDatePicker(); closeTrelloMenus();" style="padding: 7px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="far fa-clock" style="color: #579dff; width: 14px;"></i> Dates</div>
                             <div class="trello-dropdown-item" onclick="toggleTrelloMembersPopup(event)" style="padding: 7px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user-friends" style="color: #579dff; width: 14px;"></i> Members</div>
                         </div>
                     </div>
 
-                    <!-- 2. Dates Button -->
+                    <!-- 2. Attachment Button -->
+                    <button type="button" class="trello-pill-action" onclick="triggerTrelloAttachment()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
+                        <i class="fas fa-paperclip" style="font-size: 0.8rem; color: #579dff;"></i> Attachment
+                    </button>
+
+                    <!-- 3. Dates Button -->
                     <button type="button" class="trello-pill-action" onclick="openTrelloDatePicker()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
                         <i class="far fa-clock" style="font-size: 0.8rem; color: #579dff;"></i> Dates
                     </button>
 
-                    <!-- 3. Checklist Button -->
+                    <!-- 4. Checklist Button -->
                     <button type="button" class="trello-pill-action" onclick="focusTrelloChecklist()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
                         <i class="fas fa-check-square" style="font-size: 0.8rem; color: #579dff;"></i> Checklist
                     </button>
 
-                    <!-- 4. Members Button & Popup -->
+                    <!-- 5. Members Button & Popup -->
                     <div style="position: relative;">
                         <button type="button" class="trello-pill-action" onclick="toggleTrelloMembersPopup(event)" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
                             <i class="fas fa-user-friends" style="font-size: 0.8rem; color: #579dff;"></i> Members
@@ -142,23 +148,37 @@
                     </div>
                 </div>
 
-                <!-- Hidden form state inputs (not visible) -->
+                <!-- Hidden form state inputs and file input -->
+                <input type="file" id="trello-file-input" multiple onchange="uploadTrelloFiles(this.files)" style="display: none !important;">
                 <input type="date" id="trello-due-date-input" onchange="saveTrelloTaskField('due_date', this.value); updateTrelloDueDateText(this.value);" style="display: none !important;">
                 <input type="hidden" id="trello-status-select" value="not-started">
                 <input type="hidden" id="trello-project-select" value="">
                 <input type="hidden" id="trello-priority-select" value="moderate">
 
-                <!-- Description Section with seamless Auto-save -->
+                <!-- Description Section with seamless Auto-save & Paste Upload -->
                 <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
                     <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-align-left" style="color: #9fadbc; font-size: 0.85rem;"></i> Description
                     </h4>
                     <textarea id="trello-description-input" 
                               rows="3" 
-                              placeholder="Add a more detailed description..."
+                              placeholder="Add a more detailed description or paste (Ctrl+V) images/files..."
                               style="width: 100%; background: #22272b; border: 1px solid transparent; border-radius: 6px; color: #dee4ea; padding: 10px 14px; font-size: 0.875rem; line-height: 1.5; outline: none; font-family: inherit; box-sizing: border-box; resize: vertical; min-height: 64px; transition: border-color 0.15s ease, background 0.15s ease;"
                               onfocus="this.style.background='#1d2125'; this.style.borderColor='#579dff';"
                               onblur="this.style.background='#22272b'; this.style.borderColor='transparent'; saveTrelloTaskField('description', this.value);"></textarea>
+                </div>
+
+                <!-- Attachments Section (Dynamically rendered) -->
+                <div id="trello-attachments-section" style="display: none; flex-direction: column; gap: 8px; margin-top: 4px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-paperclip" style="color: #579dff; font-size: 0.9rem;"></i> Attachments
+                        </h4>
+                        <button type="button" onclick="triggerTrelloAttachment()" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;" onmouseenter="this.style.borderColor='#579dff'; this.style.color='#fff';" onmouseleave="this.style.borderColor='#2e353b'; this.style.color='#b6c2cf';">
+                            <i class="fas fa-plus" style="font-size: 0.65rem; color: #579dff;"></i> Add file
+                        </button>
+                    </div>
+                    <div id="trello-attachments-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
                 </div>
 
                 <!-- Checklist Section (Dynamically shown if active) -->

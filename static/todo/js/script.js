@@ -582,6 +582,7 @@ window.openTrelloModal = function(taskId) {
 
                 renderTrelloComments(data.task.comments || [], data.task);
                 renderTrelloMembers(data.task.assignees || [], data.task);
+                renderTrelloAttachments(data.task.attachments || []);
 
                 modal.style.display = 'flex';
             }
@@ -1056,11 +1057,184 @@ window.triggerTrelloAttachment = function() {
     if (input) input.click();
 };
 
-window.handleTrelloFileUpload = function(fileInput) {
-    if (!fileInput.files || !fileInput.files[0]) return;
-    const file = fileInput.files[0];
-    if (window.showToast) window.showToast('Attachment attached!', 'success');
+window.uploadTrelloFiles = function(files) {
+    if (!files || files.length === 0 || !currentTrelloTask) return;
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+    }
+
+    if (window.showToast) window.showToast('Uploading attachment...', 'info', 1000);
+
+    fetch(`/task/${currentTrelloTask.id}/attachment/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            currentTrelloTask.attachments = data.attachments;
+            renderTrelloAttachments(data.attachments);
+            if (window.showToast) window.showToast(data.message || 'Uploaded!', 'success', 1500);
+            const fileInput = document.getElementById('trello-file-input');
+            if (fileInput) fileInput.value = '';
+        } else {
+            if (window.showToast) window.showToast(data.error || 'Upload failed', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Error uploading attachment:', err);
+        if (window.showToast) window.showToast('Upload failed', 'error');
+    });
 };
+
+window.uploadTrelloPastedImage = function(imageData, filename = 'pasted_image.png') {
+    if (!imageData || !currentTrelloTask) return;
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+    if (window.showToast) window.showToast('Uploading pasted image...', 'info', 1000);
+
+    fetch(`/task/${currentTrelloTask.id}/attachment/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ image_data: imageData, filename: filename })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            currentTrelloTask.attachments = data.attachments;
+            renderTrelloAttachments(data.attachments);
+            if (window.showToast) window.showToast('Image uploaded to attachments!', 'success', 1500);
+        } else {
+            if (window.showToast) window.showToast(data.error || 'Upload failed', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Error uploading pasted image:', err);
+        if (window.showToast) window.showToast('Upload failed', 'error');
+    });
+};
+
+window.deleteTrelloAttachment = function(attachmentId) {
+    if (!attachmentId || !currentTrelloTask) return;
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+    fetch(`/task/attachment/${attachmentId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            currentTrelloTask.attachments = data.attachments;
+            renderTrelloAttachments(data.attachments);
+            if (window.showToast) window.showToast('Attachment deleted', 'info', 1200);
+        }
+    })
+    .catch(err => console.error('Error deleting attachment:', err));
+};
+
+window.renderTrelloAttachments = function(attachments = []) {
+    const section = document.getElementById('trello-attachments-section');
+    const list = document.getElementById('trello-attachments-list');
+    if (!section || !list) return;
+
+    if (!attachments || attachments.length === 0) {
+        section.style.display = 'none';
+        list.innerHTML = '';
+        return;
+    }
+
+    section.style.display = 'flex';
+    list.innerHTML = attachments.map(att => {
+        const isImg = att.is_image;
+        const iconClass = att.filename.endsWith('.pdf') ? 'fas fa-file-pdf' :
+                          (att.filename.match(/\.(doc|docx)$/i) ? 'fas fa-file-word' :
+                          (att.filename.match(/\.(xls|xlsx|csv)$/i) ? 'fas fa-file-excel' : 'fas fa-file-alt'));
+        const iconColor = att.filename.endsWith('.pdf') ? '#ef4444' :
+                          (att.filename.match(/\.(doc|docx)$/i) ? '#3b82f6' :
+                          (att.filename.match(/\.(xls|xlsx|csv)$/i) ? '#10b981' : '#579dff'));
+
+        return `
+            <div class="attachment-card-item" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; background: #16181d; border: 1px solid #22272b; border-radius: 6px; transition: border-color 0.15s ease;">
+                <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                    ${isImg ? `
+                        <a href="${att.file_url}" target="_blank" title="View full image" style="flex-shrink: 0; display: block;">
+                            <img src="${att.file_url}" alt="${escapeHtml(att.filename)}" style="width: 42px; height: 42px; object-fit: cover; border-radius: 4px; border: 1px solid #2e353b;">
+                        </a>
+                    ` : `
+                        <div style="width: 42px; height: 42px; border-radius: 4px; background: #22272b; border: 1px solid #2e353b; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="${iconClass}" style="color: ${iconColor}; font-size: 1.25rem;"></i>
+                        </div>
+                    `}
+                    <div style="min-width: 0; flex: 1; line-height: 1.3;">
+                        <a href="${att.file_url}" target="_blank" download="${escapeHtml(att.filename)}" style="color: #dee4ea; font-size: 0.85rem; font-weight: 600; text-decoration: none; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#dee4ea'">
+                            ${escapeHtml(att.filename)}
+                        </a>
+                        <div style="font-size: 0.725rem; color: #8c9bab; margin-top: 2px;">
+                            <span>${att.file_size_display || ''}</span>
+                            <span style="color: #3b444c; margin: 0 4px;">•</span>
+                            <span>Added ${att.created_at || 'Just now'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <a href="${att.file_url}" target="_blank" download="${escapeHtml(att.filename)}" title="Download" style="color: #8c9bab; font-size: 0.8rem; padding: 4px; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'">
+                        <i class="fas fa-download"></i>
+                    </a>
+                    <button type="button" onclick="deleteTrelloAttachment(${att.id})" title="Delete attachment" style="background: transparent; border: none; color: #8c9bab; font-size: 0.8rem; cursor: pointer; padding: 4px; transition: color 0.15s ease;" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#8c9bab'">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+function handlePasteAttachment(e) {
+    if (!e.clipboardData || !currentTrelloTask) return;
+    const items = e.clipboardData.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file') {
+            const file = item.getAsFile();
+            if (file) {
+                e.preventDefault();
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        window.uploadTrelloPastedImage(evt.target.result, file.name || `pasted_image_${Date.now()}.png`);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    window.uploadTrelloFiles([file]);
+                }
+                return;
+            }
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const descInput = document.getElementById('trello-description-input');
+    const commentInput = document.getElementById('trello-comment-input');
+    if (descInput) descInput.addEventListener('paste', handlePasteAttachment);
+    if (commentInput) commentInput.addEventListener('paste', handlePasteAttachment);
+});
 
 window.toggleTrelloExpand = function() {
     const modalContent = document.querySelector('.trello-modal-content');

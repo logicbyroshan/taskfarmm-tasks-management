@@ -233,6 +233,25 @@ class TaskService:
             }
             for u in task.assignees.all()
         ]
+        attachments = (
+            task.attachments
+            .select_related('user')
+            .order_by('-created_at')
+        )
+        attachments_data = [
+            {
+                'id': a.id,
+                'filename': a.filename,
+                'file_url': a.file.url if a.file else '',
+                'file_size': a.file_size,
+                'file_size_display': f"{a.file_size / 1024:.1f} KB" if a.file_size < 1048576 else f"{a.file_size / 1048576:.1f} MB",
+                'file_type': a.file_type,
+                'is_image': a.is_image(),
+                'user': a.user.username,
+                'created_at': a.created_at.strftime('%d %b %Y, %H:%M'),
+            }
+            for a in attachments
+        ]
         return {
             'id': task.id,
             'title': task.title,
@@ -250,7 +269,22 @@ class TaskService:
             'checklist': task.checklist or [],
             'comments': comments_data,
             'assignees': assignees_data,
+            'attachments': attachments_data,
         }
+
+    @staticmethod
+    def add_attachment(task, user, uploaded_file):
+        """Creates a TaskAttachment for the task."""
+        from .models import TaskAttachment
+        attachment = TaskAttachment.objects.create(
+            task=task,
+            user=user,
+            file=uploaded_file,
+            filename=uploaded_file.name,
+            file_size=uploaded_file.size,
+            file_type=getattr(uploaded_file, 'content_type', '')
+        )
+        return attachment
 
     @staticmethod
     def create_task(user, validated_data):

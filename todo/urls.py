@@ -26,6 +26,8 @@ urlpatterns = [
     path('task/comment/<int:pk>/edit/', views.task_comment_edit, name='task_comment_edit'),
     path('task/comment/<int:pk>/delete/', views.task_comment_delete, name='task_comment_delete'),
     path('task/<int:pk>/checklist/', views.task_update_checklist, name='task_update_checklist'),
+    path('task/<int:pk>/attachment/', views.task_upload_attachment, name='task_upload_attachment'),
+    path('task/attachment/<int:pk>/delete/', views.task_delete_attachment, name='task_delete_attachment'),
 
     # Project / Category CRUD & Collaboration
     path('projects/create/', views.category_create, name='project_create'),

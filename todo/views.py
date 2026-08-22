@@ -17,6 +17,7 @@ External consumers should use the REST API (/api/v1/).
 import csv
 import json
 import logging
+import base64
 
 # Django core
 from django.shortcuts import render, redirect, get_object_or_404
@@ -28,9 +29,10 @@ from django.contrib.auth import update_session_auth_hash, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.utils.timesince import timesince
+from django.core.files.base import ContentFile
 
 # Local models, forms, and services
-from .models import Task, Category, UserProfile, TaskComment
+from .models import Task, Category, UserProfile, TaskComment, TaskAttachment
 from .forms import TaskForm, CategoryForm, UserUpdateForm, UserProfileForm, PasswordUpdateForm
 from .services import (
     TaskService, CategoryService, ExportService,
@@ -509,6 +511,74 @@ def task_update_checklist(request, pk):
         checklist = []
     TaskService.update_checklist(task, checklist)
     return JsonResponse({'success': True, 'message': 'Checklist updated!'})
+
+
+@login_required
+@require_http_methods(['POST'])
+def task_upload_attachment(request, pk):
+    """
+    Uploads one or multiple files or pasted image (base64) to a task.
+    """
+    task = get_accessible_task(request.user, pk)
+    attachments_created = []
+
+    # Handle standard multipart file uploads
+    if request.FILES:
+        files = request.FILES.getlist('files') or ([request.FILES['file']] if 'file' in request.FILES else [])
+        for f in files:
+            att = TaskService.add_attachment(task, request.user, f)
+            attachments_created.append(att)
+
+    # Handle JSON base64 pasted images
+    elif request.body:
+        try:
+            data = json.loads(request.body)
+            image_data = data.get('image_data', '')
+            filename = data.get('filename', f'pasted_image_{timezone.now().strftime("%Y%m%d_%H%M%S")}.png')
+            if image_data and ';base64,' in image_data:
+                fmt, imgstr = image_data.split(';base64,')
+                ext = fmt.split('/')[-1] if '/' in fmt else 'png'
+                if not filename.endswith(f'.{ext}'):
+                    filename = f'{filename}.{ext}'
+                content = ContentFile(base64.b64decode(imgstr), name=filename)
+                att = TaskService.add_attachment(task, request.user, content)
+                attachments_created.append(att)
+        except Exception as e:
+            logger.warning('Failed to process pasted image: %s', e)
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+    if not attachments_created:
+        return JsonResponse({'success': False, 'error': 'No file provided.'}, status=400)
+
+    task_data = TaskService.get_task_detail_data(task)
+    return JsonResponse({
+        'success': True,
+        'message': f'{len(attachments_created)} attachment(s) uploaded.',
+        'attachments': task_data['attachments'],
+    })
+
+
+@login_required
+@require_http_methods(['POST', 'DELETE'])
+def task_delete_attachment(request, pk):
+    """Deletes a task attachment (attachment author or task owner)."""
+    attachment = get_object_or_404(
+        TaskAttachment.objects.filter(
+            Q(user=request.user) | 
+            Q(task__user=request.user) | 
+            Q(task__category__user=request.user)
+        ).distinct(),
+        pk=pk
+    )
+    task = attachment.task
+    attachment.file.delete(save=False)
+    attachment.delete()
+    task_data = TaskService.get_task_detail_data(task)
+    return JsonResponse({
+        'success': True,
+        'message': 'Attachment deleted.',
+        'attachments': task_data['attachments']
+    })
 
 
 @login_required
