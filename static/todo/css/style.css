@@ -1013,39 +1013,48 @@ select option {
     font-size: 1.15rem;
 }
 
-/* 2-Panel Side-by-Side Trello Modal Architecture */
+/* 2-Panel Side-by-Side Trello Modal Architecture (Wider Width & Fullscreen Toggle) */
 .trello-modal-content {
     display: flex !important;
     flex-direction: row !important;
-    max-width: 860px !important;
-    width: 94% !important;
-    max-height: 88vh !important;
-    height: 600px !important;
+    max-width: 1040px !important;
+    width: 95% !important;
+    max-height: 90vh !important;
+    height: 680px !important;
     background: #1d2125 !important;
     border: 1px solid #282e33 !important;
     border-radius: 12px !important;
     padding: 0 !important;
     overflow: hidden !important;
+    transition: max-width 0.25s ease, height 0.25s ease, width 0.25s ease !important;
+}
+
+.trello-modal-content.trello-modal-fullscreen {
+    max-width: 98vw !important;
+    width: 98vw !important;
+    max-height: 96vh !important;
+    height: 96vh !important;
+    border-radius: 8px !important;
 }
 
 .trello-modal-left {
-    flex: 1.25 !important;
+    flex: 1.35 !important;
     min-width: 0 !important;
-    padding: 20px 24px !important;
+    padding: 24px 28px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 16px !important;
+    gap: 18px !important;
     overflow-y: auto !important;
     background: #1d2125 !important;
 }
 
 .trello-modal-right {
-    flex: 1 !important;
+    flex: 1.05 !important;
     min-width: 0 !important;
-    padding: 16px 20px !important;
+    padding: 20px 24px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 14px !important;
+    gap: 16px !important;
     overflow-y: auto !important;
     background: #181b1f !important;
     border-left: 1px solid #282e33 !important;

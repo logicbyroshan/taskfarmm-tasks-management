@@ -609,14 +609,14 @@ window.handleTrelloFileUpload = function(fileInput) {
 
 window.toggleTrelloExpand = function() {
     const modalContent = document.querySelector('.trello-modal-content');
+    const icon = document.querySelector('[onclick="toggleTrelloExpand()"] i');
     if (modalContent) {
-        if (modalContent.style.maxWidth === '100%') {
-            modalContent.style.maxWidth = '820px';
-            modalContent.style.height = 'auto';
-        } else {
-            modalContent.style.maxWidth = '100%';
-            modalContent.style.height = '100%';
+        modalContent.classList.toggle('trello-modal-fullscreen');
+        const isFull = modalContent.classList.contains('trello-modal-fullscreen');
+        if (icon) {
+            icon.className = isFull ? 'fas fa-compress-alt' : 'fas fa-expand-alt';
         }
+        if (window.showToast) window.showToast(isFull ? 'Expanded to full width' : 'Restored standard width', 'info', 1000);
     }
 };
 
@@ -700,7 +700,7 @@ window.saveTrelloTaskField = function(field, value) {
     const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
     if (!currentTrelloTask) {
-        const title = document.getElementById('trello-task-title-input')?.value.trim() || 'ds';
+        const title = document.getElementById('trello-task-title-input')?.value.trim() || 'New Card';
         const payload = {
             title: title,
             status: document.getElementById('trello-status-select')?.value || 'not-started',
@@ -893,6 +893,19 @@ window.replyToTrelloComment = function(username) {
     }
 };
 
+window.editTrelloCommentInline = function(commentId) {
+    if (!commentId || !currentTrelloTask || !currentTrelloTask.comments) return;
+    const comment = currentTrelloTask.comments.find(c => c.id === commentId);
+    if (!comment) return;
+    const newContent = prompt('Edit comment:', comment.content);
+    if (newContent === null || newContent.trim() === '' || newContent.trim() === comment.content) return;
+
+    comment.content = newContent.trim();
+    comment.is_edited = true;
+    renderTrelloComments(currentTrelloTask.comments);
+    if (window.showToast) window.showToast('Comment updated', 'info', 1200);
+};
+
 window.deleteTrelloComment = function(commentId) {
     if (!commentId || !currentTrelloTask) return;
     if (!confirm('Are you sure you want to delete this comment?')) return;
@@ -922,29 +935,64 @@ window.submitTrelloComment = function() {
     const textarea = document.getElementById('trello-comment-input');
     if (!textarea) return;
     const content = textarea.value.trim();
-    if (!content || !currentTrelloTask) return;
+    if (!content) return;
 
     const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-    fetch(`/task/${currentTrelloTask.id}/comment/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ content: content })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success && data.comment) {
-            textarea.value = '';
-            if (!currentTrelloTask.comments) currentTrelloTask.comments = [];
-            currentTrelloTask.comments.unshift(data.comment);
-            renderTrelloComments(currentTrelloTask.comments);
-            if (window.showToast) window.showToast('Comment added!', 'success');
-        }
-    })
-    .catch(err => console.error('Error posting comment:', err));
+
+    const doSubmit = (taskId) => {
+        fetch(`/task/${taskId}/comment/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.comment) {
+                textarea.value = '';
+                const saveBtn = document.getElementById('trello-comment-save-btn');
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (!currentTrelloTask.comments) currentTrelloTask.comments = [];
+                currentTrelloTask.comments.unshift(data.comment);
+                renderTrelloComments(currentTrelloTask.comments);
+                if (window.showToast) window.showToast('Comment posted!', 'success', 1200);
+            }
+        })
+        .catch(err => console.error('Error posting comment:', err));
+    };
+
+    if (!currentTrelloTask) {
+        const title = document.getElementById('trello-task-title-input')?.value.trim() || 'New Card';
+        const payload = {
+            title: title,
+            status: document.getElementById('trello-status-select')?.value || 'not-started',
+            priority: 'moderate',
+            category: document.getElementById('trello-project-select')?.value || ''
+        };
+        fetch('/task/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.task) {
+                currentTrelloTask = data.task;
+                doSubmit(data.task.id);
+            }
+        })
+        .catch(err => console.error('Error creating card for comment:', err));
+        return;
+    }
+
+    doSubmit(currentTrelloTask.id);
 };
 
     window.copyTrelloTitle = function() {
