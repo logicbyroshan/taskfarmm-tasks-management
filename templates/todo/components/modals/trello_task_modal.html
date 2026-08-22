@@ -106,14 +106,16 @@
                 </div>
             </div>
 
-            <!-- Members / Labels / Dates Badges Row (if active) -->
-            <div id="trello-metadata-badges-row" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-left: 28px;">
-                <div id="trello-members-container" style="display: none;">
-                    <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 4px;">MEMBERS</span>
-                    <div id="trello-members-chips" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"></div>
+            <!-- Members / Labels / Dates Badges Row -->
+            <div id="trello-metadata-badges-row" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; margin-left: 28px; margin-top: 6px; margin-bottom: 8px;">
+                <div id="trello-members-container" style="display: block;">
+                    <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px;">Members</span>
+                    <div id="trello-members-chips" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <!-- Member avatars + [+] button rendered by JS -->
+                    </div>
                 </div>
                 <div id="trello-labels-container" style="display: none;">
-                    <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 4px;">LABELS</span>
+                    <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px;">Labels</span>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span id="trello-label-badge" style="background: #216e4e; color: #ffffff; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer;" onclick="cycleTrelloStatus()">
                             in progress
@@ -121,33 +123,18 @@
                     </div>
                 </div>
                 <div id="trello-dates-container" style="display: none;">
-                    <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 4px;">DUE DATE</span>
+                    <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px;">Due date</span>
                     <div style="display: inline-flex; align-items: center; gap: 6px; background: #282e33; color: #b6c2cf; border-radius: 4px; padding: 4px 10px; font-size: 0.8rem; font-weight: 500; cursor: pointer;" onclick="openTrelloDatePicker()">
                         <span id="trello-due-date-text">Aug 24</span>
                     </div>
                 </div>
             </div>
 
-            <input type="date" id="trello-due-date-input" onchange="saveTrelloTaskField('due_date', this.value); updateTrelloDueDateText(this.value);" style="opacity: 0; width: 0; height: 0; position: absolute; pointer-events: none;">
-            <select id="trello-status-select" onchange="saveTrelloTaskField('status', this.value)" style="display: none;">
-                <option value="not-started">To Do</option>
-                <option value="in-progress">In Progress</option>
-                <option value="backlog">Backlog</option>
-                <option value="completed">Done</option>
-                <option value="on-hold">On Hold</option>
-                <option value="canceled">Canceled</option>
-            </select>
-            <select id="trello-project-select" onchange="saveTrelloTaskField('category', this.value)" style="display: none;">
-                <option value="">General</option>
-                {% for p in all_projects %}
-                <option value="{{ p.id }}">{{ p.name }}</option>
-                {% endfor %}
-            </select>
-            <select id="trello-priority-select" onchange="saveTrelloTaskField('priority', this.value)" style="display: none;">
-                <option value="high">High</option>
-                <option value="moderate" selected>Moderate</option>
-                <option value="low">Low</option>
-            </select>
+            <!-- Hidden form state inputs (not visible) -->
+            <input type="date" id="trello-due-date-input" onchange="saveTrelloTaskField('due_date', this.value); updateTrelloDueDateText(this.value);" style="display: none !important;">
+            <input type="hidden" id="trello-status-select" value="not-started">
+            <input type="hidden" id="trello-project-select" value="">
+            <input type="hidden" id="trello-priority-select" value="moderate">
 
             <!-- Description Section -->
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">

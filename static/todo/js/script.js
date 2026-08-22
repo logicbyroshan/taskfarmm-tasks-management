@@ -571,7 +571,7 @@ window.openTrelloModal = function(taskId) {
                 }
 
                 renderTrelloComments(data.task.comments || [], data.task);
-                renderTrelloMembers(data.task.assignees || []);
+                renderTrelloMembers(data.task.assignees || [], data.task);
 
                 modal.style.display = 'flex';
             }
@@ -579,24 +579,34 @@ window.openTrelloModal = function(taskId) {
         .catch(err => console.error('Error opening trello modal:', err));
 };
 
-window.renderTrelloMembers = function(assignees) {
+window.renderTrelloMembers = function(assignees, task) {
     const container = document.getElementById('trello-members-container');
     const chips = document.getElementById('trello-members-chips');
     if (!container || !chips) return;
 
-    if (!assignees || assignees.length === 0) {
-        container.style.display = 'none';
-        chips.innerHTML = '';
+    container.style.display = 'block';
+
+    const membersList = assignees || [];
+    if (membersList.length === 0) {
+        const creatorName = (task && task.user) || (currentTrelloTask && currentTrelloTask.user) || 'You';
+        const creatorInitials = creatorName.slice(0, 2).toUpperCase();
+        chips.innerHTML = `
+            <div title="Created by ${creatorName}" style="width: 30px; height: 30px; border-radius: 50%; background: #282e33; color: #8c9bab; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; border: 1px solid #333c43;">
+                ${creatorInitials}
+            </div>
+            <button type="button" onclick="toggleTrelloMembersPopup(event)" title="Assign members" style="width: 30px; height: 30px; border-radius: 50%; background: #22272b; color: #579dff; border: 1px dashed #579dff; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;">
+                <i class="fas fa-plus"></i>
+            </button>
+        `;
         return;
     }
 
-    container.style.display = 'block';
-    chips.innerHTML = assignees.map(a => `
-        <div title="${a.username}" style="width: 28px; height: 28px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; border: 1px solid #282e33;">
+    chips.innerHTML = membersList.map(a => `
+        <div title="Assigned to ${a.username}" style="width: 30px; height: 30px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; border: 2px solid #1d2125; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">
             ${a.initials}
         </div>
     `).join('') + `
-        <button type="button" onclick="toggleTrelloMembersPopup(event)" style="width: 28px; height: 28px; border-radius: 50%; background: #282e33; color: #b6c2cf; border: 1px dashed #579dff; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+        <button type="button" onclick="toggleTrelloMembersPopup(event)" title="Assign members" style="width: 30px; height: 30px; border-radius: 50%; background: #22272b; color: #579dff; border: 1px dashed #579dff; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;">
             <i class="fas fa-plus"></i>
         </button>
     `;
@@ -643,7 +653,7 @@ function populateTrelloMembersChecklist(members) {
     const assignedIds = new Set((currentTrelloTask.assignees || []).map(a => a.id));
 
     list.innerHTML = members.map(m => `
-        <label style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; background: #1d2125; color: #dee4ea; font-size: 0.825rem;">
+        <label style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; background: #1d2125; color: #dee4ea; font-size: 0.825rem; transition: background 0.15s ease;" onmouseenter="this.style.background='#282e33';" onmouseleave="this.style.background='#1d2125';">
             <input type="checkbox" ${assignedIds.has(m.id) ? 'checked' : ''} onchange="toggleTrelloAssignee(${m.id}, this.checked)" style="accent-color: #579dff; cursor: pointer;">
             <div style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700;">
                 ${m.initials}
@@ -682,12 +692,39 @@ window.toggleTrelloAssignee = function(memberId, isChecked) {
     .then(data => {
         if (data.success && data.task) {
             currentTrelloTask.assignees = data.task.assignees;
-            renderTrelloMembers(data.task.assignees);
+            renderTrelloMembers(data.task.assignees, currentTrelloTask);
+            updateBoardCardAssignees(currentTrelloTask.id, data.task.assignees);
             if (window.showToast) window.showToast('Card members updated', 'success', 1000);
         }
     })
     .catch(err => console.error('Error updating assignees:', err));
 };
+
+function updateBoardCardAssignees(taskId, assignees) {
+    const card = document.querySelector(`.kanban-card[data-task-id="${taskId}"]`);
+    if (!card) return;
+
+    const usernames = (assignees || []).map(a => a.username).join(',');
+    card.setAttribute('data-assignees', usernames);
+
+    const assigneesContainer = card.querySelector('.card-assignees');
+    if (assigneesContainer) {
+        if (assignees && assignees.length > 0) {
+            assigneesContainer.innerHTML = assignees.map(a => `
+                <span title="Assigned to ${a.username}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                    ${a.initials}
+                </span>
+            `).join('');
+        } else if (currentTrelloTask && currentTrelloTask.user) {
+            const initials = currentTrelloTask.user.slice(0, 2).toUpperCase();
+            assigneesContainer.innerHTML = `
+                <span title="Created by ${currentTrelloTask.user}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                    ${initials}
+                </span>
+            `;
+        }
+    }
+}
 
 document.addEventListener('click', function(e) {
     if (!e.target.closest('#trello-members-popup') && !e.target.closest('.trello-pill-action')) {
