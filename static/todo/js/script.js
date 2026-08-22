@@ -573,6 +573,11 @@ window.openTrelloModal = function(taskId) {
                     labelBadge.style.background = colorMap[data.task.priority] || '#216e4e';
                 }
 
+                const checklistTitleInput = document.getElementById('trello-checklist-title-input');
+                if (checklistTitleInput) {
+                    checklistTitleInput.value = data.task.checklist_title || 'Checklist';
+                }
+
                 if (data.task.checklist && data.task.checklist.length > 0) {
                     if (checklistSec) checklistSec.style.display = 'block';
                     renderTrelloChecklist(data.task.checklist);
@@ -1385,6 +1390,22 @@ window.saveTrelloTaskField = function(field, value) {
     .catch(err => console.error('Error saving task field:', err));
 };
 
+window.saveTrelloChecklistTitle = function(title) {
+    if (!currentTrelloTask) return;
+    const cleanTitle = (title || '').trim() || 'Checklist';
+    currentTrelloTask.checklist_title = cleanTitle;
+    saveTrelloTaskField('checklist_title', cleanTitle);
+};
+
+window.deleteTrelloWholeChecklist = function() {
+    if (!currentTrelloTask) return;
+    currentTrelloTask.checklist = [];
+    saveTrelloTaskField('checklist', []);
+    const checklistSec = document.getElementById('trello-checklist-section');
+    if (checklistSec) checklistSec.style.display = 'none';
+    if (window.showToast) window.showToast('Checklist deleted', 'info', 1200);
+};
+
 function renderTrelloChecklist(items) {
     const container = document.getElementById('trello-checklist-items');
     if (!container) return;
@@ -1399,14 +1420,16 @@ function renderTrelloChecklist(items) {
     if (fillBar) fillBar.style.width = `${pct}%`;
 
     container.innerHTML = items.map((item, idx) => `
-        <div class="checklist-item-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 10px;background:#22272b;border:1px solid #282e33;border-radius:4px;">
-            <label style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;margin:0;">
-                <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTrelloChecklistItem('${item.id || idx}', this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#579dff;">
-                <span style="font-size:0.825rem;color:${item.completed ? '#8c9bab' : '#dee4ea'};text-decoration:${item.completed ? 'line-through' : 'none'};">${item.text}</span>
+        <div class="checklist-item-row" id="chk-item-${item.id || idx}" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; background: #181b1f; border: 1px solid #24292e; border-radius: 6px; transition: all 0.15s ease;">
+            <label style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; margin: 0; min-width: 0;">
+                <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTrelloChecklistItem('${item.id || idx}', this.checked)" style="width: 16px; height: 16px; min-width: 16px; cursor: pointer; accent-color: #579dff; border-radius: 3px;">
+                <span id="chk-text-${item.id || idx}" style="font-size: 0.85rem; color: ${item.completed ? '#8c9bab' : '#dee4ea'}; text-decoration: ${item.completed ? 'line-through' : 'none'}; word-break: break-word; line-height: 1.4;">${escapeHtml(item.text)}</span>
             </label>
-            <button type="button" onclick="deleteTrelloChecklistItem('${item.id || idx}')" style="background:transparent;border:none;color:#8c9bab;cursor:pointer;padding:2px 6px;">
-                <i class="fas fa-times"></i>
-            </button>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <button type="button" onclick="deleteTrelloChecklistItem('${item.id || idx}')" title="Delete item" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; padding: 4px 6px; font-size: 0.8rem; border-radius: 4px; transition: color 0.15s ease;" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#8c9bab'">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
         </div>
     `).join('');
 }

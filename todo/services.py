@@ -266,6 +266,7 @@ class TaskService:
             'status_display': task.get_status_display(),
             'due_date': task.due_date.strftime('%Y-%m-%d') if task.due_date else '',
             'created_at': task.created_at.strftime('%d %b %Y, %H:%M'),
+            'checklist_title': getattr(task, 'checklist_title', 'Checklist') or 'Checklist',
             'checklist': task.checklist or [],
             'comments': comments_data,
             'assignees': assignees_data,
@@ -337,6 +338,9 @@ class TaskService:
 
         if 'checklist' in data:
             task.checklist = data['checklist']
+
+        if 'checklist_title' in data:
+            task.checklist_title = data['checklist_title'] or 'Checklist'
 
         if 'assignees' in data:
             assignee_ids = data['assignees']

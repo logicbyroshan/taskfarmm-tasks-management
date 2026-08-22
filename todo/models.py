@@ -65,6 +65,7 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     is_predefined = models.BooleanField(default=False)
+    checklist_title = models.CharField(max_length=100, default='Checklist', blank=True)
     checklist = models.JSONField(default=list, blank=True)  # [{id, text, completed}]
 
     priority = models.CharField(

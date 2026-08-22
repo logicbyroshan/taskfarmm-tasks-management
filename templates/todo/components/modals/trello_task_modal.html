@@ -126,7 +126,7 @@
                         <button type="button" class="trello-pill-action" onclick="toggleTrelloMembersPopup(event)" style="background: #22272b; color: #b6c2cf; border: 1px solid #2e353b; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff';" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#2e353b';">
                             <i class="fas fa-user-friends" style="font-size: 0.8rem; color: #579dff;"></i> Members
                         </button>
-                        <div id="trello-members-popup" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 12px; width: 230px; z-index: 2800; box-shadow: 0 14px 40px rgba(0,0,0,0.85);">
+                        <div id="trello-members-popup" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; left: auto; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 12px; width: 240px; z-index: 3000; box-shadow: 0 14px 40px rgba(0,0,0,0.9);">
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #282e33; padding-bottom: 6px;">
                                 <span style="font-size: 0.8rem; font-weight: 700; color: #dee4ea;">Assign Members</span>
                                 <button type="button" onclick="closeTrelloMembersPopup()" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; font-size: 0.9rem;"><i class="fas fa-times"></i></button>
@@ -182,22 +182,38 @@
                 </div>
 
                 <!-- Checklist Section (Dynamically shown if active) -->
-                <div id="trello-checklist-section" style="display: none; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-check-square" style="color: #9fadbc; font-size: 0.9rem;"></i> Checklist
-                        </h4>
-                        <span id="trello-checklist-pct-badge" style="font-size: 0.775rem; font-weight: 700; color: #8c9bab;">0%</span>
+                <div id="trello-checklist-section" style="display: none; flex-direction: column; gap: 10px; margin-top: 8px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <i class="fas fa-check-square" style="color: #579dff; font-size: 0.95rem;"></i>
+                            <input type="text" id="trello-checklist-title-input" value="Checklist" 
+                                   title="Click to edit checklist name"
+                                   style="font-size: 0.95rem; font-weight: 600; color: #dee4ea; background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 2px 6px; outline: none; width: auto; max-width: 220px; transition: all 0.15s ease;"
+                                   onfocus="this.style.background='#1d2125'; this.style.borderColor='#579dff';"
+                                   onblur="this.style.background='transparent'; this.style.borderColor='transparent'; saveTrelloChecklistTitle(this.value);"
+                                   onkeydown="if(event.key === 'Enter'){ this.blur(); }">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="trello-checklist-pct-badge" style="font-size: 0.775rem; font-weight: 700; color: #8c9bab; min-width: 32px; text-align: right;">0%</span>
+                            <button type="button" onclick="deleteTrelloWholeChecklist()" title="Delete entire checklist" 
+                                    style="background: #22272b; color: #8c9bab; border: 1px solid #2e353b; border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.15s ease;"
+                                    onmouseenter="this.style.color='#ef4444'; this.style.borderColor='#ef4444';"
+                                    onmouseleave="this.style.color='#8c9bab'; this.style.borderColor='#2e353b';">
+                                Delete
+                            </button>
+                        </div>
                     </div>
-                    <div style="height: 6px; background: #282e33; border-radius: 999px; overflow: hidden; margin-bottom: 8px;">
+                    <div style="height: 6px; background: #282e33; border-radius: 999px; overflow: hidden; margin-top: 2px; margin-bottom: 4px;">
                         <div id="trello-checklist-progress-fill" style="height: 100%; width: 0%; background: #579dff; border-radius: 999px; transition: width 0.3s ease;"></div>
                     </div>
-                    <div id="trello-checklist-items" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;"></div>
-                    <div style="display: flex; gap: 8px;">
+                    <div id="trello-checklist-items" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    <div style="display: flex; gap: 8px; margin-top: 2px;">
                         <input type="text" id="trello-new-item-input" placeholder="Add an item..." 
-                               style="flex: 1; height: 32px; font-size: 0.825rem; background: #22272b; border: 1px solid #333c43; border-radius: 4px; padding: 0 10px; color: #dee4ea; outline: none;"
+                               style="flex: 1; height: 34px; font-size: 0.85rem; background: #22272b; border: 1px solid #333c43; border-radius: 6px; padding: 0 12px; color: #dee4ea; outline: none; transition: border-color 0.15s ease;"
+                               onfocus="this.style.borderColor='#579dff'; this.style.background='#1d2125';"
+                               onblur="this.style.borderColor='#333c43'; this.style.background='#22272b';"
                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); addTrelloChecklistItem(); }">
-                        <button type="button" onclick="addTrelloChecklistItem()" style="height: 32px; padding: 0 12px; font-size: 0.8rem; background: #579dff; color: #000000; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                        <button type="button" onclick="addTrelloChecklistItem()" style="height: 34px; padding: 0 14px; font-size: 0.825rem; background: #579dff; color: #000000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='1'">
                             Add
                         </button>
                     </div>
