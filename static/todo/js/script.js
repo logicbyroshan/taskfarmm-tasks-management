@@ -1225,6 +1225,18 @@ window.deleteTrelloChecklistItem = function(itemId) {
     saveTrelloTaskField('checklist', currentTrelloTask.checklist);
 };
 
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
 function renderTrelloComments(comments = [], task = null) {
     const container = document.getElementById('trello-comments-stream');
     if (!container) return;
@@ -1248,7 +1260,7 @@ function renderTrelloComments(comments = [], task = null) {
 
             return `
                 <div class="comment-item-row" id="comment-row-${c.id}" style="display: flex; gap: 10px; align-items: flex-start;">
-                    <div style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; aspect-ratio: 1/1; border-radius: 50% !important; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
+                    <div style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; border-radius: 4px !important; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
                         ${cInitials}
                     </div>
                     <div style="flex: 1; min-width: 0;">
