@@ -6,7 +6,9 @@ from django.utils import timezone
 
 
 class Category(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='categories', db_index=True
+    )
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=7, default='#2e86de')  # Store hex color
     description = models.TextField(blank=True, null=True)
@@ -18,6 +20,9 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = 'Categories'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'name'], name='category_user_name_idx'),
+        ]
 
 
 class Task(models.Model):
@@ -35,29 +40,34 @@ class Task(models.Model):
         ON_HOLD = 'on-hold', 'On Hold'
         CANCELED = 'canceled', 'Canceled'
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='tasks', db_index=True
+    )
     category = models.ForeignKey(
-        Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks'
+        Category, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='tasks', db_index=True
     )
 
     title = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)  # Will store rich HTML content
-    is_predefined = models.BooleanField(default=False)  # Tracks if task came from a template
-    checklist = models.JSONField(default=list, blank=True)  # Trello-style subtasks [{id, text, completed}]
+    description = models.TextField(blank=True, null=True)
+    is_predefined = models.BooleanField(default=False)
+    checklist = models.JSONField(default=list, blank=True)  # [{id, text, completed}]
 
     priority = models.CharField(
         max_length=10,
         choices=Priority.choices,
-        default=Priority.MODERATE
+        default=Priority.MODERATE,
+        db_index=True,
     )
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.TO_DO
+        default=Status.TO_DO,
+        db_index=True,
     )
 
-    due_date = models.DateField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateField(blank=True, null=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(blank=True, null=True)
 
@@ -65,7 +75,7 @@ class Task(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        # Automatically set completed_at when status is changed to completed/done
+        # Automatically set completed_at when status changes to completed/done
         if self.status == self.Status.DONE and not self.completed_at:
             self.completed_at = timezone.now()
         elif self.status != self.Status.DONE:
@@ -74,6 +84,16 @@ class Task(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            # Most common filter: user + status (dashboard, kanban)
+            models.Index(fields=['user', 'status'], name='task_user_status_idx'),
+            # Overdue detection: user + due_date
+            models.Index(fields=['user', 'due_date'], name='task_user_due_date_idx'),
+            # Priority filter
+            models.Index(fields=['user', 'priority'], name='task_user_priority_idx'),
+            # Category (project) filter
+            models.Index(fields=['user', 'category'], name='task_user_category_idx'),
+        ]
 
 
 class TaskComment(models.Model):
@@ -87,6 +107,9 @@ class TaskComment(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['task', 'created_at'], name='comment_task_created_idx'),
+        ]
 
     def __str__(self):
         return f"Comment by {self.user.username} on {self.task.title}"
@@ -112,14 +135,15 @@ class PreDefinedTask(models.Model):
     category = models.CharField(
         max_length=30,
         choices=Category.choices,
-        default=Category.GENERAL
+        default=Category.GENERAL,
+        db_index=True,
     )
     suggested_priority = models.CharField(
         max_length=10,
         choices=Task.Priority.choices,
         default=Task.Priority.MODERATE
     )
-    icon = models.CharField(max_length=50, default='fas fa-tasks')  # FontAwesome icon class
+    icon = models.CharField(max_length=50, default='fas fa-tasks')
 
     def __str__(self):
         return f"[{self.category}] {self.title}"
