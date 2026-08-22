@@ -1260,31 +1260,31 @@ function renderTrelloComments(comments = [], task = null) {
             const cTime = c.time_ago || c.created_at || 'Just now';
 
             return `
-                <div class="comment-item-row" id="comment-row-${c.id}" style="display: flex; flex-direction: column; gap: 6px; background: #16181d; border: 1px solid #22272b; border-radius: 6px; padding: 8px 12px;">
-                    <!-- Comment Body -->
-                    <div id="comment-bubble-${c.id}" style="color: #dee4ea; font-size: 0.85rem; line-height: 1.5; word-break: break-word; white-space: pre-wrap;">${escapeHtml(c.content)}</div>
+                <div class="comment-item-row" id="comment-row-${c.id}" style="display: flex; flex-direction: column; gap: 6px; background: #16181d; border: 1px solid #22272b; border-radius: 6px; padding: 10px 12px;">
+                    <!-- Highlighted Comment Body -->
+                    <div id="comment-bubble-${c.id}" style="color: #ffffff; font-size: 0.9rem; font-weight: 500; line-height: 1.5; word-break: break-word; white-space: pre-wrap;">${escapeHtml(c.content)}</div>
                     
-                    <!-- Bottom Row: Actions on Left, Author & Time on Right -->
-                    <div id="comment-footer-${c.id}" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; padding-top: 4px; border-top: 1px solid #1f2328; font-size: 0.725rem;">
+                    <!-- Bottom Row: Actions on Left, Avatar + User + Time on Right -->
+                    <div id="comment-footer-${c.id}" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; padding-top: 6px; border-top: 1px solid #1f2328; font-size: 0.725rem;">
                         <!-- Left: Actions -->
-                        <div id="comment-actions-${c.id}" style="display: flex; align-items: center; gap: 8px; color: #8c9bab;">
-                            <span style="cursor: pointer; color: #8c9bab; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="replyToTrelloComment('${cUser}')">Reply</span>
-                            <span style="color: #2e353b;">•</span>
-                            <span style="cursor: pointer; color: #8c9bab; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="editTrelloCommentInline(${c.id})">Edit</span>
+                        <div id="comment-actions-${c.id}" style="display: flex; align-items: center; gap: 6px; color: #8c9bab;">
+                            <span style="cursor: pointer; color: #8c9bab; font-size: 0.725rem; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="replyToTrelloComment('${cUser}')">Reply</span>
+                            <span style="color: #2e353b; font-size: 0.65rem;">•</span>
+                            <span style="cursor: pointer; color: #8c9bab; font-size: 0.725rem; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="editTrelloCommentInline(${c.id})">Edit</span>
                             ${c.id ? `
-                            <span style="color: #2e353b;">•</span>
-                            <span style="cursor: pointer; color: #ef4444; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'" onclick="deleteTrelloComment(${c.id})">Delete</span>` : ''}
+                            <span style="color: #2e353b; font-size: 0.65rem;">•</span>
+                            <span style="cursor: pointer; color: #ef4444; font-size: 0.725rem; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'" onclick="deleteTrelloComment(${c.id})">Delete</span>` : ''}
                         </div>
 
-                        <!-- Right: Author Info & Avatar Icon -->
+                        <!-- Right: Profile Avatar BEFORE Username & Time -->
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <div style="text-align: right; line-height: 1.2;">
-                                <strong style="color: #dee4ea; font-size: 0.75rem;">${cUser}</strong>
-                                <span style="color: #8c9bab; font-size: 0.7rem; margin-left: 4px;">${cTime}</span>
-                                ${c.is_edited ? '<span style="color: #579dff; font-size: 0.65rem; font-style: italic; margin-left: 3px;">(edited)</span>' : ''}
-                            </div>
-                            <div style="width: 22px; height: 22px; min-width: 22px; min-height: 22px; max-width: 22px; max-height: 22px; border-radius: 4px; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
+                            <div style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; max-width: 20px; max-height: 20px; border-radius: 4px; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
                                 ${cInitials}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <strong style="color: #9fadbc; font-size: 0.725rem; font-weight: 600;">${cUser}</strong>
+                                <span style="color: #6b7785; font-size: 0.7rem;">${cTime}</span>
+                                ${c.is_edited ? '<span style="color: #579dff; font-size: 0.65rem; font-style: italic;">(edited)</span>' : ''}
                             </div>
                         </div>
                     </div>
