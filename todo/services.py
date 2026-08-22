@@ -38,12 +38,15 @@ class TaskService:
 
     @staticmethod
     def get_base_queryset(user):
-        """Returns the base queryset for tasks accessible by the user (owned or shared projects or assigned)."""
+        """
+        Returns tasks accessible by user:
+        - Project owners see all tasks in their projects.
+        - Collaborators only see tasks assigned to them or created by them.
+        """
         return (
             Task.objects
             .filter(
                 Q(user=user) | 
-                Q(category__members=user) | 
                 Q(category__user=user) |
                 Q(assignees=user)
             )
@@ -172,11 +175,17 @@ class TaskService:
         if selected_project:
             selected_project_id = selected_project.id
             selected_project.ensure_share_token()
-            # For a selected project, show all tasks in that project
-            qs = Task.objects.filter(category=selected_project).select_related('category', 'user').prefetch_related('assignees')
+            if selected_project.user == user:
+                # Main user / owner sees all tasks across the project
+                qs = Task.objects.filter(category=selected_project).select_related('category', 'user').prefetch_related('assignees')
+            else:
+                # Collaborator only sees tasks assigned to them or created by them
+                qs = Task.objects.filter(
+                    Q(category=selected_project) & (Q(assignees=user) | Q(user=user))
+                ).distinct().select_related('category', 'user').prefetch_related('assignees')
         else:
             selected_project_id = None
-            # If no project selected, show accessible tasks
+            # If no project selected, show user's accessible tasks
             qs = TaskService.get_base_queryset(user)
 
         columns = {

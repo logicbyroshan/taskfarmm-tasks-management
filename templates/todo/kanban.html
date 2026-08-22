@@ -12,9 +12,23 @@
     max-height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 12px !important;
+    gap: 10px !important;
     margin: 0 !important;
     padding: 0 !important;
+}
+
+.kanban-header-bar {
+    background: rgba(20, 23, 26, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid #282e33;
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .kanban-board-scroll-wrapper {
@@ -26,7 +40,7 @@
     min-height: 0;
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    padding-bottom: 8px;
+    padding-bottom: 6px;
     margin: 0;
     scrollbar-width: thin;
     scrollbar-color: #3b82f6 #121316;
@@ -36,7 +50,7 @@
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar {
-    height: 8px;
+    height: 6px;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar-track {
@@ -55,7 +69,7 @@
     background: #3b82f6;
 }
 
-/* 6-Column Flex Row — exact 320px per column with 100% column height, 0 right gap */
+/* 6-Column Flex Row — exact 310px per column with 100% column height */
 .kanban-board-6col {
     display: flex;
     gap: 12px;
@@ -67,24 +81,24 @@
 }
 
 .kanban-column {
-    width: 320px;
+    width: 310px;
     flex-shrink: 0;
-    background: #101214;
+    background: #14171a;
     border: 1px solid #22272b;
-    border-radius: 8px;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     height: 100%;
     max-height: 100%;
     min-height: 0;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
     overflow: hidden;
 }
 
 .column-header {
-    padding: 14px 16px;
-    background: #000000;
-    border-bottom: 1px solid #18181b;
+    padding: 12px 14px;
+    background: #101214;
+    border-bottom: 1px solid #1e2227;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -99,26 +113,46 @@
 
 .column-title h3 {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #dee4ea;
 }
 
-.task-count {
-    background: #18181b;
-    color: #a1a1aa;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 2px 7px;
+.task-count-pill {
+    background: #22272b;
+    color: #8c9bab;
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 2px 8px;
     border-radius: 999px;
-    border: 1px solid #27272a;
+    border: 1px solid #2e353b;
+}
+
+.column-add-btn {
+    background: transparent;
+    border: none;
+    color: #8c9bab;
+    cursor: pointer;
+    font-size: 0.85rem;
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.column-add-btn:hover {
+    background: #22272b;
+    color: #dee4ea;
 }
 
 .kanban-cards-container {
-    padding: 12px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     flex-grow: 1;
     overflow-y: auto;
     scrollbar-width: none !important;
@@ -131,17 +165,18 @@
 }
 
 .kanban-card {
-    background: #09090b;
-    border: 1px solid #18181b;
+    background: #1d2125;
+    border: 1px solid #282e33;
     border-radius: 8px;
     padding: 12px 14px;
     cursor: pointer;
     transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 .kanban-card:hover {
     transform: translateY(-2px);
-    border-color: #3b82f6;
+    border-color: #579dff;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
@@ -151,32 +186,68 @@
 
 .kanban-card.is-completed .kanban-card-title {
     text-decoration: line-through;
-    color: #71717a;
+    color: #8c9bab;
+}
+
+.status-dot-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot-backlog { background: #8b5cf6; }
+.dot-to-do { background: #ef4444; }
+.dot-in-progress { background: #3b82f6; }
+.dot-done { background: #10b981; }
+.dot-on-hold { background: #f59e0b; }
+.dot-canceled { background: #6b7280; }
+
+.priority-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.prio-high { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.prio-moderate { background: rgba(245, 158, 11, 0.15); color: #facc15; border: 1px solid rgba(245, 158, 11, 0.3); }
+.prio-low { background: rgba(16, 185, 129, 0.15); color: #4ade80; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+.kanban-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 22px 14px;
+    border: 1px dashed #282e33;
+    border-radius: 8px;
+    color: #596773;
+    text-align: center;
+    gap: 6px;
+    margin: 4px 0;
 }
 </style>
 {% endblock styles %}
 
 {% block content %}
-<div class="kanban-header">
-    <div class="kanban-title">
-        <h2>
-            <i class="fas fa-columns" style="color: var(--accent-color); margin-right: 10px;"></i>
+<!-- Top Header Bar -->
+<div class="kanban-header-bar">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <h2 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-columns" style="color: #579dff;"></i>
             {% if selected_project %}
-                Kanban: <span style="color: {{ selected_project.color }};">{{ selected_project.name }}</span>
+                <span>{{ selected_project.name }}</span>
             {% else %}
-                Manage Kanban
+                <span>Kanban Board</span>
             {% endif %}
         </h2>
-        <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.875rem;">
-            Single project board · Click any card to open full Trello details or drag across columns.
-        </p>
-    </div>
 
-    <div class="kanban-actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <!-- Project Switcher Dropdown -->
-        <div class="project-filter-box" style="display: flex; align-items: center; gap: 8px;">
-            <label for="kanban-project-select" style="font-size: 0.825rem; font-weight: 600; color: var(--text-muted);"><i class="fas fa-folder"></i> Project:</label>
-            <select id="kanban-project-select" onchange="switchKanbanProject(this.value)" style="height: 38px; min-width: 170px; background: #000000; border: 1px solid #27272a; color: #f4f4f5; border-radius: 6px; padding: 0 10px;">
+        <div style="display: flex; align-items: center; gap: 6px; margin-left: 6px;">
+            <select id="kanban-project-select" onchange="switchKanbanProject(this.value)" style="height: 34px; min-width: 170px; background: #16181d; border: 1px solid #2e353b; color: #dee4ea; border-radius: 6px; padding: 0 10px; font-size: 0.825rem; font-weight: 500; outline: none; cursor: pointer;">
                 {% for project in all_projects %}
                 <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>
                     📁 {{ project.name }} ({{ project.task_count }})
@@ -184,28 +255,38 @@
                 {% endfor %}
             </select>
         </div>
+    </div>
 
+    <!-- Actions & Members Filter -->
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        
         {% if board_members %}
-        <!-- Board Members Bar & Filter -->
-        <div class="board-members-bar" style="display: flex; align-items: center; gap: 6px; background: #14171a; border: 1px solid #282e33; border-radius: 999px; padding: 3px 10px;">
-            <span style="font-size: 0.775rem; color: #8c9bab; font-weight: 600; margin-right: 2px;"><i class="fas fa-users" style="color: #579dff; font-size: 0.75rem;"></i> Members:</span>
-            <button type="button" onclick="filterBoardByMember('all')" class="member-filter-btn" id="filter-member-all" style="background: #0c66e4; color: #ffffff; border: none; border-radius: 999px; padding: 2px 10px; font-size: 0.725rem; font-weight: 700; cursor: pointer;">
+        <!-- Board Members Stack with Filter -->
+        <div style="display: flex; align-items: center; gap: 6px; background: #16181d; border: 1px solid #282e33; border-radius: 999px; padding: 3px 10px;">
+            <span style="font-size: 0.75rem; color: #8c9bab; font-weight: 600;">
+                <i class="fas fa-users" style="color: #579dff; font-size: 0.75rem;"></i> Members:
+            </span>
+            <button type="button" onclick="filterBoardByMember('all')" class="member-filter-btn" id="filter-member-all" style="background: #0c66e4; color: #ffffff; border: none; border-radius: 999px; padding: 2px 10px; font-size: 0.725rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease;">
                 All
             </button>
-            {% for member in board_members %}
-            <button type="button" onclick="filterBoardByMember('{{ member.username }}')" class="member-filter-btn" id="filter-member-{{ member.username }}" title="Filter cards for {{ member.username }}" style="width: 26px; height: 26px; border-radius: 50%; background: #282e33; color: #dee4ea; font-size: 0.7rem; font-weight: 700; border: 1px solid #333c43; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;">
-                {{ member.username|slice:":2"|upper }}
-            </button>
-            {% endfor %}
+            <div style="display: flex; align-items: center; margin-left: 2px;">
+                {% for member in board_members %}
+                <button type="button" onclick="filterBoardByMember('{{ member.username }}')" class="member-filter-btn" id="filter-member-{{ member.username }}" title="Filter cards for {{ member.username }}" style="width: 26px; height: 26px; border-radius: 50%; background: {% cycle '#0c66e4' '#d97706' '#216e4e' '#7c3aed' %}; color: #ffffff; font-size: 0.65rem; font-weight: 700; border: 2px solid #16181d; margin-left: -5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.15s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.4);">
+                    {{ member.username|slice:":2"|upper }}
+                </button>
+                {% endfor %}
+            </div>
         </div>
         {% endif %}
 
-        <button type="button" class="trello-pill-action" onclick="openShareProjectModal({{ selected_project_id|default:'null' }})" style="height: 38px; background: #282e33; color: #b6c2cf; border: 1px solid #333c43; border-radius: 6px; padding: 0 14px; font-size: 0.825rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+        <!-- Share Board Button -->
+        <button type="button" onclick="openShareProjectModal({{ selected_project_id|default:'null' }})" style="height: 34px; background: #1d2125; color: #b6c2cf; border: 1px solid #333c43; border-radius: 6px; padding: 0 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;">
             <i class="fas fa-user-plus" style="color: #579dff;"></i> Share Board
         </button>
 
-        <button class="invite-btn" type="button" aria-label="Add new task" onclick="openAddTaskModal()">
-            <i class="fas fa-plus" aria-hidden="true"></i> Add Task
+        <!-- Primary Add Task Button -->
+        <button type="button" onclick="openAddTaskModal()" style="height: 34px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: #ffffff; border: none; border-radius: 6px; padding: 0 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(37,99,235,0.35); transition: all 0.15s ease;">
+            <i class="fas fa-plus"></i> Add Task
         </button>
     </div>
 </div>
@@ -213,15 +294,16 @@
 <!-- Horizontal Scrolling Board Wrapper -->
 <div class="kanban-board-scroll-wrapper" id="kanban-board-scroll-wrapper">
     <div class="kanban-board-6col">
+        
         <!-- 1. Backlog Column -->
         <div class="kanban-column" id="column-backlog" data-status="backlog">
             <div class="column-header">
                 <div class="column-title">
-                    <span class="status-dot backlog"></span>
+                    <span class="status-dot-dot dot-backlog"></span>
                     <h3>Backlog</h3>
-                    <span class="task-count" id="count-backlog">{{ backlog_tasks.count }}</span>
+                    <span class="task-count-pill" id="count-backlog">{{ backlog_tasks.count }}</span>
                 </div>
-                <button class="icon-btn" onclick="openAddTaskModalWithStatus('backlog')" title="Add task to Backlog"><i class="fas fa-plus"></i></button>
+                <button class="column-add-btn" onclick="openAddTaskModalWithStatus('backlog')" title="Add task to Backlog"><i class="fas fa-plus"></i></button>
             </div>
             <div class="kanban-cards-container" data-status="backlog" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'backlog')">
                 {% for task in backlog_tasks %}
@@ -232,35 +314,34 @@
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
-                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <span class="status {{ task.status }}">BACKLOG</span>
-                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="priority-tag prio-{{ task.priority }}">{{ task.get_priority_display }}</span>
                         </div>
-                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #dee4ea; margin-bottom: 4px; line-height: 1.4;">{{ task.title }}</div>
                         {% if task.description %}
-                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                        <div style="font-size: 0.775rem; color: #8c9bab; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
                             {{ task.description|striptags }}
                         </div>
                         {% endif %}
-                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #282e33; font-size: 0.725rem;">
                             {% if task.checklist %}
-                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #4ade80; display: flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-check-square"></i> {{ task.checklist|length }}
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #8c9bab; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
                             <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
                                 {% for assignee in task.assignees.all %}
-                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                    <span title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
                                         {{ assignee.username|slice:":2"|upper }}
                                     </span>
                                 {% empty %}
                                     {% if task.user %}
-                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                    <span title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
                                         {{ task.user.username|slice:":2"|upper }}
                                     </span>
                                     {% endif %}
@@ -269,7 +350,7 @@
                         </div>
                     </div>
                 {% empty %}
-                    <div class="kanban-empty" id="empty-backlog"><i class="far fa-clipboard"></i><p>No tasks</p></div>
+                    <div class="kanban-empty" id="empty-backlog"><i class="far fa-clipboard"></i><span>No tasks</span></div>
                 {% endfor %}
             </div>
         </div>
@@ -278,11 +359,11 @@
         <div class="kanban-column" id="column-to-do" data-status="not-started">
             <div class="column-header">
                 <div class="column-title">
-                    <span class="status-dot to-do"></span>
+                    <span class="status-dot-dot dot-to-do"></span>
                     <h3>To Do</h3>
-                    <span class="task-count" id="count-not-started">{{ to_do_tasks.count }}</span>
+                    <span class="task-count-pill" id="count-not-started">{{ to_do_tasks.count }}</span>
                 </div>
-                <button class="icon-btn" onclick="openAddTaskModalWithStatus('not-started')" title="Add task to To Do"><i class="fas fa-plus"></i></button>
+                <button class="column-add-btn" onclick="openAddTaskModalWithStatus('not-started')" title="Add task to To Do"><i class="fas fa-plus"></i></button>
             </div>
             <div class="kanban-cards-container" data-status="not-started" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'not-started')">
                 {% for task in to_do_tasks %}
@@ -293,35 +374,34 @@
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
-                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <span class="status {{ task.status }}">TO DO</span>
-                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="priority-tag prio-{{ task.priority }}">{{ task.get_priority_display }}</span>
                         </div>
-                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #dee4ea; margin-bottom: 4px; line-height: 1.4;">{{ task.title }}</div>
                         {% if task.description %}
-                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                        <div style="font-size: 0.775rem; color: #8c9bab; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
                             {{ task.description|striptags }}
                         </div>
                         {% endif %}
-                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #282e33; font-size: 0.725rem;">
                             {% if task.checklist %}
-                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #4ade80; display: flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-check-square"></i> {{ task.checklist|length }}
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #8c9bab; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
                             <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
                                 {% for assignee in task.assignees.all %}
-                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                    <span title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
                                         {{ assignee.username|slice:":2"|upper }}
                                     </span>
                                 {% empty %}
                                     {% if task.user %}
-                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                    <span title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
                                         {{ task.user.username|slice:":2"|upper }}
                                     </span>
                                     {% endif %}
@@ -330,7 +410,7 @@
                         </div>
                     </div>
                 {% empty %}
-                    <div class="kanban-empty" id="empty-not-started"><i class="far fa-list-alt"></i><p>No tasks</p></div>
+                    <div class="kanban-empty" id="empty-not-started"><i class="far fa-list-alt"></i><span>No tasks</span></div>
                 {% endfor %}
             </div>
         </div>
@@ -339,11 +419,11 @@
         <div class="kanban-column" id="column-in-progress" data-status="in-progress">
             <div class="column-header">
                 <div class="column-title">
-                    <span class="status-dot in-progress"></span>
+                    <span class="status-dot-dot dot-in-progress"></span>
                     <h3>In Progress</h3>
-                    <span class="task-count" id="count-in-progress">{{ in_progress_tasks.count }}</span>
+                    <span class="task-count-pill" id="count-in-progress">{{ in_progress_tasks.count }}</span>
                 </div>
-                <button class="icon-btn" onclick="openAddTaskModalWithStatus('in-progress')" title="Add task to In Progress"><i class="fas fa-plus"></i></button>
+                <button class="column-add-btn" onclick="openAddTaskModalWithStatus('in-progress')" title="Add task to In Progress"><i class="fas fa-plus"></i></button>
             </div>
             <div class="kanban-cards-container" data-status="in-progress" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'in-progress')">
                 {% for task in in_progress_tasks %}
@@ -354,35 +434,34 @@
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
-                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <span class="status {{ task.status }}">IN PROGRESS</span>
-                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="priority-tag prio-{{ task.priority }}">{{ task.get_priority_display }}</span>
                         </div>
-                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #dee4ea; margin-bottom: 4px; line-height: 1.4;">{{ task.title }}</div>
                         {% if task.description %}
-                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                        <div style="font-size: 0.775rem; color: #8c9bab; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
                             {{ task.description|striptags }}
                         </div>
                         {% endif %}
-                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #282e33; font-size: 0.725rem;">
                             {% if task.checklist %}
-                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #4ade80; display: flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-check-square"></i> {{ task.checklist|length }}
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #8c9bab; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
                             <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
                                 {% for assignee in task.assignees.all %}
-                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                    <span title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
                                         {{ assignee.username|slice:":2"|upper }}
                                     </span>
                                 {% empty %}
                                     {% if task.user %}
-                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                    <span title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
                                         {{ task.user.username|slice:":2"|upper }}
                                     </span>
                                     {% endif %}
@@ -391,7 +470,7 @@
                         </div>
                     </div>
                 {% empty %}
-                    <div class="kanban-empty" id="empty-in-progress"><i class="fas fa-spinner"></i><p>No tasks</p></div>
+                    <div class="kanban-empty" id="empty-in-progress"><i class="fas fa-spinner"></i><span>No tasks</span></div>
                 {% endfor %}
             </div>
         </div>
@@ -400,11 +479,11 @@
         <div class="kanban-column" id="column-completed" data-status="completed">
             <div class="column-header">
                 <div class="column-title">
-                    <span class="status-dot completed"></span>
+                    <span class="status-dot-dot dot-done"></span>
                     <h3>Done</h3>
-                    <span class="task-count" id="count-completed">{{ done_tasks.count }}</span>
+                    <span class="task-count-pill" id="count-completed">{{ done_tasks.count }}</span>
                 </div>
-                <button class="icon-btn" onclick="openAddTaskModalWithStatus('completed')" title="Add task to Done"><i class="fas fa-plus"></i></button>
+                <button class="column-add-btn" onclick="openAddTaskModalWithStatus('completed')" title="Add task to Done"><i class="fas fa-plus"></i></button>
             </div>
             <div class="kanban-cards-container" data-status="completed" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'completed')">
                 {% for task in done_tasks %}
@@ -415,35 +494,34 @@
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
-                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <span class="status completed">DONE</span>
-                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="priority-tag prio-{{ task.priority }}">{{ task.get_priority_display }}</span>
                         </div>
-                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #71717a; text-decoration: line-through; margin-bottom: 4px;">{{ task.title }}</div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #8c9bab; text-decoration: line-through; margin-bottom: 4px; line-height: 1.4;">{{ task.title }}</div>
                         {% if task.description %}
-                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #71717a; text-decoration: line-through; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                        <div style="font-size: 0.775rem; color: #8c9bab; text-decoration: line-through; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
                             {{ task.description|striptags }}
                         </div>
                         {% endif %}
-                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #282e33; font-size: 0.725rem;">
                             {% if task.checklist %}
-                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #4ade80; display: flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-check-square"></i> {{ task.checklist|length }}
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #8c9bab; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
                             <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
                                 {% for assignee in task.assignees.all %}
-                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                    <span title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
                                         {{ assignee.username|slice:":2"|upper }}
                                     </span>
                                 {% empty %}
                                     {% if task.user %}
-                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                    <span title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
                                         {{ task.user.username|slice:":2"|upper }}
                                     </span>
                                     {% endif %}
@@ -452,7 +530,7 @@
                         </div>
                     </div>
                 {% empty %}
-                    <div class="kanban-empty" id="empty-completed"><i class="far fa-check-circle"></i><p>No tasks</p></div>
+                    <div class="kanban-empty" id="empty-completed"><i class="far fa-check-circle"></i><span>No tasks</span></div>
                 {% endfor %}
             </div>
         </div>
@@ -461,11 +539,11 @@
         <div class="kanban-column" id="column-on-hold" data-status="on-hold">
             <div class="column-header">
                 <div class="column-title">
-                    <span class="status-dot on-hold"></span>
+                    <span class="status-dot-dot dot-on-hold"></span>
                     <h3>On Hold</h3>
-                    <span class="task-count" id="count-on-hold">{{ on_hold_tasks.count }}</span>
+                    <span class="task-count-pill" id="count-on-hold">{{ on_hold_tasks.count }}</span>
                 </div>
-                <button class="icon-btn" onclick="openAddTaskModalWithStatus('on-hold')" title="Add task to On Hold"><i class="fas fa-plus"></i></button>
+                <button class="column-add-btn" onclick="openAddTaskModalWithStatus('on-hold')" title="Add task to On Hold"><i class="fas fa-plus"></i></button>
             </div>
             <div class="kanban-cards-container" data-status="on-hold" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'on-hold')">
                 {% for task in on_hold_tasks %}
@@ -476,35 +554,34 @@
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
-                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <span class="status on-hold">ON HOLD</span>
-                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="priority-tag prio-{{ task.priority }}">{{ task.get_priority_display }}</span>
                         </div>
-                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #dee4ea; margin-bottom: 4px; line-height: 1.4;">{{ task.title }}</div>
                         {% if task.description %}
-                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                        <div style="font-size: 0.775rem; color: #8c9bab; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
                             {{ task.description|striptags }}
                         </div>
                         {% endif %}
-                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #282e33; font-size: 0.725rem;">
                             {% if task.checklist %}
-                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #4ade80; display: flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-check-square"></i> {{ task.checklist|length }}
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #8c9bab; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
                             <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
                                 {% for assignee in task.assignees.all %}
-                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                    <span title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
                                         {{ assignee.username|slice:":2"|upper }}
                                     </span>
                                 {% empty %}
                                     {% if task.user %}
-                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                    <span title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
                                         {{ task.user.username|slice:":2"|upper }}
                                     </span>
                                     {% endif %}
@@ -513,7 +590,7 @@
                         </div>
                     </div>
                 {% empty %}
-                    <div class="kanban-empty" id="empty-on-hold"><i class="far fa-pause-circle"></i><p>No tasks</p></div>
+                    <div class="kanban-empty" id="empty-on-hold"><i class="far fa-pause-circle"></i><span>No tasks</span></div>
                 {% endfor %}
             </div>
         </div>
@@ -522,11 +599,11 @@
         <div class="kanban-column" id="column-canceled" data-status="canceled">
             <div class="column-header">
                 <div class="column-title">
-                    <span class="status-dot canceled"></span>
+                    <span class="status-dot-dot dot-canceled"></span>
                     <h3>Canceled</h3>
-                    <span class="task-count" id="count-canceled">{{ canceled_tasks.count }}</span>
+                    <span class="task-count-pill" id="count-canceled">{{ canceled_tasks.count }}</span>
                 </div>
-                <button class="icon-btn" onclick="openAddTaskModalWithStatus('canceled')" title="Add task to Canceled"><i class="fas fa-plus"></i></button>
+                <button class="column-add-btn" onclick="openAddTaskModalWithStatus('canceled')" title="Add task to Canceled"><i class="fas fa-plus"></i></button>
             </div>
             <div class="kanban-cards-container" data-status="canceled" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'canceled')">
                 {% for task in canceled_tasks %}
@@ -537,35 +614,34 @@
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
-                        <div class="kanban-card-top" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <span class="status canceled">CANCELED</span>
-                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="priority-tag prio-{{ task.priority }}">{{ task.get_priority_display }}</span>
                         </div>
-                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 4px;">{{ task.title }}</div>
+                        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #dee4ea; margin-bottom: 4px; line-height: 1.4;">{{ task.title }}</div>
                         {% if task.description %}
-                        <div class="kanban-card-desc" style="font-size: 0.775rem; color: #a1a1aa; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
+                        <div style="font-size: 0.775rem; color: #8c9bab; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">
                             {{ task.description|striptags }}
                         </div>
                         {% endif %}
-                        <div class="kanban-card-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #18181b; font-size: 0.725rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #282e33; font-size: 0.725rem;">
                             {% if task.checklist %}
-                            <span style="color: #10b981; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #4ade80; display: flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-check-square"></i> {{ task.checklist|length }}
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #8c9bab; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
                             <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
                                 {% for assignee in task.assignees.all %}
-                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                    <span title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
                                         {{ assignee.username|slice:":2"|upper }}
                                     </span>
                                 {% empty %}
                                     {% if task.user %}
-                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                    <span title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
                                         {{ task.user.username|slice:":2"|upper }}
                                     </span>
                                     {% endif %}
@@ -574,7 +650,7 @@
                         </div>
                     </div>
                 {% empty %}
-                    <div class="kanban-empty" id="empty-canceled"><i class="far fa-times-circle"></i><p>No tasks</p></div>
+                    <div class="kanban-empty" id="empty-canceled"><i class="far fa-times-circle"></i><span>No tasks</span></div>
                 {% endfor %}
             </div>
         </div>
@@ -650,29 +726,9 @@
                 const container = document.querySelector(`.kanban-cards-container[data-status="${targetStatus}"]`);
                 if (container && card) {
                     container.appendChild(card);
-                    
-                    const titleEl = card.querySelector('.kanban-card-title');
-                    const descEl = card.querySelector('.kanban-card-desc');
-                    const statusSpan = card.querySelector('.kanban-card-top span.status');
-
-                    if (targetStatus === 'completed') {
-                        card.classList.add('is-completed');
-                        if (titleEl) { titleEl.style.textDecoration = 'line-through'; titleEl.style.color = '#71717a'; }
-                        if (descEl) { descEl.style.textDecoration = 'line-through'; descEl.style.color = '#71717a'; }
-                        if (statusSpan) {
-                            statusSpan.className = 'status completed';
-                            statusSpan.textContent = 'DONE';
-                        }
-                    } else {
-                        card.classList.remove('is-completed');
-                        if (titleEl) { titleEl.style.textDecoration = 'none'; titleEl.style.color = '#ffffff'; }
-                        if (descEl) { descEl.style.textDecoration = 'none'; descEl.style.color = '#a1a1aa'; }
-                    }
-
                     updateKanbanColumnCounts();
                     if (window.showToast) {
-                        const statusNames = {'backlog':'Backlog', 'not-started':'To Do', 'in-progress':'In Progress', 'completed':'Done', 'on-hold':'On Hold', 'canceled':'Canceled'};
-                        window.showToast(`Task moved to ${statusNames[targetStatus] || targetStatus}!`, 'info');
+                        window.showToast('Card moved to ' + targetStatus, 'success', 1000);
                     }
                 }
             }
@@ -697,18 +753,17 @@
         }, 100);
     }
 
-    // Enable gentle, smooth mouse wheel horizontal panning over Kanban board
+    // Enable smooth mouse wheel horizontal panning over Kanban board
     document.addEventListener('DOMContentLoaded', function() {
         const scrollWrapper = document.querySelector('.kanban-board-scroll-wrapper');
         if (scrollWrapper) {
             scrollWrapper.addEventListener('wheel', function(e) {
-                // If scrolling inside an individual column's cards container that has room to scroll vertically
                 const innerCards = e.target.closest('.kanban-cards-container');
                 if (innerCards && innerCards.scrollHeight > innerCards.clientHeight) {
                     const atTop = innerCards.scrollTop === 0 && e.deltaY < 0;
                     const atBottom = (innerCards.scrollHeight - innerCards.scrollTop <= innerCards.clientHeight + 2) && e.deltaY > 0;
                     if (!atTop && !atBottom) {
-                        return; // Let vertical column scroll happen naturally
+                        return;
                     }
                 }
 
@@ -717,6 +772,8 @@
                     const step = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 70);
                     scrollWrapper.scrollBy({
                         left: step,
+                        behavior: 'smooth'
+                    });
                 }
             }, { passive: false });
         }
@@ -724,15 +781,13 @@
 
     function filterBoardByMember(username) {
         document.querySelectorAll('.member-filter-btn').forEach(btn => {
-            btn.style.background = '#282e33';
-            btn.style.color = '#dee4ea';
-            btn.style.border = '1px solid #333c43';
+            btn.style.background = '#16181d';
+            btn.style.color = '#8c9bab';
         });
         const activeBtn = document.getElementById(username === 'all' ? 'filter-member-all' : `filter-member-${username}`);
         if (activeBtn) {
             activeBtn.style.background = '#0c66e4';
             activeBtn.style.color = '#ffffff';
-            activeBtn.style.border = 'none';
         }
 
         document.querySelectorAll('.kanban-card').forEach(card => {
@@ -747,6 +802,7 @@
                 }
             }
         });
+        updateKanbanColumnCounts();
     }
 </script>
 {% endblock scripts %}
