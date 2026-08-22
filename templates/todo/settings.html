@@ -178,6 +178,57 @@
         </div>
     </article>
 
+    <!-- Intelligent Auto-Correction (OpenHinglish) Card -->
+    <article class="settings-card">
+        <header class="settings-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <h3><i class="fas fa-magic" style="color: #60a5fa;"></i> Intelligent Auto-Correct & Spell-Check</h3>
+            <span style="font-size: 0.7rem; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 999px; font-weight: 700;">OpenHinglish Engine</span>
+        </header>
+        <div class="settings-card-body">
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.5;">
+                Automatically corrects typos, phonetic mistakes, and shorthand across <b>English, Hindi (transliterated), and Hinglish</b> on task titles, descriptions, comments, and project notes.
+            </p>
+
+            <div class="setting-item" style="border-bottom: 1px solid #27272a; padding-bottom: 14px; margin-bottom: 16px;">
+                <div>
+                    <strong>Auto-Correct on Blur & Save</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Automatically fix misspelled words when you finish typing or press Enter</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="autocorrect-toggle-switch" onchange="toggleAutoCorrectSetting(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <!-- Live Tester Box -->
+            <div style="background: #101216; border: 1px solid #27272a; border-radius: 8px; padding: 14px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 0.775rem; font-weight: 700; color: #dee4ea; text-transform: uppercase; letter-spacing: 0.04em;">
+                        ⚡ Live OpenHinglish Auto-Correct Tester
+                    </span>
+                    <span id="tester-status" style="font-size: 0.725rem; color: #8c9bab;">Type Hinglish or English</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" 
+                           id="settings-test-autocorrect-input" 
+                           value="FLex print krna hai Sned to : Gopal Ji, intv kal h" 
+                           placeholder="Type a sentence with typos or Hinglish..."
+                           style="flex: 1; background: #181b1f; border: 1px solid #282e33; color: #dee4ea; border-radius: 6px; padding: 8px 12px; font-size: 0.85rem; outline: none;"
+                           onkeydown="if(event.key === 'Enter'){ testAutoCorrectNow(); }">
+                    <button type="button" 
+                            onclick="testAutoCorrectNow()" 
+                            style="background: #2563eb; color: #ffffff; border: none; border-radius: 6px; padding: 0 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-bolt"></i> Test
+                    </button>
+                </div>
+                <div id="tester-result-box" style="margin-top: 10px; font-size: 0.8rem; color: #8c9bab; line-height: 1.4; display: none;">
+                    <div style="color: #60a5fa; font-weight: 600;">Corrected: <span id="tester-corrected-text" style="color: #ffffff;"></span></div>
+                    <div id="tester-devanagari-row" style="color: #a78bfa; font-size: 0.75rem; margin-top: 2px;">Devanagari: <span id="tester-devanagari-text"></span></div>
+                </div>
+            </div>
+        </div>
+    </article>
+
     <!-- Quick Stats Card -->
     <article class="settings-card">
         <header class="settings-card-header">
@@ -330,6 +381,59 @@
                 })
                 .catch(() => alert('Export failed. Please try again.'));
         }
+    }
+    // Initialize Auto-Correct Setting Switch
+    const autoCorrectSwitch = document.getElementById('autocorrect-toggle-switch');
+    if (autoCorrectSwitch) {
+        const isEnabled = localStorage.getItem('taskflixx_autocorrect_enabled') !== 'false';
+        autoCorrectSwitch.checked = isEnabled;
+    }
+
+    function toggleAutoCorrectSetting(checked) {
+        localStorage.setItem('taskflixx_autocorrect_enabled', checked ? 'true' : 'false');
+        if (window.showToast) {
+            window.showToast(checked ? '✨ Intelligent Auto-Correct enabled' : 'Auto-Correct turned off', checked ? 'success' : 'info');
+        }
+    }
+
+    function testAutoCorrectNow() {
+        const input = document.getElementById('settings-test-autocorrect-input');
+        const status = document.getElementById('tester-status');
+        const resBox = document.getElementById('tester-result-box');
+        const correctedText = document.getElementById('tester-corrected-text');
+        const devanagariRow = document.getElementById('tester-devanagari-row');
+        const devanagariText = document.getElementById('tester-devanagari-text');
+
+        if (!input || !input.value.trim()) return;
+        if (status) status.textContent = 'Correcting...';
+
+        const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        fetch('/api/autocorrect/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ text: input.value })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (status) status.textContent = data.changed ? '✨ Corrected by OpenHinglish' : '✓ Already clean';
+                if (resBox) resBox.style.display = 'block';
+                if (correctedText) correctedText.textContent = data.corrected;
+                if (data.devanagari_tts && devanagariRow && devanagariText) {
+                    devanagariRow.style.display = 'block';
+                    devanagariText.textContent = data.devanagari_tts;
+                } else if (devanagariRow) {
+                    devanagariRow.style.display = 'none';
+                }
+            }
+        })
+        .catch(() => {
+            if (status) status.textContent = 'Error testing auto-correct';
+        });
     }
 </script>
 {% endblock scripts %}

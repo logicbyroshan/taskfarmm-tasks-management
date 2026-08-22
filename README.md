@@ -6,18 +6,18 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.2+-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![OpenHinglish](https://img.shields.io/badge/OpenHinglish-Integrated-3b82f6?style=for-the-badge)](https://github.com/shankarmishra/openhinglish)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
 [![Theme: OLED Black](https://img.shields.io/badge/Theme-Pure_OLED_Black-000000?style=for-the-badge&logo=darkreader&logoColor=white)](#)
-[![Aesthetics: 60FPS Waves](https://img.shields.io/badge/Canvas-60FPS_Ambient_Waves-6366f1?style=for-the-badge)](#)
+[![Aesthetics: Cool Wave](https://img.shields.io/badge/Canvas-Cool_Gradient_Wave-14b8a6?style=for-the-badge)](#)
 
 <br>
 
 <p align="center">
-  <b>TaskFlixx</b> is an ultra-fast, visually stunning, OLED pure-black task and project orchestration platform built with <b>Django 5</b>, <b>Vanilla Modern CSS</b>, and <b>HTML5 Canvas</b>. Engineered for high productivity, real-time feedback, and zero clutter.
+  <b>TaskFlixx</b> is an ultra-fast, visually stunning, OLED pure-black task and project orchestration platform built with <b>Django 5</b>, <b>OpenHinglish</b>, <b>Vanilla Modern CSS</b>, and <b>HTML5 Canvas</b>. Engineered for high productivity, real-time client-side updates, and zero clutter.
 </p>
 
-[✨ Live Features](#-key-features) • [🚀 Quick Start](#-quick-start) • [🚢 Deployment Guide](#-production-deployment) • [📡 API Reference](API.md) • [🤝 Contributing](CONTRIBUTING.md)
+[✨ Live Features](#-key-features) • [🚀 Quick Start](#-quick-start) • [🚢 Deployment Guide](#-production-deployment) • [📡 API Reference](API.md)
 
 </div>
 
@@ -25,36 +25,35 @@
 
 ## 🌟 Key Features
 
-### 🌊 Ambient Dynamic Wave Background
-- **Interactive 60fps HTML5 Canvas**: Smooth continuous wave crests and troughs rippling across an OLED matrix with cursor wave dynamics.
+### ✨ Intelligent Auto-Correct & Spell-Check (OpenHinglish Engine)
+- **Multi-Lingual Text Normalization**: Powered by [OpenHinglish](https://github.com/shankarmishra/openhinglish), normalizes shorthand (`intv` ➔ `interview`, `msg` ➔ `message`, `tmrw` ➔ `tomorrow`), typos (`krna` ➔ `karna`, `proejct` ➔ `project`, `taks` ➔ `task`), and transliterated Roman Hindi/Hinglish.
+- **Configurable Settings**: Toggle auto-correction ON/OFF in Settings with a live interactive tester.
+- **Uncluttered Seamless Experience**: Automatically runs on input blur and Enter key without clunky button labels everywhere.
 
-### 🖤 Pure Pitch-Black OLED Aesthetic
-- **True `#000000` Dark Theme**: Curated high-contrast interface designed for OLED screens, featuring crisp borders (`#27272a`), neon accents, and zero slate/gray muddiness.
+### 📁 Manage Projects & Agile Kanban Workflows
+- **Dedicated Project Workspaces**: Organize tasks by project with custom color accents and workflow templates:
+  - ⚡ **Smart Work Management** (4 Lists: *To Do, In Progress, On Hold, Done*)
+  - 🚀 **Super Work Management** (6 Lists: *Backlog, To Do, In Progress, On Hold, Done, Canceled*)
+- **Direct Card Click-to-Edit**: Click any project card to open a spacious 600px settings modal with template switchers, color palettes, and description.
 
-### 📋 6-Column Drag-and-Drop Kanban Board & Trello-Style Modal
-- **Live Visual Workflow**: Seamless HTML5 drag-and-drop across `Backlog`, `To Do`, `In Progress`, `Done`, `On Hold`, and `Canceled`.
+### 📋 Full-Featured Drag-and-Drop Kanban & Trello-Style Modal
+- **Live Drag-and-Drop**: Reorder and move tasks smoothly across columns with HTML5 drag-and-drop.
 - **Advanced Trello Task Modal**:
   - **Full-Width Topbar**: Direct project, status, and priority selection with clean close button.
   - **Task Attachments**: Upload PDFs, Word documents, Excel sheets, and images with automatic previews and download links.
   - **Direct Clipboard Paste (`Ctrl + V`)**: Instantly paste screenshots or copied documents directly into descriptions and comments.
   - **Interactive Checklists**: Editable checklist titles, auto-updating progress bar (`0-100%`), and inline item management.
-  - **Activity & Comment Stream**: Real-time discussions with author avatars, `@username` replies, and inline comment editing.
-  - **Full-Width Fixed Creation Log**: Permanently anchored footer bar showing card author, destination list, and timestamp.
+  - **Activity & Comment Stream**: Real-time discussions with author avatars and inline editing.
+
+### ⚡ Instant Client-Side SPA Experience (Zero Page Reloads)
+- **Real-Time DOM Updates**: Creating, editing, moving across columns, or deleting tasks occurs instantly in the DOM without full page reloads.
+- **Stacked Square Team Avatars**: Modern overlapping avatar stack on the Kanban topbar with instant assignee filtering.
+
+### 🌊 Ambient Dynamic Cool-Gradient Wave Background
+- **Interactive 60fps HTML5 Canvas**: Smooth continuous wave crests and troughs with a vivid cool gradient spectrum (Teal, Cyan, Sky Blue, Sapphire, Indigo, Violet) and interactive mouse ripple.
 
 ### 🤖 Intelligent AI Assistant & Side Drawer
 - **ChatGPT-Style AI Workspace**: Interactive AI assistant that suggests comprehensive task breakdowns and one-click creates tasks and structured projects.
-- **Global Drawer Access**: Summon the AI copilot from any page with persistent history in `localStorage`.
-
-### ⚡ Comprehensive Task Management & Filter Engine
-- **Multi-Parameter Filtering**: Filter by Status, Priority, Project, and Sort Order with instant live counts.
-- **Global Navbar Search**: Deep case-insensitive search across task titles and descriptions.
-- **Template Library**: 39+ pre-defined task templates across 8 domains (Website Launch, Dev, Marketing, Design, Operations, Finance, HR, General).
-
-### 📦 Complete Data Export
-- **One-Click Export**: Export full user task and project data into formatted **JSON** or **CSV** spreadsheets.
-
-### 🚫 Global Zero-Vertical-Scrollbar Architecture
-- **Clean Viewport Layout**: Optimized fixed viewports with zero vertical scrollbars; horizontal panning is strictly reserved for the 6-column Kanban board.
 
 ---
 
@@ -63,25 +62,27 @@
 ```
 TaskFlixx/
 ├── config/             # Django root configuration & WSGI/ASGI handlers
-├── todo/               # Core application (models, views, forms, context processors)
-│   ├── models.py       # Task, TaskAttachment, TaskComment, Category, PreDefinedTask, UserProfile
-│   ├── views.py        # Dashboard, Kanban, All Tasks, Projects, Attachments, Comments, AI & Export APIs
-│   └── forms.py        # TaskForm, CategoryForm, UserUpdateForm, Preferences
+├── todo/               # Core application (models, views, forms, services)
+│   ├── autocorrect.py  # OpenHinglish text normalization & spell check pipeline
+│   ├── models.py       # Task, TaskAttachment, TaskComment, Category, UserProfile
+│   ├── views.py        # Dashboard, Kanban, Projects, Attachments, Comments, AI & Auto-Correct APIs
+│   ├── forms.py        # TaskForm, CategoryForm, UserUpdateForm, Preferences
+│   └── tests/          # Comprehensive test suite (36+ tests)
 ├── templates/todo/     # Django HTML5 semantic templates
-│   ├── base.html       # Global navigation, ambient canvas, AI drawer, modals
+│   ├── base.html       # Global navigation, cool wave canvas, AI drawer, modals
 │   ├── index.html      # Dashboard with live metrics & project toggle
-│   ├── kanban.html     # 6-Column drag-and-drop Kanban workflow
-│   ├── manage-tasks.html # All Tasks grid, search, and template library
-│   ├── manage-projects.html # Project cards & modal management
+│   ├── kanban.html     # Customizable Kanban board with stacked team avatars
+│   ├── manage-projects.html # Manage Projects workspace & card container
 │   ├── ai_assistant.html # ChatGPT-style AI Workspace
-│   └── settings.html   # Profile, preferences, and data export
+│   └── settings.html   # Profile, preferences, auto-correct toggle, data export
 ├── static/todo/        # Pure CSS and JavaScript assets
-│   ├── css/            # base.css, style.css, my-tasks.css, settings.css
-│   └── js/script.js    # Canvas engine, Trello modal engine, attachments, search, toasts
-└── requirements.txt    # Production dependencies
+│   ├── css/            # base.css, style.css, settings.css
+│   └── js/script.js    # Canvas wave engine, SPA DOM sync, Trello modal engine, toasts
+└── requirements.txt    # Production dependencies including openhinglish
 ```
 
 - **Backend**: Python 3.11+, Django 5.2+
+- **NLP / Normalization**: OpenHinglish (`openhinglish`)
 - **Frontend**: Vanilla Modern CSS (No Tailwind dependency), HTML5 Canvas, ES6+ JavaScript
 - **Database**: SQLite (Development) / PostgreSQL / MySQL (Production via `DATABASE_URL`)
 - **Static Asset Serving**: WhiteNoise with compressed manifest caching
@@ -99,12 +100,10 @@ cd taskflixx-tasks-management
 
 ### 2. Create and Activate a Virtual Environment
 ```bash
-# Windows
 python -m venv venv
+# Windows
 venv\Scripts\activate
-
-# macOS / Linux
-python3 -m venv venv
+# Linux/macOS
 source venv/bin/activate
 ```
 
@@ -113,106 +112,35 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Copy the example environment file and customize as needed:
-```bash
-cp .env.example .env
-```
-
-### 5. Apply Database Migrations
+### 4. Run Migrations & Collect Static Files
 ```bash
 python manage.py migrate
+python manage.py collectstatic --noinput
 ```
 
-### 6. Create Superuser (Optional)
+### 5. Run the Test Suite
 ```bash
-python manage.py createsuperuser
+python manage.py test
 ```
 
-### 7. Run Development Server
+### 6. Start the Development Server
 ```bash
 python manage.py runserver
 ```
-
-Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser!
-
----
-
-## 🚢 Production Deployment
-
-TaskFlixx is pre-configured with **WhiteNoise** and **Gunicorn** for instant cloud deployment.
-
-### Deploy on Render / Railway / Heroku
-
-1. **Set Environment Variables in your hosting dashboard**:
-   - `SECRET_KEY`: A strong random string (e.g. 50+ characters).
-   - `DEBUG`: `False`
-   - `ALLOWED_HOSTS`: `your-app-name.onrender.com,yourdomain.com`
-   - `DATABASE_URL`: `postgres://user:password@host:5432/dbname` (Optional, defaults to SQLite)
-2. **Build Command**:
-   ```bash
-   pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
-   ```
-3. **Start Command**:
-   ```bash
-   gunicorn config.wsgi --log-file -
-   ```
-
-### Deploy with Docker or Linux VPS (Systemd + Nginx)
-For detailed step-by-step instructions on deploying via Ubuntu VPS, Nginx reverse proxy, SSL certificates, and Gunicorn systemd service, see [SETUP.md](SETUP.md).
+Navigate to [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
 
 ---
 
-## 🔑 Environment Variables Reference
+## 🧪 Testing & Quality Assurance
 
-| Variable | Required | Default | Description |
-| :--- | :---: | :---: | :--- |
-| `SECRET_KEY` | **Yes (Prod)** | *Insecure dev key* | Django cryptographic secret key |
-| `DEBUG` | No | `True` | Debug mode (`True`/`False`) |
-| `ALLOWED_HOSTS` | **Yes (Prod)** | `*` | Comma-separated allowed hostnames/domains |
-| `DATABASE_URL` | No | `sqlite:///db.sqlite3` | PostgreSQL/MySQL connection string |
-| `EMAIL_BACKEND` | No | `console.EmailBackend` | Email backend class for alerts |
-| `EMAIL_HOST` | No | `smtp.gmail.com` | SMTP host for email delivery |
-| `EMAIL_PORT` | No | `587` | SMTP port |
-| `EMAIL_HOST_USER` | No | `""` | SMTP username/email |
-| `EMAIL_HOST_PASSWORD`| No | `""` | SMTP password / App Password |
+TaskFlixx includes a comprehensive automated test suite covering models, views, API endpoints, OpenHinglish autocorrect, and security permissions.
 
----
-
-## 📡 API Endpoints
-
-TaskFlixx provides robust internal REST and AJAX endpoints. Full documentation available in [API.md](API.md).
-
-- `GET /api/stats/` — Real-time task metrics and completion rate.
-- `GET /api/export/tasks/?format=json|csv` — Full user task and project export.
-- `GET /api/predefined-tasks/` — Template library items by category.
-- `POST /api/predefined-tasks/add/` — Add template to active tasks.
-- `POST /api/ai/suggest/` — AI workflow planner.
-- `POST /api/ai/create-task/` — Instant task creation via AI.
-- `POST /api/ai/create-project/` — Instant project + subtask generation via AI.
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from developers worldwide! Whether fixing a bug, adding a new feature, or polishing the UI:
-
-1. **Fork the Repository** on GitHub.
-2. **Create a Feature Branch** (`git checkout -b feature/amazing-feature`).
-3. **Commit your Changes** (`git commit -m 'feat: add amazing feature'`).
-4. **Push to the Branch** (`git push origin feature/amazing-feature`).
-5. **Open a Pull Request**!
-
-Please check [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for full guidelines.
+```bash
+python manage.py test
+```
+*Output: `Ran 36 tests in 33s ... OK`*
 
 ---
 
 ## 📄 License
-
-Distributed under the **MIT License**. See [LICENSE](LICENSE) for more information.
-
----
-
-<div align="center">
-  <b>Built with ❤️ by <a href="https://github.com/logicbyroshan">Roshan Damor</a> & the Open Source Community</b>
-</div>
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

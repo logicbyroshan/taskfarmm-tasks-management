@@ -87,9 +87,6 @@
                                onfocus="this.style.background='#22272b'; this.style.borderColor='#579dff';" 
                                onblur="this.style.background='transparent'; this.style.borderColor='transparent'; saveTrelloTaskField('title', this.value);"
                                onkeydown="if(event.key === 'Enter'){ this.blur(); }">
-                        <button type="button" onclick="autoCorrectInput('trello-task-title-input')" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 4px; padding: 4px 8px; font-size: 0.725rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Auto-correct title">
-                            <i class="fas fa-magic"></i> Auto-Correct
-                        </button>
                     </div>
                 </div>
 
@@ -165,9 +162,6 @@
                         <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
                             <i class="fas fa-align-left" style="color: #9fadbc; font-size: 0.85rem;"></i> Description
                         </h4>
-                        <button type="button" onclick="autoCorrectInput('trello-description-input')" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 4px; padding: 2px 8px; font-size: 0.725rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;" title="Auto-correct description in English & Hinglish">
-                            <i class="fas fa-magic"></i> Auto-Correct
-                        </button>
                     </div>
                     <textarea id="trello-description-input" 
                               rows="3" 
@@ -239,9 +233,6 @@
                     <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-comment-alt" style="color: #579dff; font-size: 0.85rem;"></i> Comments and activity
                     </h4>
-                    <button type="button" onclick="autoCorrectInput('trello-comment-input')" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 4px; padding: 2px 8px; font-size: 0.725rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;" title="Auto-correct comment in English & Hinglish">
-                        <i class="fas fa-magic"></i> Auto-Correct
-                    </button>
                 </div>
 
                 <!-- Write Comment Box (Auto-submit on Enter) -->

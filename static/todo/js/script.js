@@ -353,10 +353,11 @@ window.selectEditTemplate = function(template) {
 };
 
 /**
- * Global Intelligent Auto-Correct & Spell-Check helper
+ * Global Intelligent Auto-Correct & Spell-Check helper (Powered by OpenHinglish)
  * Corrects spelling in English, Hindi & Hinglish with subtle animation & toast.
  */
-window.autoCorrectInput = function(inputElementOrId) {
+window.autoCorrectInput = function(inputElementOrId, silent = false) {
+    if (localStorage.getItem('taskflixx_autocorrect_enabled') === 'false') return;
     const el = typeof inputElementOrId === 'string' ? document.getElementById(inputElementOrId) : inputElementOrId;
     if (!el) return;
     const originalText = el.value;
@@ -373,7 +374,7 @@ window.autoCorrectInput = function(inputElementOrId) {
     })
     .then(r => r.json())
     .then(data => {
-        if (data.success && data.corrected) {
+        if (data.success && data.corrected && data.corrected !== originalText) {
             el.value = data.corrected;
             el.dispatchEvent(new Event('input', { bubbles: true }));
             el.dispatchEvent(new Event('change', { bubbles: true }));
@@ -387,15 +388,36 @@ window.autoCorrectInput = function(inputElementOrId) {
                 el.style.background = '';
                 el.style.borderColor = '';
                 el.style.transition = prevTransition;
-            }, 600);
+            }, 500);
 
-            if (data.changed && window.showToast) {
-                window.showToast('✨ Auto-corrected spelling & Hinglish!', 'info', 1800);
+            if (data.changed && !silent && window.showToast) {
+                window.showToast('✨ Auto-corrected (OpenHinglish)', 'info', 1500);
             }
         }
     })
-    .catch(err => console.error('Auto-correct error:', err));
+    .catch(err => console.error('Auto-correct notice:', err));
 };
+
+// Automatic listener for task & project input blur
+document.addEventListener('DOMContentLoaded', function() {
+    const autoCorrectIds = [
+        'add-task-title-input',
+        'add-task-description-input',
+        'new_project_name',
+        'new_project_description',
+        'edit_project_name',
+        'edit_project_description',
+        'trello-task-title-input',
+        'trello-description-input',
+        'trello-comment-input'
+    ];
+
+    document.addEventListener('focusout', function(e) {
+        if (e.target && autoCorrectIds.includes(e.target.id)) {
+            window.autoCorrectInput(e.target, true);
+        }
+    });
+});
 
 /**
  * Global Toast Notification System
