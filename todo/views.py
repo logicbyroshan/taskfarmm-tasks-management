@@ -107,26 +107,35 @@ def dashboard(request):
 def manage_tasks(request):
     """
     Displays a grid/list of all tasks with live HTMX search, filtering, and sorting.
+    Requires at least one project to exist; otherwise shows guided empty state.
     """
-    tasks = TaskService.filter_and_sort(
-        user=request.user,
-        search=request.GET.get('search', '').strip(),
-        status=request.GET.get('status', 'all'),
-        priority=request.GET.get('priority', 'all'),
-        project=request.GET.get('project', 'all'),
-        sort=request.GET.get('sort', 'newest'),
-    )
-    projects = Category.objects.filter(user=request.user)
+    projects = Category.objects.filter(Q(user=request.user) | Q(members=request.user)).distinct()
+    has_projects = projects.exists()
+
+    if has_projects:
+        tasks = TaskService.filter_and_sort(
+            user=request.user,
+            search=request.GET.get('search', '').strip(),
+            status=request.GET.get('status', 'all'),
+            priority=request.GET.get('priority', 'all'),
+            project=request.GET.get('project', 'all'),
+            sort=request.GET.get('sort', 'newest'),
+        )
+        task_count = tasks.count()
+    else:
+        tasks = Task.objects.none()
+        task_count = 0
 
     context = {
         'tasks': tasks,
         'projects': projects,
+        'has_projects': has_projects,
         'status_filter': request.GET.get('status', 'all'),
         'priority_filter': request.GET.get('priority', 'all'),
         'project_filter': request.GET.get('project', 'all'),
         'sort_by': request.GET.get('sort', 'newest'),
         'search_query': request.GET.get('search', '').strip(),
-        'task_count': tasks.count(),
+        'task_count': task_count,
         'active_page': 'manage_tasks',
     }
 
@@ -151,7 +160,7 @@ def task_categories(request):
 
 @login_required
 def manage_kanban(request):
-    """Displays the Kanban board with single-project view."""
+    """Displays the Kanban board with single-project view and dynamic workflow template."""
     project_id = request.GET.get('project')
     data = TaskService.get_kanban_columns(request.user, project_id)
 
@@ -170,6 +179,8 @@ def manage_kanban(request):
         'all_projects': data['all_projects'],
         'selected_project': data['selected_project'],
         'selected_project_id': data['selected_project_id'],
+        'has_projects': data['has_projects'],
+        'active_columns': data['active_columns'],
         'board_members': board_members,
         'backlog_tasks': data['columns']['backlog'],
         'to_do_tasks': data['columns']['not-started'],
@@ -696,6 +707,34 @@ def category_delete(request, pk):
         messages.success(request, f'Project "{name}" deleted.')
         return redirect('task_categories')
     return render(request, 'todo/confirm_delete.html', {'object': category, 'type': 'project'})
+
+
+@login_required
+@require_http_methods(['POST'])
+def category_rename_column(request, pk):
+    """Renames a column for a specific project."""
+    category = get_object_or_404(
+        Category.objects.filter(Q(user=request.user) | Q(members=request.user)).distinct(),
+        pk=pk
+    )
+    try:
+        data = json.loads(request.body)
+        col_key = data.get('column_key')
+        new_title = data.get('title', '').strip()
+    except Exception:
+        col_key = request.POST.get('column_key')
+        new_title = request.POST.get('title', '').strip()
+
+    if not col_key or not new_title:
+        return JsonResponse({'success': False, 'error': 'Invalid column key or title.'}, status=400)
+
+    TaskService.update_project_column_name(category, col_key, new_title)
+    return JsonResponse({
+        'success': True,
+        'message': f'Column renamed to "{new_title}".',
+        'column_key': col_key,
+        'title': new_title
+    })
 
 
 @login_required

@@ -218,3 +218,50 @@ class ViewTests(TestCase):
         export_csv = self.client.get(reverse('tasks_export_api') + '?format=csv')
         self.assertEqual(export_csv.status_code, 200)
         self.assertEqual(export_csv['Content-Type'], 'text/csv; charset=utf-8')
+
+    def test_kanban_and_manage_tasks_empty_state_without_projects(self):
+        # Create a fresh user with no projects
+        fresh_user = User.objects.create_user(username='emptyuser', password='password123')
+        self.client.login(username='emptyuser', password='password123')
+
+        kanban_res = self.client.get(reverse('manage_kanban'))
+        self.assertEqual(kanban_res.status_code, 200)
+        self.assertFalse(kanban_res.context['has_projects'])
+        self.assertContains(kanban_res, 'No Projects Found')
+
+        tasks_res = self.client.get(reverse('manage_tasks'))
+        self.assertEqual(tasks_res.status_code, 200)
+        self.assertFalse(tasks_res.context['has_projects'])
+        self.assertContains(tasks_res, 'No Projects Found')
+
+    def test_category_board_template_smart_vs_super(self):
+        smart_proj = Category.objects.create(
+            user=self.user,
+            name='Smart Project',
+            board_template=Category.BoardTemplate.SMART
+        )
+        super_proj = Category.objects.create(
+            user=self.user,
+            name='Super Project',
+            board_template=Category.BoardTemplate.SUPER
+        )
+
+        self.assertEqual(len(smart_proj.get_board_columns()), 4)
+        self.assertEqual(len(super_proj.get_board_columns()), 6)
+
+        # Verify Kanban view loads columns accordingly
+        res_smart = self.client.get(reverse('manage_kanban') + f'?project={smart_proj.id}')
+        self.assertEqual(len(res_smart.context['active_columns']), 4)
+
+        res_super = self.client.get(reverse('manage_kanban') + f'?project={super_proj.id}')
+        self.assertEqual(len(res_super.context['active_columns']), 6)
+
+    def test_category_rename_column_view(self):
+        rename_res = self.client.post(
+            reverse('category_rename_column', args=[self.project.id]),
+            data=json.dumps({'column_key': 'not-started', 'title': 'Up Next'}),
+            content_type='application/json'
+        )
+        self.assertEqual(rename_res.status_code, 200)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.get_column_title('not-started'), 'Up Next')

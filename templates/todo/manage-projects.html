@@ -59,17 +59,25 @@
                 const id = this.dataset.id;
                 const name = this.dataset.name;
                 const color = this.dataset.color || '#3b82f6';
+                const template = this.dataset.template || 'smart';
                 
                 const editModal = document.getElementById('edit-category-modal');
                 const editForm = document.getElementById('edit-category-form');
                 const editName = document.getElementById('edit_project_name');
                 const editColor = document.getElementById('edit_project_color');
                 const editId = document.getElementById('edit_project_id');
+                const tplSmart = document.getElementById('edit_tpl_smart');
+                const tplSuper = document.getElementById('edit_tpl_super');
 
                 if (editForm) editForm.action = '/category/' + id + '/update/';
                 if (editId) editId.value = id;
                 if (editName) editName.value = name;
                 if (editColor) editColor.value = color;
+                if (template === 'super') {
+                    if (tplSuper) tplSuper.checked = true;
+                } else {
+                    if (tplSmart) tplSmart.checked = true;
+                }
                 if (editModal) editModal.style.display = 'flex';
             });
         });

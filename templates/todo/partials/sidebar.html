@@ -8,11 +8,6 @@
                     <i class="fas fa-th-large" aria-hidden="true"></i> Dashboard
                 </a>
             </li>
-            <li class="{% if active_page == 'manage_tasks' or active_page == 'my_tasks' %}active{% endif %}">
-                <a href="{% url 'manage_tasks' %}">
-                    <i class="fas fa-list-ul" aria-hidden="true"></i> All Tasks
-                </a>
-            </li>
             <li class="{% if active_page == 'task_categories' %}active{% endif %}">
                 <a href="{% url 'task_categories' %}">
                     <i class="fas fa-folder-open" aria-hidden="true"></i> Projects
@@ -21,6 +16,11 @@
             <li class="{% if active_page == 'manage_kanban' %}active{% endif %}">
                 <a href="{% url 'manage_kanban' %}">
                     <i class="fas fa-columns" aria-hidden="true"></i> Kanban Board
+                </a>
+            </li>
+            <li class="{% if active_page == 'manage_tasks' or active_page == 'my_tasks' %}active{% endif %}">
+                <a href="{% url 'manage_tasks' %}">
+                    <i class="fas fa-list-ul" aria-hidden="true"></i> All Tasks
                 </a>
             </li>
             <li class="{% if active_page == 'ai_assistant' %}active{% endif %}">

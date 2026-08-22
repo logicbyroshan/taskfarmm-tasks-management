@@ -9,7 +9,11 @@
         </div>
         <div class="category-info">
             <h3 class="category-name">{{ category.name }}</h3>
-            <span class="category-task-count">{{ category.task_count }} Task{{ category.task_count|pluralize }}</span>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                <span class="category-task-count">{{ category.task_count }} Task{{ category.task_count|pluralize }}</span>
+                <span style="color: #3f3f46; font-size: 0.7rem;">•</span>
+                <span style="font-size: 0.7rem; font-weight: 600; color: #8c9bab;">{% if category.board_template == 'super' %}🚀 Super (6){% else %}⚡ Smart (4){% endif %}</span>
+            </div>
         </div>
         <div class="category-menu-wrapper" style="position: relative;" @click.outside="dropdownOpen = false" onclick="event.stopPropagation();">
             <button class="task-menu-btn category-options-btn" 
@@ -38,6 +42,7 @@
                         data-id="{{ category.id }}" 
                         data-name="{{ category.name }}" 
                         data-color="{{ category.color }}" 
+                        data-template="{{ category.board_template }}" 
                         @click="dropdownOpen = false" 
                         style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #e4e4e7; border-radius: 6px; text-align: left; cursor: pointer;">
                     <i class="fas fa-edit"></i> Edit

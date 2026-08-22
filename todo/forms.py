@@ -37,9 +37,16 @@ class TaskForm(forms.ModelForm):
 
 
 class CategoryForm(forms.ModelForm):
+    board_template = forms.ChoiceField(
+        choices=Category.BoardTemplate.choices,
+        required=False,
+        initial=Category.BoardTemplate.SMART,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = Category
-        fields = ['name', 'color', 'description']
+        fields = ['name', 'color', 'description', 'board_template']
         widgets = {
             'name': forms.TextInput(attrs={
                 'placeholder': 'e.g., Work, Personal, Health',
@@ -55,6 +62,10 @@ class CategoryForm(forms.ModelForm):
                 'rows': 2,
             }),
         }
+
+    def clean_board_template(self):
+        val = self.cleaned_data.get('board_template')
+        return val or Category.BoardTemplate.SMART
 
 
 class UserUpdateForm(forms.ModelForm):

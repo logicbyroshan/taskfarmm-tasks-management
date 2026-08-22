@@ -8,6 +8,21 @@
 {% endblock styles %}
 
 {% block content %}
+{% if not has_projects %}
+<!-- No Projects Guided Empty State for All Tasks -->
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 20px; background: rgba(16, 18, 20, 0.6); border: 1px dashed #282e33; border-radius: 12px; margin: 20px 0; min-height: 480px;">
+    <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #579dff; margin-bottom: 20px;">
+        <i class="fas fa-folder-open"></i>
+    </div>
+    <h2 style="font-size: 1.35rem; font-weight: 700; color: #dee4ea; margin: 0 0 10px 0;">No Projects Found</h2>
+    <p style="font-size: 0.9rem; color: #8c9bab; max-width: 440px; line-height: 1.5; margin: 0 0 24px 0;">
+        Tasks belong to organized projects. Create your first project to start adding, tracking, and executing tasks across your workflow.
+    </p>
+    <button type="button" onclick="openAddProjectModal()" style="height: 42px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: #ffffff; border: none; border-radius: 8px; padding: 0 24px; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,99,235,0.4); transition: transform 0.15s ease;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='translateY(0)'">
+        <i class="fas fa-plus"></i> Create Project
+    </button>
+</div>
+{% else %}
 <div class="page-header-bar">
     <div class="page-header-left">
         <h2><i class="fas fa-tasks" style="color: var(--accent-color);"></i> All Tasks</h2>
@@ -77,6 +92,7 @@
 
 <!-- Tasks Grid (Swapped cleanly by HTMX) -->
 {% include 'todo/components/task_list_partial.html' %}
+{% endif %}
 
 <!-- Predefined Tasks Template Modal -->
 <div id="predefined-tasks-modal" class="task-modal" style="display: none;">

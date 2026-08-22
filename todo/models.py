@@ -5,12 +5,23 @@ from django.utils import timezone
 
 
 class Category(models.Model):
+
+    class BoardTemplate(models.TextChoices):
+        SMART = 'smart', 'Smart Work Management (4 Lists)'
+        SUPER = 'super', 'Super Work Management (6 Lists)'
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='categories', db_index=True
     )
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=7, default='#2e86de')  # Store hex color
     description = models.TextField(blank=True, null=True)
+    board_template = models.CharField(
+        max_length=50,
+        choices=BoardTemplate.choices,
+        default=BoardTemplate.SMART,
+    )
+    column_names = models.JSONField(default=dict, blank=True)
     members = models.ManyToManyField(
         User, related_name='shared_categories', blank=True
     )
@@ -18,6 +29,18 @@ class Category(models.Model):
         max_length=64, blank=True, null=True, unique=True, db_index=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    DEFAULT_COLUMN_CONFIGS = {
+        'backlog': {'key': 'backlog', 'title': 'Backlog', 'dot_class': 'dot-backlog', 'color': '#8b5cf6'},
+        'not-started': {'key': 'not-started', 'title': 'To Do', 'dot_class': 'dot-to-do', 'color': '#ef4444'},
+        'in-progress': {'key': 'in-progress', 'title': 'In Progress', 'dot_class': 'dot-in-progress', 'color': '#3b82f6'},
+        'on-hold': {'key': 'on-hold', 'title': 'On Hold', 'dot_class': 'dot-on-hold', 'color': '#f59e0b'},
+        'completed': {'key': 'completed', 'title': 'Done', 'dot_class': 'dot-done', 'color': '#10b981'},
+        'canceled': {'key': 'canceled', 'title': 'Canceled', 'dot_class': 'dot-canceled', 'color': '#6b7280'},
+    }
+
+    SMART_KEYS = ['not-started', 'in-progress', 'on-hold', 'completed']
+    SUPER_KEYS = ['backlog', 'not-started', 'in-progress', 'on-hold', 'completed', 'canceled']
 
     def __str__(self):
         return self.name
@@ -27,6 +50,21 @@ class Category(models.Model):
             self.share_token = uuid.uuid4().hex
             self.save(update_fields=['share_token'])
         return self.share_token
+
+    def get_column_title(self, key):
+        if self.column_names and isinstance(self.column_names, dict) and key in self.column_names and self.column_names[key]:
+            return self.column_names[key]
+        default_cfg = self.DEFAULT_COLUMN_CONFIGS.get(key, {})
+        return default_cfg.get('title', key.replace('-', ' ').title())
+
+    def get_board_columns(self):
+        keys = self.SUPER_KEYS if self.board_template == self.BoardTemplate.SUPER else self.SMART_KEYS
+        columns = []
+        for k in keys:
+            cfg = dict(self.DEFAULT_COLUMN_CONFIGS.get(k, {'key': k, 'title': k, 'dot_class': '', 'color': '#8c9bab'}))
+            cfg['title'] = self.get_column_title(k)
+            columns.append(cfg)
+        return columns
 
     class Meta:
         verbose_name_plural = 'Categories'

@@ -34,6 +34,7 @@ urlpatterns = [
     path('category/create/', views.category_create, name='category_create'),
     path('category/<int:pk>/update/', views.category_update, name='category_update'),
     path('category/<int:pk>/delete/', views.category_delete, name='category_delete'),
+    path('category/<int:pk>/column/rename/', views.category_rename_column, name='category_rename_column'),
     path('project/<int:pk>/share/', views.project_share, name='project_share'),
     path('project/join/<str:token>/', views.project_join, name='project_join'),
 

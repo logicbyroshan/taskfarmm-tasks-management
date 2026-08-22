@@ -197,12 +197,31 @@ class TaskService:
             'canceled': qs.filter(status='canceled').order_by('-created_at'),
         }
 
+        active_columns = []
+        if selected_project:
+            for col_def in selected_project.get_board_columns():
+                col = dict(col_def)
+                col['tasks'] = columns.get(col['key'], qs.none())
+                col['count'] = col['tasks'].count()
+                active_columns.append(col)
+
         return {
             'all_projects': all_projects,
             'selected_project': selected_project,
             'selected_project_id': selected_project_id,
             'columns': columns,
+            'active_columns': active_columns,
+            'has_projects': all_projects.exists(),
         }
+
+    @staticmethod
+    def update_project_column_name(project, column_key, new_name):
+        """Renames a Kanban column title for a project."""
+        if not isinstance(project.column_names, dict):
+            project.column_names = {}
+        project.column_names[column_key] = new_name.strip()
+        project.save(update_fields=['column_names'])
+        return project
 
     @staticmethod
     def get_task_detail_data(task):
