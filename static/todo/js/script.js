@@ -4,6 +4,7 @@
 // ==============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    setupSidebarCollapse();
     setupWaveBackground();
     setupMobileMenu();
     setupGlobalSearch();
@@ -17,6 +18,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update the date/time display every minute
     setInterval(updateDateTime, 60000);
 });
+
+function setupSidebarCollapse() {
+    const isCollapsed = localStorage.getItem('taskflixx_sidebar_collapsed') === '1';
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar && isCollapsed) {
+        sidebar.classList.add('collapsed');
+    }
+}
+
+window.toggleSidebarCollapse = function() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    localStorage.setItem('taskflixx_sidebar_collapsed', isCollapsed ? '1' : '0');
+};
 
 // Global expose so onclick="openAddTaskModal()" and "openAddProjectModal()" work from HTML
 // Global expose so onclick="openAddTaskModal()" and "openAddProjectModal()" work from HTML
