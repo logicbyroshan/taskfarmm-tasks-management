@@ -95,14 +95,21 @@ window.handleAddTaskFormSubmit = function(e) {
     })
     .then(r => r.json())
     .then(data => {
-        if (data.success) {
+        if (data.success && data.task) {
             closeAddTaskModal();
             if (window.showToast) {
-                window.showToast(`Task "${data.task.title}" created successfully!`, 'success', 1200);
+                window.showToast(`Task "${data.task.title}" created!`, 'success', 1200);
             }
-            setTimeout(() => {
-                window.location.reload();
-            }, 300);
+            // Instant DOM insertion without page reload
+            const inserted = insertTaskCardToKanban(data.task);
+            if (!inserted) {
+                const taskList = document.getElementById('dashboard-tasks-container');
+                if (taskList) {
+                    insertTaskCardToDashboard(data.task);
+                } else {
+                    setTimeout(() => window.location.reload(), 300);
+                }
+            }
         } else {
             alert(data.message || (data.errors ? JSON.stringify(data.errors) : 'Error creating task.'));
         }
@@ -118,6 +125,102 @@ window.handleAddTaskFormSubmit = function(e) {
         }
     });
 };
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function insertTaskCardToKanban(task) {
+    const status = task.status || 'not-started';
+    const container = document.querySelector(`.kanban-cards-container[data-status="${status}"]`);
+    if (!container) return false;
+
+    // Hide empty state if present
+    const emptyEl = document.getElementById(`empty-${status}`);
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    const prio = task.priority || 'moderate';
+    const prioLabel = prio.charAt(0).toUpperCase() + prio.slice(1);
+    const userInitials = (task.user || 'DE').slice(0, 2).toUpperCase();
+
+    const cardDiv = document.createElement('div');
+    cardDiv.className = `kanban-card ${status === 'completed' ? 'is-completed' : ''}`;
+    cardDiv.id = `kanban-card-${task.id}`;
+    cardDiv.setAttribute('data-task-id', task.id);
+    cardDiv.setAttribute('data-assignees', task.user || '');
+    cardDiv.setAttribute('draggable', 'true');
+    cardDiv.setAttribute('ondragstart', 'handleDragStart(event)');
+    cardDiv.setAttribute('onclick', `openTrelloModal(${task.id})`);
+    cardDiv.style.opacity = '0';
+    cardDiv.style.transform = 'translateY(-6px)';
+    cardDiv.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+
+    cardDiv.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span class="priority-tag prio-${prio}">${prioLabel}</span>
+        </div>
+        <div class="kanban-card-title" style="font-size: 0.9rem; font-weight: 600; color: #dee4ea; margin-bottom: 4px; line-height: 1.4;">${escapeHtml(task.title)}</div>
+        ${task.description ? `<div style="font-size: 0.775rem; color: #8c9bab; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;">${escapeHtml(task.description)}</div>` : ''}
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid #282e33; font-size: 0.725rem;">
+            <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                <span title="Created by ${escapeHtml(task.user || 'You')}" style="width: 22px; height: 22px; min-width: 22px; border-radius: 5px; background: linear-gradient(135deg, #1e293b, #0f172a); color: #94a3b8; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #334155; box-shadow: 0 1px 3px rgba(0,0,0,0.4);">
+                    ${userInitials}
+                </span>
+            </div>
+        </div>
+    `;
+
+    container.insertBefore(cardDiv, container.firstChild);
+    requestAnimationFrame(() => {
+        cardDiv.style.opacity = '1';
+        cardDiv.style.transform = 'translateY(0)';
+    });
+
+    if (window.updateKanbanColumnCounts) updateKanbanColumnCounts();
+    return true;
+}
+
+function insertTaskCardToDashboard(task) {
+    const container = document.getElementById('dashboard-tasks-container');
+    if (!container) return false;
+    // Hide empty state if present
+    const emptyState = document.getElementById('dashboard-empty-state');
+    if (emptyState) emptyState.style.display = 'none';
+
+    const prio = task.priority || 'moderate';
+    const prioLabel = prio.charAt(0).toUpperCase() + prio.slice(1);
+    const userInitials = (task.user || 'DE').slice(0, 2).toUpperCase();
+
+    const art = document.createElement('article');
+    art.className = 'task-card';
+    art.id = `task-card-${task.id}`;
+    art.setAttribute('role', 'listitem');
+    art.setAttribute('onclick', `openTrelloModal(${task.id})`);
+    art.style.cursor = 'pointer';
+
+    art.innerHTML = `
+        <div class="task-card-header">
+            <div class="task-card-title-group" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                <input type="checkbox" id="task${task.id}" class="task-checkbox" onchange="event.stopPropagation(); toggleTaskCompletion(${task.id}, this.checked);">
+                <label for="task${task.id}" onclick="event.stopPropagation(); openTrelloModal(${task.id});" style="cursor: pointer; flex: 1;">
+                    <h3 class="task-title" style="margin: 0; font-size: 0.925rem;">${escapeHtml(task.title)}</h3>
+                </label>
+                <button type="button" class="task-menu-btn" aria-label="Task options" onclick="event.stopPropagation(); openTrelloModal(${task.id});">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    container.insertBefore(art, container.firstChild);
+    return true;
+}
 
 window.openAddProjectModal = function() {
     const projModal = document.getElementById('category-modal');
@@ -1536,6 +1639,7 @@ window.saveTrelloTaskField = function(field, value) {
         .then(data => {
             if (data.success && data.task) {
                 currentTrelloTask = data.task;
+                insertTaskCardToKanban(data.task);
                 if (window.showToast) window.showToast('Card created!', 'success', 1200);
             }
         })
@@ -1544,8 +1648,9 @@ window.saveTrelloTaskField = function(field, value) {
     }
 
     const payload = { [field]: value };
+    const taskId = currentTrelloTask.id;
 
-    fetch(`/task/${currentTrelloTask.id}/update/`, {
+    fetch(`/task/${taskId}/update/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1558,11 +1663,47 @@ window.saveTrelloTaskField = function(field, value) {
     .then(data => {
         if (data.success) {
             currentTrelloTask[field] = value;
-            if (field === 'status') {
-                updateTrelloStatusBadge(value);
-                updateTrelloCompleteIcon(value === 'completed');
+            
+            // Instant DOM updates for the Kanban card
+            const card = document.querySelector(`.kanban-card[data-task-id="${taskId}"]`);
+            if (card) {
+                if (field === 'title') {
+                    const titleEl = card.querySelector('.kanban-card-title');
+                    if (titleEl) titleEl.textContent = value;
+                } else if (field === 'priority') {
+                    const prioTag = card.querySelector('.priority-tag');
+                    if (prioTag) {
+                        prioTag.className = `priority-tag prio-${value}`;
+                        prioTag.textContent = value.charAt(0).toUpperCase() + value.slice(1);
+                    }
+                } else if (field === 'status') {
+                    updateTrelloStatusBadge(value);
+                    updateTrelloCompleteIcon(value === 'completed');
+                    
+                    // Move card dynamically to the new status column
+                    const targetContainer = document.querySelector(`.kanban-cards-container[data-status="${value}"]`);
+                    const oldContainer = card.closest('.kanban-cards-container');
+                    if (targetContainer && oldContainer !== targetContainer) {
+                        if (value === 'completed') {
+                            card.classList.add('is-completed');
+                        } else {
+                            card.classList.remove('is-completed');
+                        }
+                        targetContainer.appendChild(card);
+
+                        const oldStatus = oldContainer.getAttribute('data-status');
+                        if (oldContainer.querySelectorAll('.kanban-card').length === 0) {
+                            const oldEmpty = document.getElementById(`empty-${oldStatus}`);
+                            if (oldEmpty) oldEmpty.style.display = 'flex';
+                        }
+                        const newEmpty = document.getElementById(`empty-${value}`);
+                        if (newEmpty) newEmpty.style.display = 'none';
+
+                        if (window.updateKanbanColumnCounts) updateKanbanColumnCounts();
+                    }
+                }
             }
-            if (window.showToast) window.showToast('Saved', 'info', 1200);
+            if (window.showToast) window.showToast('Saved', 'info', 1000);
         }
     })
     .catch(err => console.error('Error saving task field:', err));
@@ -1946,11 +2087,12 @@ window.submitTrelloComment = function() {
         if (!currentTrelloTask) return;
         if (!confirm(`Are you sure you want to delete "${currentTrelloTask.title}"?`)) return;
 
+        const taskId = currentTrelloTask.id;
         const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
         const formData = new FormData();
         formData.append('csrfmiddlewaretoken', csrfToken);
 
-        fetch(`/task/${currentTrelloTask.id}/delete/`, {
+        fetch(`/task/${taskId}/delete/`, {
             method: 'POST',
             headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
@@ -1958,12 +2100,39 @@ window.submitTrelloComment = function() {
         .then(r => r.json())
         .then(data => {
             closeTrelloModal();
-            if (window.showToast) window.showToast('Task deleted', 'success');
-            setTimeout(() => window.location.reload(), 300);
+            if (window.showToast) window.showToast('Task deleted', 'success', 1200);
+
+            // Remove card instantly from Kanban board
+            const kanbanCard = document.getElementById(`kanban-card-${taskId}`);
+            if (kanbanCard) {
+                kanbanCard.style.transition = 'all 0.25s ease';
+                kanbanCard.style.opacity = '0';
+                kanbanCard.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    const parentCol = kanbanCard.closest('.kanban-cards-container');
+                    kanbanCard.remove();
+                    if (parentCol) {
+                        const remainingCards = parentCol.querySelectorAll('.kanban-card');
+                        if (remainingCards.length === 0) {
+                            const statusKey = parentCol.getAttribute('data-status');
+                            const emptyEl = document.getElementById(`empty-${statusKey}`);
+                            if (emptyEl) emptyEl.style.display = 'flex';
+                        }
+                    }
+                    if (window.updateKanbanColumnCounts) updateKanbanColumnCounts();
+                }, 250);
+            }
+
+            // Remove card from Dashboard if present
+            const taskCard = document.getElementById(`task-card-${taskId}`);
+            if (taskCard) {
+                taskCard.style.transition = 'all 0.25s ease';
+                taskCard.style.opacity = '0';
+                setTimeout(() => taskCard.remove(), 250);
+            }
         })
         .catch(() => {
             closeTrelloModal();
-            window.location.reload();
         });
     };
 
