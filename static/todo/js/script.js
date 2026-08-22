@@ -1244,7 +1244,7 @@ function renderTrelloComments(comments = [], task = null) {
     const t = task || currentTrelloTask;
     const author = (t && t.user) ? t.user : 'You';
     const initials = author.slice(0, 2).toUpperCase();
-    const avatarBg = initials === 'AC' ? '#d97706' : '#0c66e4';
+    const avatarBg = initials === 'AC' ? '#d97706' : (initials === 'PA' ? '#7c3aed' : '#0c66e4');
     const listName = (t && (t.category_name || t.status_display)) ? (t.category_name || t.status_display) : 'General';
     const timeText = (t && t.created_at) ? t.created_at : 'Just now';
 
@@ -1252,6 +1252,7 @@ function renderTrelloComments(comments = [], task = null) {
 
     // Render Comments first
     if (comments && comments.length > 0) {
+        html += '<div style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto;">';
         html += comments.map(c => {
             const cUser = c.user || 'User';
             const cInitials = cUser.slice(0, 2).toUpperCase();
@@ -1259,43 +1260,55 @@ function renderTrelloComments(comments = [], task = null) {
             const cTime = c.time_ago || c.created_at || 'Just now';
 
             return `
-                <div class="comment-item-row" id="comment-row-${c.id}" style="display: flex; gap: 10px; align-items: flex-start;">
-                    <div style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; border-radius: 4px !important; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
-                        ${cInitials}
-                    </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.825rem; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-                            <strong style="color: #dee4ea;">${cUser}</strong>
-                            <span style="color: #8c9bab; font-size: 0.75rem;">${cTime}</span>
-                            ${c.is_edited ? '<span style="color: #579dff; font-size: 0.7rem; font-style: italic;">(edited)</span>' : ''}
-                        </div>
-                        <div id="comment-bubble-${c.id}" style="background: #181b1f; border: 1px solid #282e33; border-radius: 6px; padding: 8px 12px; color: #dee4ea; font-size: 0.85rem; line-height: 1.5; word-break: break-word; white-space: pre-wrap;">${escapeHtml(c.content)}</div>
-                        <div id="comment-actions-${c.id}" style="display: flex; align-items: center; gap: 10px; margin-top: 4px; font-size: 0.75rem; color: #8c9bab;">
+                <div class="comment-item-row" id="comment-row-${c.id}" style="display: flex; flex-direction: column; gap: 6px; background: #16181d; border: 1px solid #22272b; border-radius: 6px; padding: 8px 12px;">
+                    <!-- Comment Body -->
+                    <div id="comment-bubble-${c.id}" style="color: #dee4ea; font-size: 0.85rem; line-height: 1.5; word-break: break-word; white-space: pre-wrap;">${escapeHtml(c.content)}</div>
+                    
+                    <!-- Bottom Row: Actions on Left, Author & Time on Right -->
+                    <div id="comment-footer-${c.id}" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; padding-top: 4px; border-top: 1px solid #1f2328; font-size: 0.725rem;">
+                        <!-- Left: Actions -->
+                        <div id="comment-actions-${c.id}" style="display: flex; align-items: center; gap: 8px; color: #8c9bab;">
                             <span style="cursor: pointer; color: #8c9bab; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="replyToTrelloComment('${cUser}')">Reply</span>
+                            <span style="color: #2e353b;">•</span>
                             <span style="cursor: pointer; color: #8c9bab; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="editTrelloCommentInline(${c.id})">Edit</span>
-                            ${c.id ? `<span style="cursor: pointer; color: #ef4444; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'" onclick="deleteTrelloComment(${c.id})">Delete</span>` : ''}
+                            ${c.id ? `
+                            <span style="color: #2e353b;">•</span>
+                            <span style="cursor: pointer; color: #ef4444; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'" onclick="deleteTrelloComment(${c.id})">Delete</span>` : ''}
+                        </div>
+
+                        <!-- Right: Author Info & Avatar Icon -->
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="text-align: right; line-height: 1.2;">
+                                <strong style="color: #dee4ea; font-size: 0.75rem;">${cUser}</strong>
+                                <span style="color: #8c9bab; font-size: 0.7rem; margin-left: 4px;">${cTime}</span>
+                                ${c.is_edited ? '<span style="color: #579dff; font-size: 0.65rem; font-style: italic; margin-left: 3px;">(edited)</span>' : ''}
+                            </div>
+                            <div style="width: 22px; height: 22px; min-width: 22px; min-height: 22px; max-width: 22px; max-height: 22px; border-radius: 4px; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
+                                ${cInitials}
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
+        html += '</div>';
     }
 
-    // Activity Log Entry at bottom of feed
+    // Activity Log Entry: Sticked at the very bottom of the feed
     html += `
-        <div class="activity-log-item" style="display: flex; gap: 10px; align-items: flex-start; margin-top: 6px;">
-            <div style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; aspect-ratio: 1/1; border-radius: 50% !important; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
-                ${initials}
-            </div>
-            <div style="flex: 1; font-size: 0.825rem; line-height: 1.4;">
-                <div>
+        <div class="activity-log-item" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 10px; border-top: 1px solid #22272b; font-size: 0.775rem;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; border-radius: 4px; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
+                    ${initials}
+                </div>
+                <div style="line-height: 1.3;">
                     <strong style="color: #dee4ea;">${author}</strong> 
                     <span style="color: #8c9bab;">added this card to</span> 
-                    <strong style="color: #dee4ea;">${listName}</strong>
+                    <strong style="color: #579dff;">${listName}</strong>
                 </div>
-                <div style="color: #579dff; font-size: 0.75rem; margin-top: 2px;">
-                    ${timeText}
-                </div>
+            </div>
+            <div style="color: #8c9bab; font-size: 0.725rem; white-space: nowrap;">
+                ${timeText}
             </div>
         </div>
     `;
