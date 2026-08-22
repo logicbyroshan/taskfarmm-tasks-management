@@ -29,6 +29,8 @@
     flex-wrap: wrap;
     gap: 10px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 100;
 }
 
 .kanban-board-scroll-wrapper {
@@ -251,29 +253,69 @@
 </div>
 {% else %}
 <!-- Top Header Bar -->
-<div class="kanban-header-bar">
+<div class="kanban-header-bar" x-data="{ projectMenuOpen: false }">
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <h2 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-columns" style="color: #579dff;"></i>
-            {% if selected_project %}
-                <span>{{ selected_project.name }}</span>
-                <span style="font-size: 0.725rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">
-                    {% if selected_project.board_template == 'super' %}🚀 Super Work (6 Lists){% else %}⚡ Smart Work (4 Lists){% endif %}
-                </span>
-            {% else %}
-                <span>Kanban Board</span>
-            {% endif %}
-        </h2>
+        <!-- Custom Project Switcher Dropdown (Zero Clipping) -->
+        <div style="position: relative;" @click.outside="projectMenuOpen = false">
+            <button type="button" 
+                    @click="projectMenuOpen = !projectMenuOpen"
+                    style="height: 36px; background: #16181d; border: 1px solid #282e33; color: #dee4ea; border-radius: 8px; padding: 0 14px; font-size: 0.875rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.15s ease;"
+                    onmouseenter="this.style.borderColor='#579dff'; this.style.background='#1a1d22';"
+                    onmouseleave="this.style.borderColor='#282e33'; this.style.background='#16181d';">
+                <i class="fas fa-folder-open" style="color: #579dff;"></i>
+                {% if selected_project %}
+                    <span style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ selected_project.name }}</span>
+                    <span style="font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        {% if selected_project.board_template == 'super' %}🚀 Super (6 Lists){% else %}⚡ Smart (4 Lists){% endif %}
+                    </span>
+                {% else %}
+                    <span>Select Project</span>
+                {% endif %}
+                <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: #8c9bab; margin-left: 2px; transition: transform 0.2s ease;" :style="projectMenuOpen ? 'transform: rotate(180deg);' : ''"></i>
+            </button>
 
-        <!-- Project Switcher Dropdown -->
-        <div style="display: flex; align-items: center; margin-left: 6px;">
-            <select id="kanban-project-select" onchange="switchKanbanProject(this.value)" style="height: 34px; background: #16181d; border: 1px solid #282e33; color: #dee4ea; border-radius: 6px; padding: 0 12px; font-size: 0.825rem; font-weight: 600; outline: none; cursor: pointer; transition: border-color 0.15s ease;">
-                {% for project in all_projects %}
-                <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>
-                    📁 {{ project.name }} ({{ project.task_count }}) · {% if project.board_template == 'super' %}Super (6){% else %}Smart (4){% endif %}
-                </option>
-                {% endfor %}
-            </select>
+            <!-- Custom Dropdown Menu -->
+            <div x-show="projectMenuOpen"
+                 x-transition:enter="transition ease-out duration-100"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-75"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 style="display: none; position: absolute; left: 0; top: calc(100% + 6px); background: #101214; border: 1px solid #282e33; border-radius: 8px; padding: 6px; z-index: 999999; min-width: 280px; box-shadow: 0 16px 36px rgba(0,0,0,0.95);">
+                <div style="font-size: 0.725rem; font-weight: 700; color: #8c9bab; text-transform: uppercase; padding: 6px 10px 4px 10px; letter-spacing: 0.05em;">
+                    Switch Project
+                </div>
+                <div style="max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;">
+                    {% for project in all_projects %}
+                    <a href="{% url 'manage_kanban' %}?project={{ project.id }}" 
+                       style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 6px; font-size: 0.825rem; font-weight: 600; text-decoration: none; transition: background 0.15s ease; {% if selected_project_id == project.id %}background: rgba(59, 130, 246, 0.15); color: #579dff; border: 1px solid rgba(59, 130, 246, 0.25);{% else %}color: #dee4ea; background: transparent; border: 1px solid transparent;{% endif %}"
+                       onmouseenter="this.style.background='#16181d';"
+                       onmouseleave="this.style.background='{% if selected_project_id == project.id %}rgba(59, 130, 246, 0.15){% else %}transparent{% endif %}';">
+                        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ project.color|default:'#3b82f6' }}; flex-shrink: 0;"></span>
+                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{{ project.name }}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                            <span style="font-size: 0.7rem; color: #8c9bab;">{% if project.board_template == 'super' %}🚀 6{% else %}⚡ 4{% endif %}</span>
+                            <span style="font-size: 0.7rem; background: #22272b; color: #8c9bab; padding: 1px 6px; border-radius: 999px;">{{ project.task_count }}</span>
+                            {% if selected_project_id == project.id %}
+                            <i class="fas fa-check" style="font-size: 0.75rem; color: #579dff; margin-left: 2px;"></i>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                <div style="border-top: 1px solid #22272b; margin-top: 6px; padding-top: 6px;">
+                    <button type="button" 
+                            onclick="openAddProjectModal(); projectMenuOpen = false;" 
+                            style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.8rem; font-weight: 600; color: #60a5fa; border-radius: 6px; cursor: pointer; transition: background 0.15s ease;"
+                            onmouseenter="this.style.background='#16181d';"
+                            onmouseleave="this.style.background='transparent';">
+                        <i class="fas fa-plus"></i> Add New Project
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
