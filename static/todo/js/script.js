@@ -411,21 +411,21 @@ function setupEditTaskModal() {
             });
         });
     }
+}
 
-    // ==============================================================================
-    //  TRELLO-STYLE RICH CARD MODAL MANAGER
-    // ==============================================================================
-    let currentTrelloTask = null;
+// ==============================================================================
+//  TRELLO-STYLE RICH CARD MODAL MANAGER
+// ==============================================================================
+let currentTrelloTask = null;
 
-    window.openTrelloModal = function(taskId) {
-        const modal = document.getElementById('trello-task-modal');
-        if (!modal) {
-            // Fallback to legacy edit modal if trello modal markup not loaded
-            if (window.openEditTaskModalLegacy) return window.openEditTaskModalLegacy(taskId);
-            return;
-        }
+window.openTrelloModal = function(taskId) {
+    const modal = document.getElementById('trello-task-modal');
+    if (!modal) {
+        if (window.openEditTaskModalLegacy) return window.openEditTaskModalLegacy(taskId);
+        return;
+    }
 
-        fetch(`/task/${taskId}/update/`, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    fetch(`/task/${taskId}/update/`, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(r => r.json())
         .then(data => {
             if (data.success && data.task) {
@@ -576,15 +576,43 @@ function setupEditTaskModal() {
                     ${(c.user || 'U').charAt(0).toUpperCase()}
                 </div>
                 <div style="flex:1;background:#09090b;border:1px solid #18181b;border-radius:8px;padding:10px 14px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.75rem;">
-                        <strong style="color:#f4f4f5;">${c.user}</strong>
-                        <span style="color:#71717a;">${c.time_ago || c.created_at}</span>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:0.75rem;">
+                        <div>
+                            <strong style="color:#f4f4f5;">${c.user}</strong>
+                            <span style="color:#71717a;margin-left:6px;">${c.time_ago || c.created_at}</span>
+                        </div>
+                        ${c.id ? `<button type="button" onclick="deleteTrelloComment(${c.id})" style="background:transparent;border:none;color:#71717a;cursor:pointer;padding:0 4px;font-size:0.75rem;" title="Delete comment"><i class="fas fa-times"></i></button>` : ''}
                     </div>
                     <p style="margin:0;color:#d4d4d8;font-size:0.825rem;line-height:1.45;white-space:pre-wrap;">${c.content}</p>
                 </div>
             </div>
         `).join('');
     }
+
+    window.deleteTrelloComment = function(commentId) {
+        if (!commentId || !currentTrelloTask) return;
+        if (!confirm('Are you sure you want to delete this comment?')) return;
+
+        const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        fetch(`/task/comment/${commentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (currentTrelloTask.comments) {
+                    currentTrelloTask.comments = currentTrelloTask.comments.filter(c => c.id !== commentId);
+                    renderTrelloComments(currentTrelloTask.comments);
+                }
+                if (window.showToast) window.showToast('Comment deleted', 'info');
+            }
+        })
+        .catch(err => console.error('Error deleting comment:', err));
+    };
 
     window.submitTrelloComment = function() {
         const textarea = document.getElementById('trello-comment-input');
@@ -684,8 +712,6 @@ function setupEditTaskModal() {
             window.location.reload();
         });
     };
-}
-
 
 /**
  * Sets up Progressive Web App (PWA) features.
@@ -698,7 +724,7 @@ function setupPWA() {
 }
 
 /* ==============================================================================
- *  TASKMITRA AI SIDE DRAWER
+ *  TASKFLIXX AI SIDE DRAWER
  * ============================================================================== */
 
 function openAiDrawer() {
@@ -872,7 +898,7 @@ function applyAiSuggestionToTask() {
 
 function getCsrfToken() {
     const name = 'csrftoken';
-    let cookieValue = null;
+    let cookieValue = '';
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
         for (let i = 0; i < cookies.length; i++) {
@@ -883,8 +909,17 @@ function getCsrfToken() {
             }
         }
     }
-    return cookieValue;
+    if (!cookieValue) {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input && input.value) cookieValue = input.value;
+    }
+    if (!cookieValue) {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta && meta.content) cookieValue = meta.content;
+    }
+    return cookieValue || '';
 }
+window.getCsrfToken = getCsrfToken;
 
 /**
  * Dynamic Ambient Dot Wave Canvas

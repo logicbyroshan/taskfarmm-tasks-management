@@ -1,40 +1,48 @@
 # todo/middleware.py
-from django.contrib.auth import get_user_model
-from django.contrib.auth import login
+import logging
+from django.conf import settings
+from django.contrib.auth import get_user_model, login
 
 User = get_user_model()
+logger = logging.getLogger('todo')
 
 class DemoAuthMiddleware:
     """
-    Temporary middleware to auto-login a demo user.
-    This will be replaced by API token/session auth later.
+    Middleware to auto-login a demo user for seamless interactive testing.
+    Can be enabled/disabled via ENABLE_DEMO_AUTH in settings or environment.
+    Runs lazily without executing DB queries during server initialization.
     """
     def __init__(self, get_response):
         self.get_response = get_response
-        # Create or get demo user on startup
-        self.demo_user = self._get_or_create_demo_user()
 
     def _get_or_create_demo_user(self):
-        """Create a demo user for testing"""
+        """Lazily create or get a demo user with safe database exception handling."""
         username = 'demo_user'
         try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            user = User.objects.create_user(
+            user, _ = User.objects.get_or_create(
                 username=username,
-                email='demo@taskflix.com',
-                password='demo123',  # This won't be used
-                first_name='Demo',
-                last_name='User'
+                defaults={
+                    'email': 'demo@taskflix.com',
+                    'first_name': 'Demo',
+                    'last_name': 'User'
+                }
             )
-        return user
+            return user
+        except Exception as e:
+            logger.debug('DemoAuthMiddleware could not get or create demo user: %s', e)
+            return None
 
     def __call__(self, request):
-        # Auto-login demo user if not authenticated
-        if not request.user.is_authenticated:
-            # Manually set the user in the session
-            request.user = self.demo_user
-            login(request, self.demo_user, backend='django.contrib.auth.backends.ModelBackend')
+        enable_demo = getattr(settings, 'ENABLE_DEMO_AUTH', True)
         
-        response = self.get_response(request)
-        return response
+        # Don't auto-login on admin, logout, or explicit API auth paths
+        exempt_prefixes = ('/admin/', '/logout/', '/api/v1/auth/')
+        is_exempt_path = any(request.path.startswith(prefix) for prefix in exempt_prefixes)
+
+        if enable_demo and not is_exempt_path and not request.user.is_authenticated:
+            demo_user = self._get_or_create_demo_user()
+            if demo_user:
+                request.user = demo_user
+                login(request, demo_user, backend='django.contrib.auth.backends.ModelBackend')
+
+        return self.get_response(request)

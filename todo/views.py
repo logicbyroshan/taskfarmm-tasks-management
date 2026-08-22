@@ -60,10 +60,12 @@ def dashboard(request):
     recent_tasks = TaskService.get_recent_tasks(request.user)
     recently_completed = TaskService.get_recently_completed(request.user)
     category_stats = CategoryService.get_with_stats(request.user)
+    all_projects_progress = CategoryService.get_dashboard_project_progress(request.user)
 
     context = {
         # Stats (single DB aggregation)
         'total_tasks': stats['total_count'],
+        'total_count': stats['total_count'],
         'backlog_count': stats['backlog_count'],
         'to_do_count': stats['to_do_count'],
         'in_progress_count': stats['in_progress_count'],
@@ -72,10 +74,14 @@ def dashboard(request):
         'canceled_count': stats['canceled_count'],
         'completion_rate': stats['completion_rate'],
         'overdue_count': stats['overdue_count'],
+        'due_today_count': stats['due_today_count'],
         # Lists
         'recent_tasks': recent_tasks,
         'recently_completed': recently_completed,
+        'recently_completed_tasks': recently_completed,
         'category_stats': category_stats,
+        'projects': category_stats,
+        'all_projects_progress': all_projects_progress,
         'active_page': 'dashboard',
     }
     return render(request, 'todo/index.html', context)
@@ -184,11 +190,19 @@ def settings_page(request):
             u_form = UserUpdateForm(instance=request.user)
             p_form = UserProfileForm(instance=profile)
 
-        elif action == 'clear_data':
+        elif action == 'clear_tasks':
+            if request.POST.get('confirm_clear') == 'yes':
+                Task.objects.filter(user=request.user).delete()
+                messages.success(request, 'All tasks cleared successfully. Projects remain intact.')
+            else:
+                messages.error(request, 'Confirmation not provided. No tasks were deleted.')
+            return redirect('settings')
+
+        elif action in ('clear_all', 'clear_data'):
             if request.POST.get('confirm_clear') == 'yes':
                 Task.objects.filter(user=request.user).delete()
                 Category.objects.filter(user=request.user).delete()
-                messages.success(request, 'All data cleared successfully.')
+                messages.success(request, 'All data (tasks and projects) cleared successfully.')
             else:
                 messages.error(request, 'Confirmation not provided. No data was deleted.')
             return redirect('settings')
@@ -254,11 +268,18 @@ def task_detail(request, pk):
 
 @login_required
 def task_create(request):
-    """Creates a task via AJAX POST."""
+    """Creates a task via AJAX POST or JSON payload."""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'POST required.'}, status=405)
 
-    form = TaskForm(request.POST, user=request.user)
+    post_data = request.POST
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            post_data = json.loads(request.body)
+        except Exception:
+            post_data = request.POST
+
+    form = TaskForm(post_data, user=request.user)
     if form.is_valid():
         task = form.save(commit=False)
         task.user = request.user
@@ -356,6 +377,15 @@ def task_add_comment(request, pk):
 
 
 @login_required
+@require_http_methods(['POST', 'DELETE'])
+def task_comment_delete(request, pk):
+    """Deletes a task comment (owner only)."""
+    comment = get_object_or_404(TaskComment, pk=pk, user=request.user)
+    comment.delete()
+    return JsonResponse({'success': True, 'message': 'Comment deleted.'})
+
+
+@login_required
 @require_http_methods(['POST'])
 def task_update_checklist(request, pk):
     """Replaces the checklist for a task."""
@@ -417,12 +447,23 @@ def task_delete(request, pk):
 def category_create(request):
     """Creates a new project/category."""
     if request.method == 'POST':
-        form = CategoryForm(request.POST)
+        post_data = request.POST
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                post_data = json.loads(request.body)
+            except Exception:
+                post_data = request.POST
+
+        form = CategoryForm(post_data)
         if form.is_valid():
             category = form.save(commit=False)
             category.user = request.user
             category.save()
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            is_ajax_or_json = (
+                request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                or (request.content_type and 'application/json' in request.content_type)
+            )
+            if is_ajax_or_json:
                 return JsonResponse({
                     'success': True,
                     'message': f'Project "{category.name}" created!',
@@ -434,7 +475,11 @@ def category_create(request):
                 })
             messages.success(request, f'Project "{category.name}" created.')
         else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            is_ajax_or_json = (
+                request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                or (request.content_type and 'application/json' in request.content_type)
+            )
+            if is_ajax_or_json:
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     return redirect('task_categories')
 

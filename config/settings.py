@@ -89,6 +89,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'config.urls'
 
 LOGIN_REDIRECT_URL = 'dashboard'
+ENABLE_DEMO_AUTH = os.environ.get('ENABLE_DEMO_AUTH', str(DEBUG)).strip().lower() in ['true', '1', 'yes', 't']
 
 # ============================================================
 #  TEMPLATES

@@ -78,8 +78,12 @@ class Task(models.Model):
         # Automatically set completed_at when status changes to completed/done
         if self.status == self.Status.DONE and not self.completed_at:
             self.completed_at = timezone.now()
-        elif self.status != self.Status.DONE:
+            if 'update_fields' in kwargs and kwargs['update_fields'] is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {'completed_at'}
+        elif self.status != self.Status.DONE and self.completed_at is not None:
             self.completed_at = None
+            if 'update_fields' in kwargs and kwargs['update_fields'] is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {'completed_at'}
         super().save(*args, **kwargs)
 
     class Meta:

@@ -73,6 +73,39 @@
                 if (editModal) editModal.style.display = 'flex';
             });
         });
+
+        // Wire delete button inside edit project modal
+        const deleteProjectBtn = document.getElementById('edit-project-delete-btn');
+        if (deleteProjectBtn) {
+            deleteProjectBtn.addEventListener('click', function() {
+                const id = document.getElementById('edit_project_id')?.value;
+                const name = document.getElementById('edit_project_name')?.value || 'this project';
+                if (!id) return;
+                if (!confirm(`Are you sure you want to delete project "${name}"? All assigned tasks will become unassigned.`)) return;
+
+                const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                const formData = new FormData();
+                formData.append('csrfmiddlewaretoken', csrfToken);
+
+                fetch(`/category/${id}/delete/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const modal = document.getElementById('edit-category-modal');
+                        if (modal) modal.style.display = 'none';
+                        if (window.showToast) window.showToast(data.message || 'Project deleted', 'success');
+                        setTimeout(() => window.location.reload(), 300);
+                    }
+                })
+                .catch(() => {
+                    window.location.reload();
+                });
+            });
+        }
     });
 </script>
 {% endblock scripts %}

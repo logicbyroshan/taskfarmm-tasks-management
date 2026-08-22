@@ -199,9 +199,10 @@ class TaskWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = [
-            'title', 'description', 'priority', 'status',
+            'id', 'title', 'description', 'priority', 'status',
             'due_date', 'category_id', 'checklist',
         ]
+        read_only_fields = ['id']
 
     def validate_title(self, value):
         if not value or not value.strip():

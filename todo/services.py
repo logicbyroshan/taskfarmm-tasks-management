@@ -314,7 +314,7 @@ class CategoryService:
         Returns all categories for a user annotated with task counts
         and a computed progress percentage.
         """
-        categories = (
+        categories = list(
             Category.objects
             .filter(user=user)
             .annotate(
@@ -468,7 +468,7 @@ class PreDefinedTaskService:
             status=Task.Status.TO_DO,
             is_predefined=True,
         )
-        logger.info('Predefined task added: predefined_id=%d task_id=%d user=%s',
+        logger.info('Predefined task added: predefined_id=%s task_id=%d user=%s',
                     predefined_id, task.id, user.username)
         return task
 

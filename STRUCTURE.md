@@ -17,7 +17,7 @@ TaskFlixx/
 │   ├── __init__.py
 │   ├── asgi.py                      # ASGI entry point for async servers
 │   ├── settings.py                  # Environment-aware Django settings & WhiteNoise
-│   ├── urls.py                      # Global URL router
+│   ├── urls.py                      # Global URL router (admin, /api/v1/, web app)
 │   └── wsgi.py                      # Production WSGI entry point
 ├── static/                          # Static UI assets
 │   └── todo/
@@ -28,7 +28,8 @@ TaskFlixx/
 │       │   ├── task-categories.css  # Project board cards & progress metrics
 │       │   └── settings.css         # Profile & preferences forms
 │       ├── js/
-│       │   └── script.js            # 60fps Wave canvas, modals, search, toasts
+│       │   ├── script.js            # 60fps Wave canvas, modals, search, toasts
+│       │   └── sw.js                # Service worker for offline caching
 │       └── images/
 │           └── logo.png             # Official TaskFlixx brand mark
 ├── templates/                       # Semantic HTML5 Django Templates
@@ -40,18 +41,30 @@ TaskFlixx/
 │       ├── manage-projects.html     # Project management and modals
 │       ├── task-categories.html     # Projects alias
 │       ├── ai_assistant.html        # ChatGPT-style AI Workspace
-│       └── settings.html            # Profile, notification switches, JSON/CSV export
+│       ├── settings.html            # Profile, notification switches, JSON/CSV export
+│       └── components/              # Modular template components & modals
 ├── todo/                            # Core Django Application
 │   ├── admin.py                     # Django admin model registrations
 │   ├── apps.py                      # Application configuration
 │   ├── context_processors.py        # Global template context injectors
 │   ├── forms.py                     # ModelForms for Tasks, Projects, and Users
-│   ├── middleware.py                # Authentication and session middleware
+│   ├── middleware.py                # Authentication and demo middleware
 │   ├── models.py                    # Task, Category, PreDefinedTask, UserProfile
-│   ├── urls.py                      # All 24 route patterns
-│   └── views.py                     # Views & REST APIs
+│   ├── services.py                  # Domain service layer (Task, Category, Stats, Export)
+│   ├── serializers.py               # Django REST Framework serializers
+│   ├── api_auth.py                  # JWT session bridge & token verification
+│   ├── urls.py                      # Internal session/AJAX routes
+│   ├── api/                         # REST API v1 Package
+│   │   ├── urls.py                  # REST API v1 URL routes
+│   │   └── views.py                 # DRF ViewSets & API Views
+│   └── tests/                       # 32 Automated Unit & Integration Tests
+│       ├── test_models.py           # Model tests
+│       ├── test_services.py         # Service layer tests
+│       ├── test_views.py            # View & HTMX tests
+│       └── test_api.py              # REST API v1 & JWT tests
 ├── .env.example                     # Environment variable blueprint
 ├── .gitignore                       # Git ignore list
+├── API.md                           # Complete REST API v1 & AJAX reference
 ├── CODE_OF_CONDUCT.md               # Contributor Covenant Code of Conduct
 ├── CONTRIBUTING.md                  # Contribution and Pull Request workflow
 ├── LICENSE                          # MIT Open Source License

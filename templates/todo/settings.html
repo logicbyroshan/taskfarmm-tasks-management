@@ -266,7 +266,7 @@
 <!-- Hidden clear data form -->
 <form id="clear-data-form" method="post" action="{% url 'settings' %}" style="display: none;">
     {% csrf_token %}
-    <input type="hidden" name="action" value="clear_data">
+    <input type="hidden" name="action" id="clear-data-action" value="clear_tasks">
     <input type="hidden" name="confirm_clear" value="yes">
 </form>
 {% endblock content %}
@@ -278,27 +278,35 @@
         fetch('/api/stats/')
             .then(r => r.json())
             .then(data => {
-                if (data.success) {
-                    document.getElementById('stat-total-tasks').textContent = data.stats.total;
-                    document.getElementById('stat-done-tasks').textContent = data.stats.done;
-                    document.getElementById('stat-progress-tasks').textContent = data.stats.in_progress;
-                    document.getElementById('stat-overdue-tasks').textContent = data.stats.overdue;
+                if (data.success && data.stats) {
+                    const s = data.stats;
+                    const total = s.total_count !== undefined ? s.total_count : (s.total || 0);
+                    const done = s.done_count !== undefined ? s.done_count : (s.done || 0);
+                    const inProg = s.in_progress_count !== undefined ? s.in_progress_count : (s.in_progress || 0);
+                    const overdue = s.overdue_count !== undefined ? s.overdue_count : (s.overdue || 0);
+
+                    document.getElementById('stat-total-tasks').textContent = total;
+                    document.getElementById('stat-done-tasks').textContent = done;
+                    document.getElementById('stat-progress-tasks').textContent = inProg;
+                    document.getElementById('stat-overdue-tasks').textContent = overdue;
                 }
             })
             .catch(() => {});
     });
 
     function confirmClearTasks() {
-        if (confirm('Are you sure? This will permanently delete ALL your tasks. This cannot be undone.')) {
+        if (confirm('Are you sure? This will permanently delete ALL your tasks. Your projects will remain intact.')) {
+            document.getElementById('clear-data-action').value = 'clear_tasks';
             document.getElementById('clear-data-form').submit();
         }
     }
 
     function confirmClearAll() {
-        const input = prompt('Type "DELETE" to confirm clearing all data:');
+        const input = prompt('Type "DELETE" to confirm permanently clearing ALL your tasks AND projects:');
         if (input === 'DELETE') {
+            document.getElementById('clear-data-action').value = 'clear_all';
             document.getElementById('clear-data-form').submit();
-        } else {
+        } else if (input !== null) {
             alert('Confirmation failed. No data was deleted.');
         }
     }
