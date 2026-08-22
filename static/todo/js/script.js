@@ -1420,12 +1420,12 @@ function renderTrelloChecklist(items) {
     if (fillBar) fillBar.style.width = `${pct}%`;
 
     container.innerHTML = items.map((item, idx) => `
-        <div class="checklist-item-row" id="chk-item-${item.id || idx}" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; background: #16181d; border: 1px solid #22272b; border-radius: 4px; transition: all 0.15s ease;">
-            <label style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; margin: 0; min-width: 0;">
-                <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTrelloChecklistItem('${item.id || idx}', this.checked)" style="width: 15px; height: 15px; min-width: 15px; cursor: pointer; accent-color: #579dff; margin: 0;">
-                <span id="chk-text-${item.id || idx}" style="font-size: 0.825rem; color: ${item.completed ? '#8c9bab' : '#dee4ea'}; text-decoration: ${item.completed ? 'line-through' : 'none'}; word-break: break-word; line-height: 1.35;">${escapeHtml(item.text)}</span>
+        <div class="checklist-item-row" id="chk-item-${item.id || idx}" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; background: #16181d; border: 1px solid #24292e; border-radius: 5px; transition: all 0.15s ease;">
+            <label style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; margin: 0; min-width: 0;">
+                <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTrelloChecklistItem('${item.id || idx}', this.checked)" style="width: 16px; height: 16px; min-width: 16px; cursor: pointer; accent-color: #579dff; margin: 0;">
+                <span id="chk-text-${item.id || idx}" style="font-size: 0.85rem; color: ${item.completed ? '#8c9bab' : '#dee4ea'}; text-decoration: ${item.completed ? 'line-through' : 'none'}; word-break: break-word; line-height: 1.4;">${escapeHtml(item.text)}</span>
             </label>
-            <button type="button" onclick="deleteTrelloChecklistItem('${item.id || idx}')" title="Delete item" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; padding: 2px 4px; font-size: 0.75rem; border-radius: 3px; transition: color 0.15s ease;" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#8c9bab'">
+            <button type="button" onclick="deleteTrelloChecklistItem('${item.id || idx}')" title="Delete item" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; padding: 2px 5px; font-size: 0.775rem; border-radius: 3px; transition: color 0.15s ease;" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#8c9bab'">
                 <i class="fas fa-trash-alt"></i>
             </button>
         </div>
