@@ -35,90 +35,87 @@ window.toggleSidebarCollapse = function() {
 };
 
 // Global expose so onclick="openAddTaskModal()" and "openAddProjectModal()" work from HTML
-// Global expose so onclick="openAddTaskModal()" and "openAddProjectModal()" work from HTML
+// Global Quick Add Task Modal Handlers
 window.openAddTaskModal = function(initialStatus = 'not-started', initialCategory = '') {
-    const trelloModal = document.getElementById('trello-task-modal');
-    if (!trelloModal) return;
+    const modal = document.getElementById('add-task-modal');
+    if (!modal) return;
 
-    currentTrelloTask = null;
-    const titleInput = document.getElementById('trello-task-title-input');
-    const projText = document.getElementById('trello-project-text');
-    const statusSelect = document.getElementById('trello-status-select');
-    const prioSelect = document.getElementById('trello-priority-select');
-    const projSelect = document.getElementById('trello-project-select');
-    const dueInput = document.getElementById('trello-due-date-input');
-    const descDisplay = document.getElementById('trello-desc-display');
-    const descInput = document.getElementById('trello-description-input');
-    const checklistSec = document.getElementById('trello-checklist-section');
-    const metadataRow = document.getElementById('trello-metadata-badges-row');
+    const titleInput = document.getElementById('add-task-title-input');
+    const statusSelect = document.getElementById('add-task-status-input');
+    const catSelect = document.getElementById('add-task-category-input');
+    const prioSelect = document.getElementById('add-task-priority-input');
+    const dueInput = document.getElementById('add-task-due-date-input');
 
-    const statusNames = {
-        'not-started': 'To Do',
-        'in-progress': 'In Progress',
-        'backlog': 'Backlog',
-        'on-hold': 'On Hold',
-        'completed': 'Done',
-        'canceled': 'Canceled'
-    };
-
-    const activeProjSelect = document.getElementById('kanban-project-select');
-    const currentProjId = initialCategory || (activeProjSelect ? activeProjSelect.value : '');
-    const currentProjName = activeProjSelect && activeProjSelect.selectedIndex >= 0 
-        ? activeProjSelect.options[activeProjSelect.selectedIndex].text.replace(/^[📁\s]+|\s*\(\d+\)$/g, '').trim()
-        : 'General';
-
-    if (titleInput) {
-        titleInput.value = '';
-        titleInput.placeholder = 'Enter card title...';
-    }
-    if (projText) projText.textContent = currentProjName || 'General';
-    
-    const statusPillText = document.getElementById('trello-status-pill-text');
-    if (statusPillText) statusPillText.textContent = statusNames[initialStatus] || 'To Do';
-
-    const prioPillText = document.getElementById('trello-priority-pill-text');
-    const prioDot = document.getElementById('trello-priority-dot');
-    if (prioPillText) prioPillText.textContent = 'Moderate';
-    if (prioDot) prioDot.textContent = '🟡';
-
+    if (titleInput) titleInput.value = '';
     if (statusSelect) statusSelect.value = initialStatus || 'not-started';
     if (prioSelect) prioSelect.value = 'moderate';
-    if (projSelect) projSelect.value = currentProjId || '';
     if (dueInput) dueInput.value = '';
-    if (descDisplay) {
-        descDisplay.textContent = 'Add a more detailed description...';
-        descDisplay.style.color = '#8c9bab';
-    }
-    if (descInput) descInput.value = '';
-    if (checklistSec) checklistSec.style.display = 'none';
-    if (metadataRow) metadataRow.style.display = 'none';
 
-    updateTrelloStatusBadge(initialStatus || 'not-started');
-    updateTrelloCompleteIcon(false);
+    // If on Kanban, get currently selected project
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeProjFromUrl = urlParams.get('project');
+    const kanbanProjSelect = document.getElementById('kanban-project-select');
+    const selectedProj = initialCategory || activeProjFromUrl || (kanbanProjSelect ? kanbanProjSelect.value : '');
 
-    const stream = document.getElementById('trello-comments-stream');
-    if (stream) {
-        stream.innerHTML = `
-            <div class="activity-log-item" style="display: flex; gap: 10px; align-items: flex-start;">
-                <div style="width: 30px; height: 30px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
-                    PA
-                </div>
-                <div style="flex: 1; font-size: 0.85rem; line-height: 1.4;">
-                    <div>
-                        <strong style="color: #dee4ea;">You</strong> 
-                        <span style="color: #9fadbc;">are creating this card in</span> 
-                        <strong style="color: #dee4ea;">${statusNames[initialStatus] || 'To Do'}</strong>
-                    </div>
-                    <div style="color: #579dff; font-size: 0.75rem; text-decoration: underline; margin-top: 2px;">
-                        just now
-                    </div>
-                </div>
-            </div>
-        `;
+    if (catSelect && selectedProj) {
+        catSelect.value = selectedProj;
     }
 
-    trelloModal.style.display = 'flex';
-    setTimeout(() => { if (titleInput) titleInput.focus(); }, 80);
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        if (titleInput) titleInput.focus();
+    }, 60);
+};
+
+window.closeAddTaskModal = function() {
+    const modal = document.getElementById('add-task-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.handleAddTaskFormSubmit = function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = document.getElementById('add-task-submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    }
+
+    const formData = new FormData(form);
+    const csrfToken = getCsrfToken() || form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+    fetch(form.action || '/task/create/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            closeAddTaskModal();
+            if (window.showToast) {
+                window.showToast(`Task "${data.task.title}" created successfully!`, 'success', 1200);
+            }
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
+        } else {
+            alert(data.message || (data.errors ? JSON.stringify(data.errors) : 'Error creating task.'));
+        }
+    })
+    .catch(err => {
+        console.error('Error creating task:', err);
+        alert('Network error while creating task.');
+    })
+    .finally(() => {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Task';
+        }
+    });
 };
 
 window.openAddProjectModal = function() {
