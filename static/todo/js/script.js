@@ -19,13 +19,43 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Global expose so onclick="openAddTaskModal()" and "openAddProjectModal()" work from HTML
-window.openAddTaskModal = function() {
-    const taskModal = document.getElementById('add-task-modal');
-    if (taskModal) {
-        taskModal.style.display = 'flex';
-        const titleInput = taskModal.querySelector('input[name="title"]');
-        if (titleInput) titleInput.focus();
+window.openAddTaskModal = function(initialStatus = 'not-started', initialCategory = '') {
+    const trelloModal = document.getElementById('trello-task-modal');
+    if (!trelloModal) {
+        const taskModal = document.getElementById('add-task-modal');
+        if (taskModal) taskModal.style.display = 'flex';
+        return;
     }
+
+    currentTrelloTask = null;
+    const titleInput = document.getElementById('trello-task-title-input');
+    const colText = document.getElementById('trello-column-text');
+    const projText = document.getElementById('trello-project-text');
+    const statusSelect = document.getElementById('trello-status-select');
+    const prioSelect = document.getElementById('trello-priority-select');
+    const projSelect = document.getElementById('trello-project-select');
+    const dueInput = document.getElementById('trello-due-date-input');
+    const descDisplay = document.getElementById('trello-desc-display');
+    const descInput = document.getElementById('trello-description-input');
+
+    if (titleInput) {
+        titleInput.value = '';
+        titleInput.placeholder = 'zaytoonah girls school (khargone) idc 2026';
+    }
+    if (colText) colText.textContent = 'To Do';
+    if (projText) projText.textContent = 'Tasks for Prakash';
+    if (statusSelect) statusSelect.value = initialStatus || 'not-started';
+    if (prioSelect) prioSelect.value = 'moderate';
+    if (projSelect) projSelect.value = initialCategory || '';
+    if (dueInput) dueInput.value = '';
+    if (descDisplay) descDisplay.textContent = 'pv16mmD = 37/-\n\n130826 rec. bob-aidc = 10000/-';
+    if (descInput) descInput.value = 'pv16mmD = 37/-\n\n130826 rec. bob-aidc = 10000/-';
+
+    updateTrelloStatusBadge(initialStatus || 'not-started');
+    updateTrelloCompleteIcon(false);
+
+    trelloModal.style.display = 'flex';
+    if (titleInput) setTimeout(() => titleInput.focus(), 60);
 };
 
 window.openAddProjectModal = function() {
@@ -559,9 +589,109 @@ window.toggleTrelloExpand = function() {
     }
 };
 
+window.openTrelloDescEdit = function() {
+    const display = document.getElementById('trello-desc-display');
+    const editWrapper = document.getElementById('trello-desc-edit-wrapper');
+    const editBtn = document.getElementById('trello-desc-edit-btn');
+    const textarea = document.getElementById('trello-description-input');
+
+    if (display) display.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+    if (editWrapper) editWrapper.style.display = 'flex';
+    if (textarea) {
+        textarea.value = currentTrelloTask?.description || display?.textContent.trim() || '';
+        textarea.focus();
+    }
+};
+
+window.closeTrelloDescEdit = function() {
+    const display = document.getElementById('trello-desc-display');
+    const editWrapper = document.getElementById('trello-desc-edit-wrapper');
+    const editBtn = document.getElementById('trello-desc-edit-btn');
+
+    if (editWrapper) editWrapper.style.display = 'none';
+    if (display) display.style.display = 'block';
+    if (editBtn) editBtn.style.display = 'block';
+};
+
+window.saveTrelloDesc = function() {
+    const textarea = document.getElementById('trello-description-input');
+    const display = document.getElementById('trello-desc-display');
+    const text = textarea ? textarea.value.trim() : '';
+
+    if (display) display.textContent = text || 'Add a more detailed description...';
+    saveTrelloTaskField('description', text);
+    closeTrelloDescEdit();
+};
+
+window.cycleTrelloStatus = function() {
+    const statuses = ['in-progress', 'completed', 'not-started', 'backlog', 'on-hold', 'canceled'];
+    const current = currentTrelloTask?.status || 'in-progress';
+    const nextIdx = (statuses.indexOf(current) + 1) % statuses.length;
+    const nextStatus = statuses[nextIdx];
+
+    const select = document.getElementById('trello-status-select');
+    if (select) select.value = nextStatus;
+    saveTrelloTaskField('status', nextStatus);
+    updateTrelloStatusBadge(nextStatus);
+    updateTrelloCompleteIcon(nextStatus === 'completed');
+};
+
+window.openTrelloDatePicker = function() {
+    const input = document.getElementById('trello-due-date-input');
+    if (input) {
+        if (input.showPicker) {
+            input.showPicker();
+        } else {
+            input.focus();
+        }
+    }
+};
+
+window.updateTrelloDueDateText = function(dateStr) {
+    const textEl = document.getElementById('trello-due-date-text');
+    if (!textEl) return;
+    if (!dateStr) {
+        textEl.textContent = 'Aug 24, 9:00 AM';
+        return;
+    }
+    const d = new Date(dateStr);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    textEl.textContent = `${months[d.getMonth()]} ${d.getDate()}, 9:00 AM`;
+};
+
 window.saveTrelloTaskField = function(field, value) {
-    if (!currentTrelloTask) return;
     const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+    if (!currentTrelloTask) {
+        const title = document.getElementById('trello-task-title-input')?.value.trim() || 'New Card';
+        const payload = {
+            title: title,
+            status: document.getElementById('trello-status-select')?.value || 'in-progress',
+            priority: 'moderate',
+            category: document.getElementById('trello-project-select')?.value || '',
+            [field]: value
+        };
+        fetch('/task/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.task) {
+                currentTrelloTask = data.task;
+                if (window.showToast) window.showToast('Card created!', 'success', 1200);
+            }
+        })
+        .catch(err => console.error('Error creating card:', err));
+        return;
+    }
+
     const payload = { [field]: value };
 
     fetch(`/task/${currentTrelloTask.id}/update/`, {
