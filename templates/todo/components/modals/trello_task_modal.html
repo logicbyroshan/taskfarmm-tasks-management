@@ -228,7 +228,24 @@
                 </div>
 
                 <!-- Dynamic Activity & Comments Stream -->
-                <div id="trello-comments-stream" style="display: flex; flex-direction: column; gap: 14px; margin-top: 4px; flex: 1;"></div>
+                <div id="trello-comments-stream" style="display: flex; flex-direction: column; gap: 14px; margin-top: 4px; flex: 1; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <!-- FULL-WIDTH FIXED BOTTOM FOOTER BAR (Anchored at bottom with topbar theme, never scrolls) -->
+        <div class="trello-modal-bottombar" id="trello-modal-bottombar" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: #14171a; border-top: 1px solid #22272b; flex-shrink: 0; font-size: 0.775rem; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div id="trello-bottom-avatar" style="width: 22px; height: 22px; min-width: 22px; min-height: 22px; border-radius: 4px; background: #0c66e4; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
+                    DE
+                </div>
+                <div style="line-height: 1.3;">
+                    <strong id="trello-bottom-author" style="color: #dee4ea;">demo_user</strong> 
+                    <span style="color: #8c9bab;">added this card to</span> 
+                    <strong id="trello-bottom-list" style="color: #579dff;">General</strong>
+                </div>
+            </div>
+            <div id="trello-bottom-time" style="color: #8c9bab; font-size: 0.725rem; white-space: nowrap;">
+                22 Aug 2026, 12:04
             </div>
         </div>
     </div>

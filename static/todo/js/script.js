@@ -1464,7 +1464,6 @@ function escapeHtml(text) {
 
 function renderTrelloComments(comments = [], task = null) {
     const container = document.getElementById('trello-comments-stream');
-    if (!container) return;
 
     const t = task || currentTrelloTask;
     const author = (t && t.user) ? t.user : 'You';
@@ -1473,9 +1472,25 @@ function renderTrelloComments(comments = [], task = null) {
     const listName = (t && (t.category_name || t.status_display)) ? (t.category_name || t.status_display) : 'General';
     const timeText = (t && t.created_at) ? t.created_at : 'Just now';
 
+    // Update Full-Width Fixed Bottom Footer Bar (never scrolls with chat/comments)
+    const bAvatar = document.getElementById('trello-bottom-avatar');
+    const bAuthor = document.getElementById('trello-bottom-author');
+    const bList = document.getElementById('trello-bottom-list');
+    const bTime = document.getElementById('trello-bottom-time');
+
+    if (bAvatar) {
+        bAvatar.textContent = initials;
+        bAvatar.style.background = avatarBg;
+    }
+    if (bAuthor) bAuthor.textContent = author;
+    if (bList) bList.textContent = listName;
+    if (bTime) bTime.textContent = timeText;
+
+    if (!container) return;
+
     let html = '';
 
-    // Render Comments first
+    // Render Comments only in the scrollable stream
     if (comments && comments.length > 0) {
         html += '<div style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto;">';
         html += comments.map(c => {
@@ -1509,7 +1524,7 @@ function renderTrelloComments(comments = [], task = null) {
                             <div style="display: flex; align-items: center; gap: 4px;">
                                 <strong style="color: #9fadbc; font-size: 0.725rem; font-weight: 600;">${cUser}</strong>
                                 <span style="color: #6b7785; font-size: 0.7rem;">${cTime}</span>
-                                ${c.is_edited ? '<span style="color: #579dff; font-size: 0.65rem; font-style: italic;">(edited)</span>' : ''}
+                                ${c.is_edited ? '<span style="color: #579dff; font-size: 0.65rem; font-style: italic; margin-left: 3px;">(edited)</span>' : ''}
                             </div>
                         </div>
                     </div>
@@ -1518,25 +1533,6 @@ function renderTrelloComments(comments = [], task = null) {
         }).join('');
         html += '</div>';
     }
-
-    // Activity Log Entry: Sticked at the very bottom of the feed
-    html += `
-        <div class="activity-log-item" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 10px; border-top: 1px solid #22272b; font-size: 0.775rem;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; max-width: 24px; max-height: 24px; border-radius: 4px; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
-                    ${initials}
-                </div>
-                <div style="line-height: 1.3;">
-                    <strong style="color: #dee4ea;">${author}</strong> 
-                    <span style="color: #8c9bab;">added this card to</span> 
-                    <strong style="color: #579dff;">${listName}</strong>
-                </div>
-            </div>
-            <div style="color: #8c9bab; font-size: 0.725rem; white-space: nowrap;">
-                ${timeText}
-            </div>
-        </div>
-    `;
 
     container.innerHTML = html;
 }
