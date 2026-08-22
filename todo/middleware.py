@@ -35,8 +35,8 @@ class DemoAuthMiddleware:
     def __call__(self, request):
         enable_demo = getattr(settings, 'ENABLE_DEMO_AUTH', True)
         
-        # Don't auto-login on admin, logout, or explicit API auth paths
-        exempt_prefixes = ('/admin/', '/logout/', '/api/v1/auth/')
+        # Don't auto-login on admin, auth pages (login/register), logout, or explicit API auth paths
+        exempt_prefixes = ('/admin/', '/login/', '/register/', '/signup/', '/logout/', '/api/v1/auth/', '/api/auth/')
         is_exempt_path = any(request.path.startswith(prefix) for prefix in exempt_prefixes)
 
         if enable_demo and not is_exempt_path and not request.user.is_authenticated:

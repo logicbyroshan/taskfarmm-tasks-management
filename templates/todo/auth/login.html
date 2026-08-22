@@ -1,0 +1,276 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - TaskFlixx</title>
+    <meta name="description" content="Sign in to TaskFlixx, next-generation smart task and project orchestration platform.">
+    <link rel="icon" type="image/png" href="{% static 'todo/images/logo.png' %}">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Auth Styles -->
+    <link rel="stylesheet" href="{% static 'todo/css/auth.css' %}?v=1">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <!-- 60FPS Ambient Dynamic Cool Wave Canvas -->
+        <canvas id="auth-wave-canvas" class="auth-wave-canvas"></canvas>
+
+        <div class="auth-container">
+            <!-- LEFT HERO: Platform Features & Highlights Showcase -->
+            <div class="auth-hero">
+                <div>
+                    <div class="auth-hero-brand">
+                        <img src="{% static 'todo/images/logo.png' %}" alt="TaskFlixx Logo" class="auth-hero-logo">
+                        <h1 class="auth-hero-title">TaskFlixx</h1>
+                    </div>
+
+                    <h2 class="auth-hero-tagline">Orchestrate Projects with Next-Gen Intelligence</h2>
+                    <p class="auth-hero-desc">
+                        A pure OLED pitch-black orchestration hub with multi-workflow Kanban, multi-lingual OpenHinglish autocorrect, and instant AI task breakdown.
+                    </p>
+
+                    <div class="auth-features-list">
+                        <div class="auth-feature-item">
+                            <div class="auth-feature-icon" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+                                <i class="fas fa-columns"></i>
+                            </div>
+                            <div class="auth-feature-text">
+                                <h4>Smart & Super Kanban Workflows</h4>
+                                <p>Switch between 4-list agile delivery and 6-column full-lifecycle board pipelines with live drag-and-drop.</p>
+                            </div>
+                        </div>
+
+                        <div class="auth-feature-item">
+                            <div class="auth-feature-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                            <div class="auth-feature-text">
+                                <h4>OpenHinglish Spell-Check & Normalizer</h4>
+                                <p>Auto-correct typos across English, transliterated Hindi, and Hinglish shorthand seamlessly.</p>
+                            </div>
+                        </div>
+
+                        <div class="auth-feature-item">
+                            <div class="auth-feature-icon" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa;">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="auth-feature-text">
+                                <h4>ChatGPT-Style AI Assistant Copilot</h4>
+                                <p>Summon the AI side drawer to auto-generate project roadmaps and 1-click structured tasks.</p>
+                            </div>
+                        </div>
+
+                        <div class="auth-feature-item">
+                            <div class="auth-feature-icon" style="background: rgba(6, 182, 212, 0.15); color: #22d3ee;">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="auth-feature-text">
+                                <h4>Zero-Reload SPA Performance</h4>
+                                <p>Instant live DOM task creation, deletion, column moves, and smooth modal transitions.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Stats Pills -->
+                <div class="auth-hero-stats">
+                    <span class="auth-stat-pill"><i class="fas fa-layer-group" style="color: #60a5fa;"></i> 39+ Templates</span>
+                    <span class="auth-stat-pill"><i class="fas fa-check-double" style="color: #34d399;"></i> 6 Workflow Lists</span>
+                    <span class="auth-stat-pill"><i class="fas fa-globe" style="color: #a78bfa;"></i> OpenHinglish NLP</span>
+                    <span class="auth-stat-pill"><i class="fas fa-moon" style="color: #f59e0b;"></i> OLED Pure Black</span>
+                </div>
+            </div>
+
+            <!-- RIGHT FORM PANEL: Sign In -->
+            <div class="auth-form-panel">
+                <!-- Navigation Tabs: Sign In / Create Account -->
+                <div class="auth-tabs-nav">
+                    <a href="{% url 'login' %}" class="auth-tab-btn active">Sign In</a>
+                    <a href="{% url 'register' %}" class="auth-tab-btn">Create Account</a>
+                </div>
+
+                <div class="auth-header">
+                    <h2>Welcome back</h2>
+                    <p>Enter your credentials to access your orchestration workspace.</p>
+                </div>
+
+                <!-- One-Click Instant Demo Login Profiles -->
+                <div class="auth-quick-login-section">
+                    <div class="auth-quick-login-title">
+                        <i class="fas fa-bolt" style="color: #f59e0b;"></i> 1-Click Instant Demo Access:
+                    </div>
+                    <div class="auth-quick-pills-row">
+                        <button type="button" class="auth-demo-btn" onclick="quickDemoLogin('demo_user')">
+                            <span class="auth-demo-avatar" style="background: #3b82f6;">D</span> Demo Admin
+                        </button>
+                        <button type="button" class="auth-demo-btn" onclick="quickDemoLogin('prakash_ahuja')">
+                            <span class="auth-demo-avatar" style="background: #10b981;">P</span> Prakash
+                        </button>
+                        <button type="button" class="auth-demo-btn" onclick="quickDemoLogin('adarsh_computer')">
+                            <span class="auth-demo-avatar" style="background: #8b5cf6;">A</span> Adarsh
+                        </button>
+                        <button type="button" class="auth-demo-btn" onclick="quickDemoLogin('kamal_dewnani')">
+                            <span class="auth-demo-avatar" style="background: #06b6d4;">K</span> Kamal
+                        </button>
+                        <button type="button" class="auth-demo-btn" onclick="quickDemoLogin('roshan_damor')">
+                            <span class="auth-demo-avatar" style="background: #ec4899;">R</span> Roshan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="auth-divider">Or continue with account</div>
+
+                {% if error_message %}
+                <div class="auth-error-alert" style="margin-bottom: 16px;">
+                    <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                    <span>{{ error_message }}</span>
+                </div>
+                {% endif %}
+
+                {% if messages %}
+                <div style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
+                    {% for msg in messages %}
+                    <div class="auth-error-alert" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #93c5fd;">
+                        <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
+                        <span>{{ msg }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Main Login Form -->
+                <form method="post" action="{% url 'login' %}" class="auth-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <div class="auth-field-group">
+                        <label for="id_username">Username or Email</label>
+                        <div class="auth-input-wrapper">
+                            {{ form.username }}
+                        </div>
+                        {{ form.username.errors }}
+                    </div>
+
+                    <div class="auth-field-group">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <label for="id_password">Password</label>
+                        </div>
+                        <div class="auth-input-wrapper">
+                            {{ form.password }}
+                            <i class="fas fa-eye auth-input-icon" id="toggle-password-icon" onclick="togglePasswordVisibility('id_password', 'toggle-password-icon')"></i>
+                        </div>
+                        {{ form.password.errors }}
+                    </div>
+
+                    <div class="auth-remember-row">
+                        <label style="display: flex; align-items: center; gap: 8px; color: #8c9bab; cursor: pointer;">
+                            {{ form.remember_me }}
+                            <span>Keep me signed in</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="auth-submit-btn">
+                        <i class="fas fa-sign-in-alt"></i> Sign In to TaskFlixx
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script for Dynamic Wave Canvas & Quick Demo Login -->
+    <script>
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash auth-input-icon';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye auth-input-icon';
+            }
+        }
+
+        function quickDemoLogin(username) {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            fetch('/api/auth/switch-user/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ username: username })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{{ next }}' || '/kanban/';
+                } else {
+                    alert('Error: ' + (data.message || 'Login failed'));
+                }
+            })
+            .catch(() => {
+                window.location.href = '/kanban/';
+            });
+        }
+
+        // 60FPS Ambient Dynamic Cool Wave Canvas Simulation
+        (function initAuthCanvas() {
+            const canvas = document.getElementById('auth-wave-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            let t = 0;
+            const colors = [
+                'rgba(20, 184, 166, 0.22)', // Teal
+                'rgba(6, 182, 212, 0.24)',  // Cyan
+                'rgba(59, 130, 246, 0.26)', // Blue
+                'rgba(99, 102, 241, 0.22)', // Indigo
+                'rgba(139, 92, 246, 0.18)'  // Violet
+            ];
+
+            function render() {
+                t += 0.012;
+                ctx.clearRect(0, 0, width, height);
+
+                colors.forEach((color, i) => {
+                    ctx.beginPath();
+                    ctx.fillStyle = color;
+                    const amp = 40 + i * 15;
+                    const freq = 0.0015 + i * 0.0004;
+                    const phase = t + i * 1.2;
+
+                    ctx.moveTo(0, height);
+                    for (let x = 0; x <= width; x += 8) {
+                        const y = height * 0.55 + Math.sin(x * freq + phase) * amp + Math.cos(x * 0.002 + t * 0.8) * 20;
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.lineTo(width, height);
+                    ctx.closePath();
+                    ctx.fill();
+                });
+
+                requestAnimationFrame(render);
+            }
+            render();
+        })();
+    </script>
+</body>
+</html>

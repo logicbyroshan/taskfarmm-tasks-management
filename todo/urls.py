@@ -14,6 +14,10 @@ urlpatterns = [
     path('kanban/', views.manage_kanban, name='manage_kanban'),
     path('ai-assistant/', views.ai_assistant_page, name='ai_assistant'),
     path('settings/', views.settings_page, name='settings'),
+    # Authentication
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path('signup/', views.register_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
 
     # Task CRUD

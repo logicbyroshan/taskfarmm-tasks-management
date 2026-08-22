@@ -275,3 +275,48 @@ class ViewTests(TestCase):
         self.assertIn('send to:', data['corrected'].lower())
         self.assertIn('interview', data['corrected'].lower())
         self.assertTrue(data['changed'])
+
+    def test_login_view(self):
+        # Unauthenticated client
+        anon_client = Client()
+        get_res = anon_client.get(reverse('login'))
+        self.assertEqual(get_res.status_code, 200)
+        self.assertTemplateUsed(get_res, 'todo/auth/login.html')
+
+        # Successful login
+        post_res = anon_client.post(reverse('login'), {
+            'username': 'viewuser',
+            'password': 'password123'
+        })
+        self.assertEqual(post_res.status_code, 302)
+        self.assertRedirects(post_res, reverse('dashboard'))
+
+    def test_register_view(self):
+        anon_client = Client()
+        get_res = anon_client.get(reverse('register'))
+        self.assertEqual(get_res.status_code, 200)
+        self.assertTemplateUsed(get_res, 'todo/auth/register.html')
+
+        post_res = anon_client.post(reverse('register'), {
+            'first_name': 'New Tester',
+            'username': 'newtester',
+            'email': 'newtester@example.com',
+            'password': 'safePassword999',
+            'confirm_password': 'safePassword999'
+        })
+        self.assertEqual(post_res.status_code, 302)
+        self.assertRedirects(post_res, reverse('dashboard'))
+        self.assertTrue(User.objects.filter(username='newtester').exists())
+
+    def test_logout_view(self):
+        res = self.client.get(reverse('logout'))
+        self.assertEqual(res.status_code, 302)
+        self.assertRedirects(res, reverse('login'))
+
+    def test_stats_api_comprehensive(self):
+        res = self.client.get(reverse('stats_api'))
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['success'])
+        self.assertIn('projects_count', data['stats'])
+        self.assertEqual(data['stats']['total_count'], 1)

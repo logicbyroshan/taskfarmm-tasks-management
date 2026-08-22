@@ -26,7 +26,8 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib import messages
-from django.contrib.auth import update_session_auth_hash, logout as auth_logout
+from django.contrib.auth import update_session_auth_hash, authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.utils.timesince import timesince
@@ -34,7 +35,10 @@ from django.core.files.base import ContentFile
 
 # Local models, forms, and services
 from .models import Task, Category, UserProfile, TaskComment, TaskAttachment
-from .forms import TaskForm, CategoryForm, UserUpdateForm, UserProfileForm, PasswordUpdateForm
+from .forms import (
+    TaskForm, CategoryForm, UserUpdateForm, UserProfileForm, 
+    PasswordUpdateForm, LoginForm, RegisterForm
+)
 from .autocorrect import autocorrect_text
 from .services import (
     TaskService, CategoryService, ExportService,
@@ -229,11 +233,98 @@ def settings_page(request):
     return render(request, 'todo/settings.html', context)
 
 
+def login_view(request):
+    """
+    Dedicated TaskFlixx Authentication Page.
+    Handles user login with showcase of platform features and instant demo logins.
+    """
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    form = LoginForm(request.POST or None)
+    error_message = None
+
+    if request.method == 'POST' and form.is_valid():
+        username_or_email = form.cleaned_data['username'].strip()
+        password = form.cleaned_data['password']
+        remember_me = form.cleaned_data.get('remember_me', True)
+
+        # Allow logging in via username or email
+        user_obj = None
+        if '@' in username_or_email:
+            user_obj = User.objects.filter(email__iexact=username_or_email).first()
+        if not user_obj:
+            user_obj = User.objects.filter(username__iexact=username_or_email).first()
+
+        user = None
+        if user_obj:
+            user = authenticate(request, username=user_obj.username, password=password)
+
+        if user is not None:
+            auth_login(request, user)
+            if not remember_me:
+                request.session.set_expiry(0)  # Session expires on browser close
+            else:
+                request.session.set_expiry(1209600)  # 2 weeks
+            messages.success(request, f'Welcome back, {user.first_name or user.username}!')
+            next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
+            return redirect(next_url)
+        else:
+            error_message = "Invalid username/email or password. Please check your credentials."
+
+    context = {
+        'form': form,
+        'error_message': error_message,
+        'next': request.GET.get('next', ''),
+        'active_auth_tab': 'login',
+    }
+    return render(request, 'todo/auth/login.html', context)
+
+
+def register_view(request):
+    """
+    Dedicated TaskFlixx Registration Page.
+    Creates a new user account with default setup, automatic login, and dashboard redirect.
+    """
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    form = RegisterForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        user = form.save(commit=False)
+        user.set_password(form.cleaned_data['password'])
+        user.save()
+
+        # Create default UserProfile
+        UserProfile.objects.get_or_create(user=user)
+
+        # Create default starter project
+        Category.objects.create(
+            user=user,
+            name="General Tasks",
+            color="#3b82f6",
+            description="Default workspace for your tasks & quick ideas.",
+            board_template=Category.BoardTemplate.SMART,
+        )
+
+        auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        messages.success(request, f'Welcome to TaskFlixx, {user.first_name or user.username}! Your workspace is ready.')
+        return redirect('dashboard')
+
+    context = {
+        'form': form,
+        'active_auth_tab': 'register',
+    }
+    return render(request, 'todo/auth/register.html', context)
+
+
 @login_required
 def logout_view(request):
     """Logs out the user and redirects to the login page."""
     auth_logout(request)
-    return redirect('dashboard')
+    messages.info(request, "You have been logged out successfully.")
+    return redirect('login')
 
 
 def switch_user(request):

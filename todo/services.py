@@ -87,6 +87,8 @@ class TaskService:
 
         completion_rate = int((done / total) * 100) if total > 0 else 0
 
+        projects_count = CategoryService.get_categories(user).count()
+
         return {
             'total_count': total,
             'done_count': done,
@@ -98,6 +100,7 @@ class TaskService:
             'overdue_count': overdue,
             'due_today_count': due_today,
             'completion_rate': completion_rate,
+            'projects_count': projects_count,
         }
 
     @staticmethod
@@ -409,6 +412,11 @@ class TaskService:
 
 class CategoryService:
     """Encapsulates all Category/Project-related business logic."""
+
+    @staticmethod
+    def get_categories(user):
+        """Returns categories owned by or shared with a user."""
+        return Category.objects.filter(Q(user=user) | Q(members=user)).distinct()
 
     @staticmethod
     def get_with_stats(user):
