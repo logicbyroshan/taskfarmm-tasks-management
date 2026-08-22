@@ -253,14 +253,20 @@ Authorization: Bearer <your_access_token>
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/task/create/` | Create task via session form |
-| `POST` | `/task/<id>/update/` | Inline update task (Trello modal / drag-and-drop) |
+| `POST` | `/task/<id>/update/` | Inline update task (Trello modal live save / drag-and-drop) |
 | `POST` | `/task/<id>/delete/` | Delete task |
 | `POST` | `/task/<id>/toggle/` | Toggle Done / To Do status |
-| `POST` | `/task/<id>/comment/` | Add comment |
-| `POST` | `/task/<id>/checklist/` | Update checklist |
+| `POST` | `/task/<id>/attachment/` | Upload file(s) or clipboard base64 pasted images to task |
+| `POST`/`DELETE` | `/task/attachment/<id>/delete/` | Delete task attachment |
+| `POST` | `/task/<id>/comment/` | Add activity comment |
+| `POST` | `/task/comment/<id>/edit/` | Edit activity comment inline |
+| `POST`/`DELETE` | `/task/comment/<id>/delete/` | Delete activity comment |
+| `POST` | `/task/<id>/checklist/` | Replace / sync task checklist items |
 | `POST` | `/projects/create/` | Create new project |
 | `POST` | `/category/<id>/update/` | Edit project |
 | `POST` | `/category/<id>/delete/` | Delete project |
+| `POST` | `/project/<id>/share/` | Generate collaboration share token |
+| `GET` | `/project/join/<token>/` | Join shared project board |
 | `GET` | `/api/stats/` | Fetch aggregated user stats |
 | `GET` | `/api/export/tasks/?format=json\|csv` | Export all tasks |
 | `POST` | `/api/ai/suggest/` | AI Action Plan assistant |

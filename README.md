@@ -31,9 +31,15 @@
 ### 🖤 Pure Pitch-Black OLED Aesthetic
 - **True `#000000` Dark Theme**: Curated high-contrast interface designed for OLED screens, featuring crisp borders (`#27272a`), neon accents, and zero slate/gray muddiness.
 
-### 📋 6-Column Drag-and-Drop Kanban Board
+### 📋 6-Column Drag-and-Drop Kanban Board & Trello-Style Modal
 - **Live Visual Workflow**: Seamless HTML5 drag-and-drop across `Backlog`, `To Do`, `In Progress`, `Done`, `On Hold`, and `Canceled`.
-- **Dynamic Counters**: Instant numeric badge updates, auto-strike-through on completion, and project switcher filter.
+- **Advanced Trello Task Modal**:
+  - **Full-Width Topbar**: Direct project, status, and priority selection with clean close button.
+  - **Task Attachments**: Upload PDFs, Word documents, Excel sheets, and images with automatic previews and download links.
+  - **Direct Clipboard Paste (`Ctrl + V`)**: Instantly paste screenshots or copied documents directly into descriptions and comments.
+  - **Interactive Checklists**: Editable checklist titles, auto-updating progress bar (`0-100%`), and inline item management.
+  - **Activity & Comment Stream**: Real-time discussions with author avatars, `@username` replies, and inline comment editing.
+  - **Full-Width Fixed Creation Log**: Permanently anchored footer bar showing card author, destination list, and timestamp.
 
 ### 🤖 Intelligent AI Assistant & Side Drawer
 - **ChatGPT-Style AI Workspace**: Interactive AI assistant that suggests comprehensive task breakdowns and one-click creates tasks and structured projects.
@@ -58,8 +64,8 @@
 TaskFlixx/
 ├── config/             # Django root configuration & WSGI/ASGI handlers
 ├── todo/               # Core application (models, views, forms, context processors)
-│   ├── models.py       # Task, Category, PreDefinedTask, UserProfile
-│   ├── views.py        # Dashboard, Kanban, All Tasks, Projects, AI & Export APIs
+│   ├── models.py       # Task, TaskAttachment, TaskComment, Category, PreDefinedTask, UserProfile
+│   ├── views.py        # Dashboard, Kanban, All Tasks, Projects, Attachments, Comments, AI & Export APIs
 │   └── forms.py        # TaskForm, CategoryForm, UserUpdateForm, Preferences
 ├── templates/todo/     # Django HTML5 semantic templates
 │   ├── base.html       # Global navigation, ambient canvas, AI drawer, modals
@@ -71,7 +77,7 @@ TaskFlixx/
 │   └── settings.html   # Profile, preferences, and data export
 ├── static/todo/        # Pure CSS and JavaScript assets
 │   ├── css/            # base.css, style.css, my-tasks.css, settings.css
-│   └── js/script.js    # Canvas engine, modal handlers, global search, toasts
+│   └── js/script.js    # Canvas engine, Trello modal engine, attachments, search, toasts
 └── requirements.txt    # Production dependencies
 ```
 
