@@ -8,12 +8,16 @@
 /* Horizontal Scrollable Kanban Container */
 .kanban-board-scroll-wrapper {
     width: 100%;
-    overflow-x: auto;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: scroll !important;
     overflow-y: hidden;
-    padding-bottom: 20px;
+    padding-bottom: 24px;
     margin-top: 10px;
     scrollbar-width: thin;
     scrollbar-color: #3b82f6 #09090b;
+    -webkit-overflow-scrolling: touch;
+    display: block;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar {
@@ -42,7 +46,8 @@
     grid-template-columns: repeat(6, 320px);
     gap: 16px;
     width: max-content;
-    min-width: 100%;
+    min-width: calc(6 * 320px + 5 * 16px);
+    padding-right: 24px;
 }
 
 .kanban-column {
@@ -569,5 +574,26 @@
             }
         }, 100);
     }
+
+    // Enable smooth mouse wheel horizontal panning over Kanban board
+    document.addEventListener('DOMContentLoaded', function() {
+        const scrollWrapper = document.querySelector('.kanban-board-scroll-wrapper');
+        if (scrollWrapper) {
+            scrollWrapper.addEventListener('wheel', function(e) {
+                const innerCards = e.target.closest('.kanban-cards-container');
+                if (innerCards && innerCards.scrollHeight > innerCards.clientHeight) {
+                    const atTop = innerCards.scrollTop === 0 && e.deltaY < 0;
+                    const atBottom = (innerCards.scrollHeight - innerCards.scrollTop <= innerCards.clientHeight + 2) && e.deltaY > 0;
+                    if (!atTop && !atBottom) {
+                        return; // Allow vertical scrolling inside column when not at edges
+                    }
+                }
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    scrollWrapper.scrollLeft += e.deltaY * 1.5;
+                }
+            }, { passive: false });
+        }
+    });
 </script>
 {% endblock scripts %}

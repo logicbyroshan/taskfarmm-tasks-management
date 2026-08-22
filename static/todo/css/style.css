@@ -147,7 +147,8 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     gap: 6px;
 }
 
-.sidebar-nav a {
+.sidebar-nav a,
+.sidebar-settings-link a {
     display: flex;
     align-items: center;
     padding: 10px 14px;
@@ -157,28 +158,41 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     border-radius: var(--radius-md);
     transition: var(--transition);
     border: 1px solid transparent;
+    text-decoration: none;
 }
 
-.sidebar-nav a i {
+.sidebar-nav a i,
+.sidebar-settings-link a i {
     margin-right: 12px;
     font-size: 1rem;
     width: 20px;
     text-align: center;
+    color: var(--text-muted);
+    transition: var(--transition);
 }
 
-.sidebar-nav a:hover {
-    background: #0c0c0c;
-    color: var(--highlight-color);
+.sidebar-nav a:hover,
+.sidebar-settings-link a:hover {
+    background: #0e0e10;
+    color: #ffffff;
+    border-color: #27272a;
 }
 
-.sidebar-nav li.active a {
+.sidebar-nav a:hover i,
+.sidebar-settings-link a:hover i {
+    color: #ffffff;
+}
+
+.sidebar-nav li.active a,
+.sidebar-settings-link.active a {
     background: rgba(59, 130, 246, 0.12);
     color: #60a5fa;
-    border-color: transparent;
+    border-color: rgba(59, 130, 246, 0.35);
     font-weight: 600;
 }
 
-.sidebar-nav li.active a i {
+.sidebar-nav li.active a i,
+.sidebar-settings-link.active a i {
     color: #60a5fa;
 }
 
@@ -190,37 +204,6 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     gap: 8px;
     width: 100%;
     box-sizing: border-box;
-}
-
-.sidebar-settings-link a {
-    display: flex;
-    align-items: center;
-    padding: 10px 14px;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: var(--radius-md);
-    transition: var(--transition);
-    border: 1px solid transparent;
-}
-
-.sidebar-settings-link a i {
-    margin-right: 12px;
-    font-size: 1rem;
-    width: 20px;
-    text-align: center;
-}
-
-.sidebar-settings-link a:hover {
-    background: #0c0c0c;
-    color: var(--highlight-color);
-}
-
-.sidebar-settings-link.active a {
-    background: rgba(59, 130, 246, 0.12);
-    color: #60a5fa;
-    border-color: rgba(59, 130, 246, 0.25);
-    font-weight: 600;
 }
 
 .sidebar-divider {
@@ -304,6 +287,8 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 /* Content Area Layout */
 .content-area {
     flex: 1;
+    min-width: 0;
+    width: 100%;
     padding: 0;
     background: transparent;
     border: none;
@@ -311,7 +296,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     flex-direction: column;
     gap: 20px;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     height: 100%;
     box-sizing: border-box;
 }
