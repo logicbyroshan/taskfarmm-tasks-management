@@ -1,4 +1,4 @@
-<!-- Trello-Style Add Task Modal (Exact Trello Card Layout Matching Screenshot 4) -->
+<!-- Master Trello Card Modal for Creating Tasks (Left-Right 2-Panel Architecture) -->
 <div id="add-task-modal" 
      class="task-modal" 
      style="display: none;" 
@@ -6,169 +6,130 @@
      aria-modal="true" 
      aria-labelledby="add-task-title-field">
     <div class="modal-backdrop" onclick="document.getElementById('add-task-modal').style.display='none';"></div>
-    <div class="modal-content trello-modal-content" style="max-width: 960px; width: 94%; max-height: 92vh; background: #121316; border: 1px solid #282e33; border-radius: 12px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; overflow: hidden; padding: 0; color: #b6c2cf;">
+    <div class="modal-content trello-modal-content">
         
-        <form id="add-task-form" class="task-form" method="post" action="{% url 'task_create' %}" style="display: flex; flex-direction: column; height: 100%; width: 100%; margin: 0;">
-            {% csrf_token %}
-
-            <!-- Modal Top Header / Breadcrumb Bar -->
-            <div class="trello-modal-header" style="padding: 16px 20px 12px 20px; border-bottom: 1px solid #22272b; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #16181d; flex-shrink: 0;">
-                <!-- Breadcrumb / Project Pill -->
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="display: inline-flex; align-items: center; gap: 6px; background: #22272b; border: 1px solid #333c43; border-radius: 4px; padding: 4px 10px; font-size: 0.8rem; color: #9fadbc;">
-                        <i class="fas fa-folder" style="color: #579dff; font-size: 0.75rem;"></i>
-                        <span id="add-task-project-label" style="font-weight: 500; color: #dee4ea;">General</span>
-                        <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab; margin-left: 2px;"></i>
-                    </div>
-                    <span style="color: #454f59; font-size: 0.8rem;">in list</span>
-                    <span id="add-task-column-label" style="color: #579dff; font-size: 0.825rem; font-weight: 600;">To Do</span>
+        <!-- LEFT PANEL: Task Context, Title, Actions, Description, Checklist -->
+        <div class="trello-modal-left">
+            
+            <!-- Breadcrumb Pill -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: inline-flex; align-items: center; gap: 6px; background: #282e33; color: #b6c2cf; border-radius: 4px; padding: 5px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer;" onclick="document.getElementById('add-task-category-select').focus()">
+                    <span id="add-task-project-label">Tasks for Roshan (D-G)</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab; margin-left: 2px;"></i>
                 </div>
+                <select id="add-task-category-select" name="category" onchange="document.getElementById('add-task-project-label').textContent = this.options[this.selectedIndex].text;" style="display: none;">
+                    <option value="">Tasks for Roshan (D-G)</option>
+                    {% for p in user.categories.all %}
+                    <option value="{{ p.id }}">{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <!-- Top Right Controls -->
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <button type="button" class="close-modal" onclick="document.getElementById('add-task-modal').style.display='none';" aria-label="Close modal" style="font-size: 1.25rem; color: #9fadbc; background: transparent; border: none; cursor: pointer; padding: 4px 8px; line-height: 1;">
-                        <i class="fas fa-times"></i>
-                    </button>
+            <!-- Card Title Line with Circle Complete Button -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #8c9bab; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;"></div>
+                <div style="flex: 1; min-width: 0;">
+                    <input type="text" 
+                           id="add-task-title-field" 
+                           name="title" 
+                           required 
+                           placeholder="public royal school (diary) 2026"
+                           style="width: 100%; background: transparent; border: 1px solid transparent; border-radius: 4px; font-size: 1.45rem; font-weight: 700; color: #dee4ea; padding: 2px 4px; outline: none; box-sizing: border-box; font-family: inherit; letter-spacing: -0.01em;"
+                           onfocus="this.style.background='#22272b'; this.style.borderColor='#579dff';" 
+                           onblur="this.style.background='transparent'; this.style.borderColor='transparent';">
                 </div>
             </div>
 
-            <!-- Modal Body (Two-Column Trello Split) -->
-            <div class="trello-modal-body" style="padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; flex: 1;">
+            <!-- Action Pills Bar (+ Add, Labels, Dates, Checklist, Members) -->
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: 28px;">
+                <button type="button" class="trello-pill-action" onclick="document.getElementById('add-task-status-select').focus()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-plus" style="font-size: 0.75rem;"></i> Add
+                </button>
+                <button type="button" class="trello-pill-action" onclick="document.getElementById('add-task-status-select').focus()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-tag" style="font-size: 0.75rem; color: #579dff;"></i> Labels
+                </button>
+                <button type="button" class="trello-pill-action" onclick="document.getElementById('add-task-due-date').showPicker ? document.getElementById('add-task-due-date').showPicker() : document.getElementById('add-task-due-date').focus()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="far fa-clock" style="font-size: 0.8rem; color: #579dff;"></i> Dates
+                </button>
+                <button type="button" class="trello-pill-action" onclick="document.getElementById('add-task-desc-field').focus()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-check-square" style="font-size: 0.8rem; color: #579dff;"></i> Checklist
+                </button>
+                <button type="button" class="trello-pill-action" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-user-friends" style="font-size: 0.8rem; color: #579dff;"></i> Members
+                </button>
+            </div>
+
+            <select id="add-task-status-select" name="status" style="display: none;">
+                <option value="not-started" selected>To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="backlog">Backlog</option>
+                <option value="completed">Done</option>
+                <option value="on-hold">On Hold</option>
+                <option value="canceled">Canceled</option>
+            </select>
+            <input type="date" id="add-task-due-date" name="due_date" style="display: none;">
+
+            <!-- Description Section -->
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-align-left" style="color: #9fadbc; font-size: 0.85rem;"></i> Description
+                </h4>
                 
-                <!-- Title Row with Checkbox Circle -->
-                <div style="display: flex; align-items: flex-start; gap: 12px;">
-                    <div style="padding: 4px 0 0 0; color: #8c9bab; font-size: 1.2rem;">
-                        <i class="far fa-circle"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <input type="text" 
-                               id="add-task-title-field" 
-                               name="title" 
-                               required 
-                               placeholder="Enter card title..."
-                               style="width: 100%; background: transparent; border: 1px solid transparent; border-radius: 6px; font-size: 1.35rem; font-weight: 700; color: #dee4ea; padding: 4px 8px; transition: all 0.2s ease; outline: none; box-sizing: border-box;"
-                               onfocus="this.style.background='#22272b'; this.style.borderColor='#579dff';" 
-                               onblur="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    </div>
-                </div>
+                <textarea id="add-task-desc-field" 
+                          name="description" 
+                          rows="4" 
+                          placeholder="Add a more detailed description..."
+                          style="width: 100%; background: #22272b; border: 1px solid #333c43; border-radius: 4px; color: #dee4ea; padding: 12px 14px; font-size: 0.875rem; line-height: 1.5; outline: none; font-family: inherit; box-sizing: border-box; resize: vertical; min-height: 56px;"
+                          onfocus="this.style.borderColor='#579dff'; this.style.background='#1d2125';"
+                          onblur="this.style.borderColor='#333c43'; this.style.background='#22272b';"></textarea>
+            </div>
+        </div>
 
-                <!-- Top Action Pills Bar -->
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" class="trello-pill-btn" onclick="document.getElementById('add-task-status-select').focus()" style="display: inline-flex; align-items: center; gap: 6px; background: #22272b; border: 1px solid #333c43; color: #b6c2cf; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; font-weight: 500; cursor: pointer;">
-                        <i class="fas fa-plus" style="font-size: 0.75rem;"></i> Add
-                    </button>
-                    <button type="button" class="trello-pill-btn" onclick="document.getElementById('add-task-desc-field').focus()" style="display: inline-flex; align-items: center; gap: 6px; background: #22272b; border: 1px solid #333c43; color: #b6c2cf; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; font-weight: 500; cursor: pointer;">
-                        <i class="fas fa-check-square" style="font-size: 0.8rem; color: #579dff;"></i> Checklist
-                    </button>
-                    <button type="button" class="trello-pill-btn" style="display: inline-flex; align-items: center; gap: 6px; background: #22272b; border: 1px solid #333c43; color: #b6c2cf; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; font-weight: 500; cursor: pointer;">
-                        <i class="fas fa-user-friends" style="font-size: 0.8rem; color: #579dff;"></i> Members
-                    </button>
-                    <button type="button" class="trello-pill-btn" style="display: inline-flex; align-items: center; gap: 6px; background: #22272b; border: 1px solid #333c43; color: #b6c2cf; border-radius: 4px; padding: 6px 12px; font-size: 0.8rem; font-weight: 500; cursor: pointer;">
-                        <i class="fas fa-paperclip" style="font-size: 0.8rem; color: #579dff;"></i> Attachment
-                    </button>
-                </div>
+        <!-- RIGHT PANEL: Window Actions, Comments & Activity Stream, Separated with Vertical Line -->
+        <div class="trello-modal-right">
+            
+            <!-- Window Actions at Top Right of Right Panel -->
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-shrink: 0;">
+                <button type="button" class="close-modal" onclick="document.getElementById('add-task-modal').style.display='none';" aria-label="Close modal" style="font-size: 1.25rem; color: #9fadbc; background: transparent; border: none; cursor: pointer; padding: 2px 6px; line-height: 1;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
 
-                <!-- Trello Metadata Badges Row -->
-                <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start;">
-                    <!-- Status Badge -->
-                    <div>
-                        <span style="font-size: 0.725rem; font-weight: 700; color: #8c9bab; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;">Status / List</span>
-                        <select id="add-task-status-select" name="status" onchange="document.getElementById('add-task-column-label').textContent = this.options[this.selectedIndex].text;" style="height: 30px; background: #22272b; border: 1px solid #333c43; color: #b6c2cf; border-radius: 4px; font-size: 0.8rem; padding: 0 8px; cursor: pointer;">
-                            <option value="not-started" selected>To Do</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="backlog">Backlog</option>
-                            <option value="completed">Done</option>
-                            <option value="on-hold">On Hold</option>
-                            <option value="canceled">Canceled</option>
-                        </select>
+            <!-- Comments & Activity Header with Show Details -->
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-comment-alt" style="color: #9fadbc; font-size: 0.85rem;"></i> Comments and activity
+                </h4>
+                <button type="button" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.775rem; font-weight: 500; cursor: pointer;">
+                    Show details
+                </button>
+            </div>
+
+            <!-- Write Comment Box -->
+            <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+                <textarea rows="2" 
+                          placeholder="Write a comment..." 
+                          style="width: 100%; background: #22272b; border: 1px solid #333c43; border-radius: 6px; color: #dee4ea; font-size: 0.85rem; padding: 10px 14px; resize: vertical; min-height: 40px; box-sizing: border-box; outline: none; font-family: inherit;"></textarea>
+            </div>
+
+            <!-- Activity Log Stream -->
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 4px; flex: 1;">
+                <div class="activity-log-item" style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
+                        {{ user.username|slice:":2"|upper|default:"PA" }}
                     </div>
-
-                    <!-- Priority Badge -->
-                    <div>
-                        <span style="font-size: 0.725rem; font-weight: 700; color: #8c9bab; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;">Priority</span>
-                        <select id="add-task-priority-select" name="priority" style="height: 30px; background: #22272b; border: 1px solid #333c43; color: #b6c2cf; border-radius: 4px; font-size: 0.8rem; padding: 0 8px; cursor: pointer;">
-                            <option value="high">🔴 High</option>
-                            <option value="moderate" selected>🟡 Moderate</option>
-                            <option value="low">🟢 Low</option>
-                        </select>
-                    </div>
-
-                    <!-- Project Badge -->
-                    <div>
-                        <span style="font-size: 0.725rem; font-weight: 700; color: #8c9bab; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;">Project</span>
-                        <select id="add-task-category-select" name="category" onchange="document.getElementById('add-task-project-label').textContent = this.options[this.selectedIndex].text.trim();" style="height: 30px; background: #22272b; border: 1px solid #333c43; color: #b6c2cf; border-radius: 4px; font-size: 0.8rem; padding: 0 8px; cursor: pointer;">
-                            <option value="">📁 General</option>
-                            {% for p in user.categories.all %}
-                            <option value="{{ p.id }}">{{ p.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <!-- Due Date Badge -->
-                    <div>
-                        <span style="font-size: 0.725rem; font-weight: 700; color: #8c9bab; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;">Due date</span>
-                        <input type="date" id="add-task-due-date" name="due_date" style="height: 30px; background: #22272b; border: 1px solid #333c43; color: #b6c2cf; border-radius: 4px; font-size: 0.8rem; padding: 0 8px; cursor: pointer;">
-                    </div>
-                </div>
-
-                <!-- Two Column Split (Left 65% + Right 35%) -->
-                <div style="display: grid; grid-template-columns: 1.65fr 1fr; gap: 28px; margin-top: 6px;">
-                    
-                    <!-- Left Column -->
-                    <div style="display: flex; flex-direction: column; gap: 20px;">
-                        
-                        <!-- Description Section -->
+                    <div style="flex: 1; font-size: 0.85rem; line-height: 1.4;">
                         <div>
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fas fa-align-left" style="color: #9fadbc; font-size: 0.9rem;"></i> Description
-                                </h4>
-                            </div>
-                            <textarea id="add-task-desc-field" 
-                                      name="description"
-                                      rows="4" 
-                                      placeholder="Add a more detailed description..."
-                                      style="width: 100%; background: #16181d; border: 1px solid #22272b; border-radius: 6px; color: #dee4ea; padding: 12px; font-size: 0.85rem; line-height: 1.5; resize: vertical; min-height: 80px; box-sizing: border-box; outline: none; font-family: inherit;"
-                                      onfocus="this.style.borderColor='#579dff'; this.style.background='#1d2125';"
-                                      onblur="this.style.borderColor='#22272b'; this.style.background='#16181d';"></textarea>
+                            <strong style="color: #dee4ea;">{{ user.username|default:"prakash ahuja" }}</strong> 
+                            <span style="color: #9fadbc;">added this card to</span> 
+                            <strong style="color: #dee4ea;">Tasks for Roshan (D-G)</strong>
                         </div>
-
-                        <!-- Attachments Section Mock -->
-                        <div>
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fas fa-paperclip" style="color: #9fadbc; font-size: 0.9rem;"></i> Attachments
-                                </h4>
-                            </div>
-                            <div style="padding: 12px; background: #16181d; border: 1px dashed #282e33; border-radius: 6px; text-align: center; color: #8c9bab; font-size: 0.8rem;">
-                                Files can be attached after creating this card.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column -->
-                    <div style="display: flex; flex-direction: column; gap: 16px;">
-                        <div>
-                            <h4 style="margin: 0 0 10px 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-comment-alt" style="color: #9fadbc; font-size: 0.85rem;"></i> Activity & Discussion
-                            </h4>
-                            <div style="padding: 14px; background: #16181d; border: 1px solid #22272b; border-radius: 6px; color: #8c9bab; font-size: 0.8rem; line-height: 1.45;">
-                                Comments and checklist items can be added directly once the card is created.
-                            </div>
+                        <div style="color: #579dff; font-size: 0.75rem; text-decoration: underline; cursor: pointer; margin-top: 2px;">
+                            just now
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Modal Actions Footer -->
-            <div style="padding: 14px 20px; background: #16181d; border-top: 1px solid #22272b; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
-                <button type="button" class="btn-cancel" onclick="document.getElementById('add-task-modal').style.display='none';" style="background: transparent; border: 1px solid #333c43; color: #b6c2cf; padding: 7px 16px; border-radius: 4px; font-size: 0.825rem; cursor: pointer;">
-                    Cancel
-                </button>
-                <button type="submit" class="btn-submit" style="background: #579dff; color: #000000; font-weight: 700; border: none; padding: 7px 20px; border-radius: 4px; font-size: 0.825rem; cursor: pointer;">
-                    <i class="fas fa-plus"></i> Create Card
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>

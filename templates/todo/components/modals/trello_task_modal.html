@@ -1,10 +1,10 @@
 <!-- Master Trello Card Modal (2-Column Split: Task Context on Left, Dedicated Comments & Activity on Right with Vertical Separator) -->
 <div id="trello-task-modal" class="task-modal" style="display: none;" role="dialog" aria-modal="true">
     <div class="modal-backdrop" onclick="closeTrelloModal()"></div>
-    <div class="modal-content trello-modal-content" style="max-width: 860px; width: 94%; max-height: 88vh; background: #1d2125; border: 1px solid #282e33; border-radius: 12px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95); display: flex; overflow: hidden; padding: 0; color: #b6c2cf; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div class="modal-content trello-modal-content">
         
-        <!-- LEFT COLUMN: Task Details, Title, Action Pills, Description, Checklist -->
-        <div style="flex: 1.25; min-width: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
+        <!-- LEFT PANEL: Task Details, Title, Action Pills, Description, Checklist -->
+        <div class="trello-modal-left">
             
             <!-- Breadcrumb Dropdown Pill (e.g. Tasks for Roshan (D-G)) -->
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -134,8 +134,8 @@
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: Window Actions Header, Dedicated Comments & Activity Stream, Separated with Vertical Line -->
-        <div style="flex: 1; min-width: 0; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; background: #181b1f; border-left: 1px solid #282e33;">
+        <!-- RIGHT PANEL: Window Actions Header, Dedicated Comments & Activity Stream, Separated with Vertical Line -->
+        <div class="trello-modal-right">
             
             <!-- Window Actions at Top Right of Right Panel -->
             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-shrink: 0;">
