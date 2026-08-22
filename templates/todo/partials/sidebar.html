@@ -9,10 +9,10 @@
                     <span class="sidebar-link-text">Dashboard</span>
                 </a>
             </li>
-            <li class="{% if active_page == 'task_categories' %}active{% endif %}">
-                <a href="{% url 'task_categories' %}" title="Projects">
+            <li class="{% if active_page == 'task_categories' or active_page == 'manage_projects' %}active{% endif %}">
+                <a href="{% url 'manage_projects' %}" title="Manage Projects">
                     <i class="fas fa-folder-open" aria-hidden="true"></i>
-                    <span class="sidebar-link-text">Projects</span>
+                    <span class="sidebar-link-text">Manage Projects</span>
                 </a>
             </li>
             <li class="{% if active_page == 'manage_kanban' %}active{% endif %}">

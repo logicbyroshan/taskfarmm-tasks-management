@@ -123,10 +123,129 @@ window.openAddProjectModal = function() {
     const projModal = document.getElementById('category-modal');
     if (projModal) {
         projModal.style.display = 'flex';
-        const nameInput = projModal.querySelector('input[name="name"]');
-        if (nameInput) nameInput.focus();
+        const nameInput = document.getElementById('new_project_name') || projModal.querySelector('input[name="name"]');
+        if (nameInput) setTimeout(() => nameInput.focus(), 50);
     } else {
-        window.location.href = '/categories/';
+        window.location.href = '/manage-projects/';
+    }
+};
+
+window.closeAddProjectModal = function() {
+    const projModal = document.getElementById('category-modal');
+    if (projModal) projModal.style.display = 'none';
+};
+
+window.openEditProjectModal = function(id, name, color, template, description) {
+    const editModal = document.getElementById('edit-category-modal');
+    const editForm = document.getElementById('edit-category-form');
+    const editName = document.getElementById('edit_project_name');
+    const editColor = document.getElementById('edit_project_color');
+    const editId = document.getElementById('edit_project_id');
+    const editDesc = document.getElementById('edit_project_description');
+
+    if (editForm) editForm.action = '/category/' + id + '/update/';
+    if (editId) editId.value = id;
+    if (editName) editName.value = name || '';
+    if (editColor) editColor.value = color || '#3b82f6';
+    if (editDesc) editDesc.value = description || '';
+
+    selectEditTemplate(template || 'smart');
+    selectEditProjectColor(color || '#3b82f6');
+
+    if (editModal) {
+        editModal.style.display = 'flex';
+        if (editName) setTimeout(() => editName.focus(), 50);
+    }
+};
+
+window.closeEditProjectModal = function() {
+    const editModal = document.getElementById('edit-category-modal');
+    if (editModal) editModal.style.display = 'none';
+};
+
+window.selectAddProjectColor = function(color) {
+    const colorInput = document.getElementById('new_project_color');
+    if (colorInput) colorInput.value = color;
+    document.querySelectorAll('#add-color-swatches .color-swatch-btn').forEach(btn => {
+        btn.style.borderColor = (btn.style.backgroundColor === color || btn.getAttribute('onclick')?.includes(color)) ? '#ffffff' : 'transparent';
+    });
+};
+
+window.syncAddProjectCustomColor = function(color) {
+    document.querySelectorAll('#add-color-swatches .color-swatch-btn').forEach(btn => {
+        btn.style.borderColor = 'transparent';
+    });
+};
+
+window.selectEditProjectColor = function(color) {
+    const colorInput = document.getElementById('edit_project_color');
+    if (colorInput) colorInput.value = color;
+    document.querySelectorAll('#edit-color-swatches .color-swatch-btn').forEach(btn => {
+        btn.style.borderColor = (btn.style.backgroundColor === color || btn.getAttribute('onclick')?.includes(color)) ? '#ffffff' : 'transparent';
+    });
+};
+
+window.syncEditProjectCustomColor = function(color) {
+    document.querySelectorAll('#edit-color-swatches .color-swatch-btn').forEach(btn => {
+        btn.style.borderColor = 'transparent';
+    });
+};
+
+window.selectAddTemplate = function(template) {
+    const smartRadio = document.getElementById('add_tpl_smart');
+    const superRadio = document.getElementById('add_tpl_super');
+    const smartLabel = document.getElementById('add-tpl-smart-label');
+    const superLabel = document.getElementById('add-tpl-super-label');
+
+    if (template === 'super') {
+        if (superRadio) superRadio.checked = true;
+        if (superLabel) {
+            superLabel.style.borderColor = '#3b82f6';
+            superLabel.style.background = 'rgba(59, 130, 246, 0.08)';
+        }
+        if (smartLabel) {
+            smartLabel.style.borderColor = '#27272a';
+            smartLabel.style.background = '#121316';
+        }
+    } else {
+        if (smartRadio) smartRadio.checked = true;
+        if (smartLabel) {
+            smartLabel.style.borderColor = '#3b82f6';
+            smartLabel.style.background = 'rgba(59, 130, 246, 0.08)';
+        }
+        if (superLabel) {
+            superLabel.style.borderColor = '#27272a';
+            superLabel.style.background = '#121316';
+        }
+    }
+};
+
+window.selectEditTemplate = function(template) {
+    const smartRadio = document.getElementById('edit_tpl_smart');
+    const superRadio = document.getElementById('edit_tpl_super');
+    const smartLabel = document.getElementById('edit-tpl-smart-label');
+    const superLabel = document.getElementById('edit-tpl-super-label');
+
+    if (template === 'super') {
+        if (superRadio) superRadio.checked = true;
+        if (superLabel) {
+            superLabel.style.borderColor = '#3b82f6';
+            superLabel.style.background = 'rgba(59, 130, 246, 0.08)';
+        }
+        if (smartLabel) {
+            smartLabel.style.borderColor = '#27272a';
+            smartLabel.style.background = '#121316';
+        }
+    } else {
+        if (smartRadio) smartRadio.checked = true;
+        if (smartLabel) {
+            smartLabel.style.borderColor = '#3b82f6';
+            smartLabel.style.background = 'rgba(59, 130, 246, 0.08)';
+        }
+        if (superLabel) {
+            superLabel.style.borderColor = '#27272a';
+            superLabel.style.background = '#121316';
+        }
     }
 };
 

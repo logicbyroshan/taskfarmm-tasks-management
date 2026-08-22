@@ -1,15 +1,18 @@
 <article class="category-card" 
          id="project-card-{{ category.id }}" 
-         style="--category-color: {{ category.color }}; cursor: pointer;" 
-         onclick="navigateToProjectKanban({{ category.id }})"
+         style="--category-color: {{ category.color }}; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease;" 
+         onclick="openEditProjectModal({{ category.id }}, '{{ category.name|escapejs }}', '{{ category.color|default:'#3b82f6'|escapejs }}', '{{ category.board_template|default:'smart'|escapejs }}', '{{ category.description|default:''|escapejs }}')"
+         title="Click to view & edit project details"
          x-data="{ dropdownOpen: false }">
     <div class="category-header">
         <div class="category-icon" style="background: {{ category.color }}20; color: {{ category.color }}; border-color: {{ category.color }}40;">
             <i class="fas fa-folder"></i>
         </div>
-        <div class="category-info">
-            <h3 class="category-name">{{ category.name }}</h3>
-            <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+        <div class="category-info" style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <h3 class="category-name" style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ category.name }}</h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
                 <span class="category-task-count">{{ category.task_count }} Task{{ category.task_count|pluralize }}</span>
                 <span style="color: #3f3f46; font-size: 0.7rem;">•</span>
                 <span style="font-size: 0.7rem; font-weight: 600; color: #8c9bab;">{% if category.board_template == 'super' %}🚀 Super (6){% else %}⚡ Smart (4){% endif %}</span>
@@ -19,7 +22,8 @@
             <button class="task-menu-btn category-options-btn" 
                     type="button" 
                     @click.stop="dropdownOpen = !dropdownOpen" 
-                    aria-label="Project options">
+                    aria-label="Project options"
+                    title="Project actions">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <div class="category-options-dropdown" 
@@ -30,22 +34,20 @@
                  x-transition:leave="transition ease-in duration-75"
                  x-transition:leave-start="opacity-100 scale-100"
                  x-transition:leave-end="opacity-0 scale-95"
-                 style="display: none; position: absolute; right: 0; top: calc(100% + 6px); background: #000000; border: 1px solid #27272a; border-radius: 8px; padding: 5px; z-index: 99999; min-width: 150px; box-shadow: 0 12px 30px rgba(0,0,0,0.9);">
-                <a href="{% url 'manage_kanban' %}?project={{ category.id }}" class="dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #60a5fa; border-radius: 6px; text-decoration: none;">
+                 style="display: none; position: absolute; right: 0; top: calc(100% + 6px); background: #000000; border: 1px solid #27272a; border-radius: 8px; padding: 5px; z-index: 99999; min-width: 155px; box-shadow: 0 12px 30px rgba(0,0,0,0.9);">
+                <a href="{% url 'manage_kanban' %}?project={{ category.id }}" onclick="event.stopPropagation();" class="dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #60a5fa; border-radius: 6px; text-decoration: none;">
                     <i class="fas fa-columns"></i> View Kanban
                 </a>
                 <button type="button" 
                         class="dropdown-item edit-project-trigger-btn" 
-                        data-id="{{ category.id }}" 
-                        data-name="{{ category.name }}" 
-                        data-color="{{ category.color }}" 
-                        data-template="{{ category.board_template }}" 
+                        onclick="event.stopPropagation(); openEditProjectModal({{ category.id }}, '{{ category.name|escapejs }}', '{{ category.color|default:'#3b82f6'|escapejs }}', '{{ category.board_template|default:'smart'|escapejs }}', '{{ category.description|default:''|escapejs }}');"
                         @click="dropdownOpen = false" 
                         style="width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #e4e4e7; border-radius: 6px; text-align: left; cursor: pointer;">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-edit"></i> Edit Details
                 </button>
                 <button type="button" 
                         class="dropdown-item delete-project-trigger-btn" 
+                        onclick="event.stopPropagation();"
                         hx-post="{% url 'category_delete' category.id %}"
                         hx-confirm="Are you sure you want to delete project '{{ category.name|escapejs }}'? All tasks will become unassigned."
                         hx-target="#project-card-{{ category.id }}"
