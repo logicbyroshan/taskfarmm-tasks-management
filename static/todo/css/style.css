@@ -1021,11 +1021,12 @@ select option {
     width: 95% !important;
     max-height: 90vh !important;
     height: 680px !important;
-    background: #1d2125 !important;
+    background: #14171a !important;
     border: 1px solid #282e33 !important;
-    border-radius: 12px !important;
+    border-radius: 14px !important;
     padding: 0 !important;
     overflow: hidden !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9) !important;
     transition: max-width 0.25s ease, height 0.25s ease, width 0.25s ease !important;
 }
 
@@ -1043,9 +1044,9 @@ select option {
     padding: 24px 28px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 18px !important;
+    gap: 16px !important;
     overflow-y: auto !important;
-    background: #1d2125 !important;
+    background: #16181d !important;
 }
 
 .trello-modal-right {
@@ -1056,8 +1057,8 @@ select option {
     flex-direction: column !important;
     gap: 16px !important;
     overflow-y: auto !important;
-    background: #181b1f !important;
-    border-left: 1px solid #282e33 !important;
+    background: #101215 !important;
+    border-left: 1px solid #22272b !important;
 }
 
 .close-modal {

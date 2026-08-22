@@ -588,10 +588,10 @@ window.renderTrelloMembers = function(assignees, task) {
         const creatorName = (task && task.user) || (currentTrelloTask && currentTrelloTask.user) || 'You';
         const creatorInitials = creatorName.slice(0, 2).toUpperCase();
         chips.innerHTML = `
-            <div title="Created by ${creatorName} (Click to assign)" style="width: 28px; height: 28px; border-radius: 50%; background: #282e33; color: #dee4ea; display: inline-flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700; border: 2px solid #1d2125; cursor: pointer; transition: transform 0.15s ease;" onclick="toggleTrelloMembersPopup(event)">
+            <div title="Created by ${creatorName} (Click to assign)" style="width: 30px; height: 30px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.775rem; font-weight: 700; border: 2px solid #14171a; cursor: pointer; transition: transform 0.15s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.35);" onclick="toggleTrelloMembersPopup(event)" onmouseenter="this.style.transform='scale(1.08)'" onmouseleave="this.style.transform='scale(1)'">
                 ${creatorInitials}
             </div>
-            <button type="button" onclick="toggleTrelloMembersPopup(event)" title="Assign members" style="width: 28px; height: 28px; border-radius: 50%; background: #22272b; color: #579dff; border: 1px dashed #579dff; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;">
+            <button type="button" onclick="toggleTrelloMembersPopup(event)" title="Assign members" style="width: 30px; height: 30px; border-radius: 50%; background: #22272b; color: #579dff; border: 1px solid #3b444c; font-size: 0.825rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff'; this.style.transform='scale(1.08)'" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#3b444c'; this.style.transform='scale(1)'">
                 <i class="fas fa-plus"></i>
             </button>
         `;
@@ -602,12 +602,12 @@ window.renderTrelloMembers = function(assignees, task) {
     chips.innerHTML = `
         <div style="display: flex; align-items: center;">
             ${membersList.map((a, idx) => `
-                <div title="Assigned to ${a.username} (Click to manage)" style="width: 28px; height: 28px; border-radius: 50%; background: ${colors[idx % colors.length]}; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700; border: 2px solid #1d2125; ${idx > 0 ? 'margin-left: -6px;' : ''} box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.15s ease;" onclick="toggleTrelloMembersPopup(event)">
+                <div title="Assigned to ${a.username} (Click to manage)" style="width: 30px; height: 30px; border-radius: 50%; background: ${colors[idx % colors.length]}; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.775rem; font-weight: 700; border: 2px solid #14171a; ${idx > 0 ? 'margin-left: -6px;' : ''} box-shadow: 0 2px 6px rgba(0,0,0,0.35); cursor: pointer; transition: transform 0.15s ease;" onclick="toggleTrelloMembersPopup(event)" onmouseenter="this.style.transform='scale(1.12)'; this.style.zIndex='10';" onmouseleave="this.style.transform='scale(1)'; this.style.zIndex='1';">
                     ${a.initials}
                 </div>
             `).join('')}
         </div>
-        <button type="button" onclick="toggleTrelloMembersPopup(event)" title="Assign members" style="width: 28px; height: 28px; border-radius: 50%; background: #22272b; color: #579dff; border: 1px dashed #579dff; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease; margin-left: 3px;">
+        <button type="button" onclick="toggleTrelloMembersPopup(event)" title="Assign members" style="width: 30px; height: 30px; border-radius: 50%; background: #22272b; color: #579dff; border: 1px solid #3b444c; font-size: 0.825rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease; margin-left: 4px;" onmouseenter="this.style.background='#282e33'; this.style.borderColor='#579dff'; this.style.transform='scale(1.08)'" onmouseleave="this.style.background='#22272b'; this.style.borderColor='#3b444c'; this.style.transform='scale(1)'">
             <i class="fas fa-plus"></i>
         </button>
     `;

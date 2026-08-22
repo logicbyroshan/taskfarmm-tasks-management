@@ -178,15 +178,9 @@
         <!-- RIGHT PANEL: Window Actions Header, Dedicated Comments & Activity Stream, Separated with Vertical Line -->
         <div class="trello-modal-right">
             
-            <!-- Window Actions at Top Right of Right Panel -->
-            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-shrink: 0;">
-                <button type="button" onclick="toggleTrelloExpand()" title="Expand" style="background: transparent; border: none; color: #9fadbc; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 0.85rem;">
-                    <i class="fas fa-expand-alt"></i>
-                </button>
-                <button type="button" onclick="openShareProjectModal()" title="Share & Members" style="background: transparent; border: none; color: #9fadbc; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 0.85rem;">
-                    <i class="fas fa-user-plus"></i>
-                </button>
-                <button type="button" class="close-modal" onclick="closeTrelloModal()" aria-label="Close modal" style="font-size: 1.25rem; color: #9fadbc; background: transparent; border: none; cursor: pointer; padding: 2px 6px; line-height: 1;">
+            <!-- Window Action: Single Clean Close Button -->
+            <div style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;">
+                <button type="button" class="close-modal" onclick="closeTrelloModal()" aria-label="Close modal" style="font-size: 1rem; color: #8c9bab; background: #1d2125; border: 1px solid #282e33; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;" onmouseenter="this.style.background='#ef4444'; this.style.borderColor='#ef4444'; this.style.color='#ffffff';" onmouseleave="this.style.background='#1d2125'; this.style.borderColor='#282e33'; this.style.color='#8c9bab';">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -194,9 +188,9 @@
             <!-- Comments & Activity Header with Show Details -->
             <div style="display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
                 <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-comment-alt" style="color: #9fadbc; font-size: 0.85rem;"></i> Comments and activity
+                    <i class="fas fa-comment-alt" style="color: #579dff; font-size: 0.85rem;"></i> Comments and activity
                 </h4>
-                <button type="button" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.775rem; font-weight: 500; cursor: pointer;">
+                <button type="button" style="background: #1d2125; color: #b6c2cf; border: 1px solid #282e33; border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">
                     Show details
                 </button>
             </div>
@@ -206,9 +200,9 @@
                 <textarea id="trello-comment-input" 
                           rows="2" 
                           placeholder="Write a comment... (Press Enter to post)" 
-                          style="width: 100%; background: #22272b; border: 1px solid #333c43; border-radius: 6px; color: #dee4ea; font-size: 0.85rem; padding: 10px 14px; resize: vertical; min-height: 44px; box-sizing: border-box; outline: none; font-family: inherit; transition: border-color 0.15s ease;"
-                          onfocus="this.style.borderColor='#579dff'; this.style.background='#1d2125';"
-                          onblur="this.style.borderColor='#333c43'; this.style.background='#22272b';"
+                          style="width: 100%; background: #181b1f; border: 1px solid #282e33; border-radius: 8px; color: #dee4ea; font-size: 0.85rem; padding: 10px 14px; resize: vertical; min-height: 46px; box-sizing: border-box; outline: none; font-family: inherit; transition: border-color 0.15s ease;"
+                          onfocus="this.style.borderColor='#579dff'; this.style.background='#14171a';"
+                          onblur="this.style.borderColor='#282e33'; this.style.background='#181b1f';"
                           onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); submitTrelloComment(); }"></textarea>
             </div>
 
