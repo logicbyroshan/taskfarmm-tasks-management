@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Task, Category, UserProfile
@@ -32,7 +33,9 @@ class TaskForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super(TaskForm, self).__init__(*args, **kwargs)
         if user:
-            self.fields['category'].queryset = Category.objects.filter(user=user)
+            self.fields['category'].queryset = Category.objects.filter(
+                Q(user=user) | Q(members=user)
+            ).distinct()
             self.fields['category'].empty_label = "No Category"
 
 

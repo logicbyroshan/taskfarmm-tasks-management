@@ -51,11 +51,12 @@ window.openAddTaskModal = function(initialStatus = 'not-started', initialCategor
     if (prioSelect) prioSelect.value = 'moderate';
     if (dueInput) dueInput.value = '';
 
-    // If on Kanban, get currently selected project
+    // If on Kanban, get currently selected project from hidden input or URL
+    const activeProjInput = document.getElementById('current-active-project-id');
     const urlParams = new URLSearchParams(window.location.search);
     const activeProjFromUrl = urlParams.get('project');
     const kanbanProjSelect = document.getElementById('kanban-project-select');
-    const selectedProj = initialCategory || activeProjFromUrl || (kanbanProjSelect ? kanbanProjSelect.value : '');
+    const selectedProj = initialCategory || (activeProjInput ? activeProjInput.value : '') || activeProjFromUrl || (kanbanProjSelect ? kanbanProjSelect.value : '');
 
     if (catSelect && selectedProj) {
         catSelect.value = selectedProj;

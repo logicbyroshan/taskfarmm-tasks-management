@@ -263,6 +263,7 @@
 {% else %}
 <!-- Top Header Bar -->
 <div class="kanban-header-bar" x-data="{ projectMenuOpen: false }">
+    <input type="hidden" id="current-active-project-id" value="{{ selected_project_id|default:'' }}">
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
         <!-- Custom Project Switcher Dropdown (Zero Clipping) -->
         <div style="position: relative;" @click.outside="projectMenuOpen = false">
