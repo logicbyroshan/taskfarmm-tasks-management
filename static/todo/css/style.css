@@ -123,7 +123,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 
 /* Sidebar Component */
 .sidebar {
-    width: 220px;
+    width: 235px;
     background: var(--card-bg);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
@@ -133,7 +133,7 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
-    padding: 16px;
+    padding: 14px;
     box-sizing: border-box;
     flex-shrink: 0;
 }
@@ -151,7 +151,8 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 .sidebar-settings-link a {
     display: flex;
     align-items: center;
-    padding: 10px 14px;
+    padding: 10px 12px;
+    gap: 12px;
     color: var(--text-muted);
     font-size: 0.875rem;
     font-weight: 500;
@@ -159,15 +160,20 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     transition: var(--transition);
     border: 1px solid transparent;
     text-decoration: none;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .sidebar-nav a i,
 .sidebar-settings-link a i {
-    margin-right: 12px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     width: 20px;
-    text-align: center;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-muted);
+    flex-shrink: 0;
     transition: var(--transition);
 }
 

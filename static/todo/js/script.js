@@ -303,7 +303,7 @@ function updateDateTime() {
 function setupAddTaskModal() {
     const taskModal = document.getElementById('add-task-modal');
     const addTaskForm = document.getElementById('add-task-form');
-    const openModalButtons = document.querySelectorAll('.invite-btn:not(#add-category-btn)');
+    const openModalButtons = document.querySelectorAll('.open-add-task-btn, [data-action="add-task"], #open-task-modal-btn');
 
     if (!taskModal || !addTaskForm) return;
 
@@ -434,7 +434,6 @@ window.openTrelloModal = function(taskId) {
                 const titleInput = document.getElementById('trello-task-title-input');
                 const colText = document.getElementById('trello-column-text');
                 const projText = document.getElementById('trello-project-text');
-                const dateText = document.getElementById('trello-created-date');
                 const statusSelect = document.getElementById('trello-status-select');
                 const prioSelect = document.getElementById('trello-priority-select');
                 const projSelect = document.getElementById('trello-project-select');
@@ -443,8 +442,7 @@ window.openTrelloModal = function(taskId) {
 
                 if (titleInput) titleInput.value = data.task.title;
                 if (colText) colText.textContent = data.task.status_display;
-                if (projText) projText.textContent = data.task.category_name || 'General';
-                if (dateText) dateText.textContent = 'Created ' + (data.task.created_at || 'recently');
+                if (projText) projText.textContent = data.task.category_name || 'Tasks';
                 
                 if (statusSelect) statusSelect.value = data.task.status;
                 if (prioSelect) prioSelect.value = data.task.priority;
@@ -452,6 +450,8 @@ window.openTrelloModal = function(taskId) {
                 if (dueInput) dueInput.value = data.task.due_date || '';
                 if (descInput) descInput.value = data.task.description || '';
 
+                updateTrelloStatusBadge(data.task.status);
+                updateTrelloCompleteIcon(data.task.status === 'completed');
                 renderTrelloChecklist(data.task.checklist || []);
                 renderTrelloComments(data.task.comments || []);
 
@@ -459,189 +459,285 @@ window.openTrelloModal = function(taskId) {
             }
         })
         .catch(err => console.error('Error opening trello modal:', err));
+};
+
+function updateTrelloStatusBadge(status) {
+    const badge = document.getElementById('trello-label-badge');
+    if (!badge) return;
+    const map = {
+        'completed': { text: 'done', bg: '#216e4e' },
+        'in-progress': { text: 'in progress', bg: '#0c66e4' },
+        'backlog': { text: 'backlog', bg: '#596773' },
+        'not-started': { text: 'to do', bg: '#ae2e24' },
+        'on-hold': { text: 'on hold', bg: '#974f0c' },
+        'canceled': { text: 'canceled', bg: '#454f59' }
     };
+    const item = map[status] || { text: status, bg: '#216e4e' };
+    badge.textContent = item.text;
+    badge.style.background = item.bg;
+}
 
-    window.openEditTaskModal = window.openTrelloModal;
-
-    window.closeTrelloModal = function() {
-        const modal = document.getElementById('trello-task-modal');
-        if (modal) modal.style.display = 'none';
-    };
-
-    window.saveTrelloTaskField = function(field, value) {
-        if (!currentTrelloTask) return;
-        const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-        const payload = { [field]: value };
-
-        fetch(`/task/${currentTrelloTask.id}/update/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                currentTrelloTask[field] = value;
-                if (field === 'status') {
-                    const statusNames = {'backlog':'Backlog','not-started':'To Do','in-progress':'In Progress','completed':'Done','on-hold':'On Hold','canceled':'Canceled'};
-                    const colText = document.getElementById('trello-column-text');
-                    if (colText) colText.textContent = statusNames[value] || value;
-                }
-                if (window.showToast) window.showToast('Saved', 'info', 1200);
-            }
-        })
-        .catch(err => console.error('Error saving task field:', err));
-    };
-
-    function renderTrelloChecklist(items) {
-        const container = document.getElementById('trello-checklist-items');
-        if (!container) return;
-
-        const total = items.length;
-        const completed = items.filter(i => i.completed).length;
-        const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-        const pctBadge = document.getElementById('trello-checklist-pct-badge');
-        const fillBar = document.getElementById('trello-checklist-progress-fill');
-        if (pctBadge) pctBadge.textContent = `${pct}%`;
-        if (fillBar) fillBar.style.width = `${pct}%`;
-
-        container.innerHTML = items.map((item, idx) => `
-            <div class="checklist-item-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 10px;background:#09090b;border:1px solid #18181b;border-radius:6px;">
-                <label style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;margin:0;">
-                    <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTrelloChecklistItem('${item.id || idx}', this.checked)" style="width:16px;height:16px;cursor:pointer;">
-                    <span style="font-size:0.85rem;color:${item.completed ? '#71717a' : '#f4f4f5'};text-decoration:${item.completed ? 'line-through' : 'none'};">${item.text}</span>
-                </label>
-                <button type="button" onclick="deleteTrelloChecklistItem('${item.id || idx}')" style="background:transparent;border:none;color:#71717a;cursor:pointer;padding:2px 6px;">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `).join('');
-    }
-
-    window.addTrelloChecklistItem = function() {
-        const input = document.getElementById('trello-new-item-input');
-        if (!input) return;
-        const text = input.value.trim();
-        if (!text || !currentTrelloTask) return;
-
-        if (!currentTrelloTask.checklist) currentTrelloTask.checklist = [];
-        currentTrelloTask.checklist.push({
-            id: 'chk_' + Date.now(),
-            text: text,
-            completed: false
-        });
-
-        input.value = '';
-        renderTrelloChecklist(currentTrelloTask.checklist);
-        saveTrelloTaskField('checklist', currentTrelloTask.checklist);
-    };
-
-    window.toggleTrelloChecklistItem = function(itemId, isCompleted) {
-        if (!currentTrelloTask || !currentTrelloTask.checklist) return;
-        currentTrelloTask.checklist = currentTrelloTask.checklist.map((item, idx) => {
-            if (item.id === itemId || String(idx) === String(itemId)) {
-                return { ...item, completed: isCompleted };
-            }
-            return item;
-        });
-        renderTrelloChecklist(currentTrelloTask.checklist);
-        saveTrelloTaskField('checklist', currentTrelloTask.checklist);
-    };
-
-    window.deleteTrelloChecklistItem = function(itemId) {
-        if (!currentTrelloTask || !currentTrelloTask.checklist) return;
-        currentTrelloTask.checklist = currentTrelloTask.checklist.filter((item, idx) => {
-            return !(item.id === itemId || String(idx) === String(itemId));
-        });
-        renderTrelloChecklist(currentTrelloTask.checklist);
-        saveTrelloTaskField('checklist', currentTrelloTask.checklist);
-    };
-
-    function renderTrelloComments(comments) {
-        const container = document.getElementById('trello-comments-stream');
-        if (!container) return;
-        if (comments.length === 0) {
-            container.innerHTML = '<p style="color:#71717a;font-size:0.8rem;margin:0;">No comments yet. Write a note above to start the discussion.</p>';
-            return;
+function updateTrelloCompleteIcon(isComplete) {
+    const icon = document.getElementById('trello-circle-icon');
+    const titleInput = document.getElementById('trello-task-title-input');
+    if (icon) {
+        if (isComplete) {
+            icon.className = 'fas fa-check-circle';
+            icon.style.color = '#216e4e';
+        } else {
+            icon.className = 'far fa-circle';
+            icon.style.color = '#8c9bab';
         }
+    }
+    if (titleInput) {
+        titleInput.style.textDecoration = isComplete ? 'line-through' : 'none';
+        titleInput.style.color = isComplete ? '#8c9bab' : '#dee4ea';
+    }
+}
 
-        container.innerHTML = comments.map(c => `
-            <div class="comment-bubble-item" style="display:flex;gap:12px;align-items:flex-start;">
-                <div style="width:30px;height:30px;border-radius:50%;background:#18181b;color:#a1a1aa;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0;">
-                    ${(c.user || 'U').charAt(0).toUpperCase()}
-                </div>
-                <div style="flex:1;background:#09090b;border:1px solid #18181b;border-radius:8px;padding:10px 14px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:0.75rem;">
-                        <div>
-                            <strong style="color:#f4f4f5;">${c.user}</strong>
-                            <span style="color:#71717a;margin-left:6px;">${c.time_ago || c.created_at}</span>
-                        </div>
-                        ${c.id ? `<button type="button" onclick="deleteTrelloComment(${c.id})" style="background:transparent;border:none;color:#71717a;cursor:pointer;padding:0 4px;font-size:0.75rem;" title="Delete comment"><i class="fas fa-times"></i></button>` : ''}
-                    </div>
-                    <p style="margin:0;color:#d4d4d8;font-size:0.825rem;line-height:1.45;white-space:pre-wrap;">${c.content}</p>
-                </div>
+window.openEditTaskModal = window.openTrelloModal;
+
+window.closeTrelloModal = function() {
+    const modal = document.getElementById('trello-task-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.toggleTrelloComplete = function() {
+    if (!currentTrelloTask) return;
+    const newStatus = (currentTrelloTask.status === 'completed') ? 'not-started' : 'completed';
+    saveTrelloTaskField('status', newStatus);
+    const statusSelect = document.getElementById('trello-status-select');
+    if (statusSelect) statusSelect.value = newStatus;
+    updateTrelloCompleteIcon(newStatus === 'completed');
+    updateTrelloStatusBadge(newStatus);
+};
+
+window.focusTrelloChecklist = function() {
+    const input = document.getElementById('trello-new-item-input');
+    if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+    }
+};
+
+window.triggerTrelloAttachment = function() {
+    const input = document.getElementById('trello-file-input');
+    if (input) input.click();
+};
+
+window.handleTrelloFileUpload = function(fileInput) {
+    if (!fileInput.files || !fileInput.files[0]) return;
+    const file = fileInput.files[0];
+    const container = document.getElementById('trello-attachments-container');
+    if (container) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;background:#16181d;border:1px solid #22272b;border-radius:6px;padding:8px 12px;';
+        row.innerHTML = `
+            <div style="width:38px;height:38px;background:#22272b;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#579dff;font-size:1.1rem;flex-shrink:0;">
+                <i class="far fa-file-image"></i>
             </div>
-        `).join('');
+            <div style="flex:1;min-width:0;">
+                <strong style="color:#dee4ea;font-size:0.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;">${file.name}</strong>
+                <span style="font-size:0.725rem;color:#8c9bab;">Added just now • <span style="color:#579dff;cursor:pointer;">Cover</span></span>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+    if (window.showToast) window.showToast('Attachment attached!', 'success');
+};
+
+window.toggleTrelloExpand = function() {
+    const modalContent = document.querySelector('.trello-modal-content');
+    if (modalContent) {
+        if (modalContent.style.maxWidth === '100%') {
+            modalContent.style.maxWidth = '960px';
+            modalContent.style.height = 'auto';
+        } else {
+            modalContent.style.maxWidth = '100%';
+            modalContent.style.height = '100%';
+        }
+    }
+};
+
+window.saveTrelloTaskField = function(field, value) {
+    if (!currentTrelloTask) return;
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const payload = { [field]: value };
+
+    fetch(`/task/${currentTrelloTask.id}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            currentTrelloTask[field] = value;
+            if (field === 'status') {
+                const statusNames = {'backlog':'Backlog','not-started':'To Do','in-progress':'In Progress','completed':'Done','on-hold':'On Hold','canceled':'Canceled'};
+                const colText = document.getElementById('trello-column-text');
+                if (colText) colText.textContent = statusNames[value] || value;
+                updateTrelloStatusBadge(value);
+                updateTrelloCompleteIcon(value === 'completed');
+            }
+            if (window.showToast) window.showToast('Saved', 'info', 1200);
+        }
+    })
+    .catch(err => console.error('Error saving task field:', err));
+};
+
+function renderTrelloChecklist(items) {
+    const container = document.getElementById('trello-checklist-items');
+    if (!container) return;
+
+    const total = items.length;
+    const completed = items.filter(i => i.completed).length;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    const pctBadge = document.getElementById('trello-checklist-pct-badge');
+    const fillBar = document.getElementById('trello-checklist-progress-fill');
+    if (pctBadge) pctBadge.textContent = `${pct}%`;
+    if (fillBar) fillBar.style.width = `${pct}%`;
+
+    container.innerHTML = items.map((item, idx) => `
+        <div class="checklist-item-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 10px;background:#16181d;border:1px solid #22272b;border-radius:4px;">
+            <label style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;margin:0;">
+                <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTrelloChecklistItem('${item.id || idx}', this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#579dff;">
+                <span style="font-size:0.825rem;color:${item.completed ? '#8c9bab' : '#dee4ea'};text-decoration:${item.completed ? 'line-through' : 'none'};">${item.text}</span>
+            </label>
+            <button type="button" onclick="deleteTrelloChecklistItem('${item.id || idx}')" style="background:transparent;border:none;color:#8c9bab;cursor:pointer;padding:2px 6px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+window.addTrelloChecklistItem = function() {
+    const input = document.getElementById('trello-new-item-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text || !currentTrelloTask) return;
+
+    if (!currentTrelloTask.checklist) currentTrelloTask.checklist = [];
+    currentTrelloTask.checklist.push({
+        id: 'chk_' + Date.now(),
+        text: text,
+        completed: false
+    });
+
+    input.value = '';
+    renderTrelloChecklist(currentTrelloTask.checklist);
+    saveTrelloTaskField('checklist', currentTrelloTask.checklist);
+};
+
+window.toggleTrelloChecklistItem = function(itemId, isCompleted) {
+    if (!currentTrelloTask || !currentTrelloTask.checklist) return;
+    currentTrelloTask.checklist = currentTrelloTask.checklist.map((item, idx) => {
+        if (item.id === itemId || String(idx) === String(itemId)) {
+            return { ...item, completed: isCompleted };
+        }
+        return item;
+    });
+    renderTrelloChecklist(currentTrelloTask.checklist);
+    saveTrelloTaskField('checklist', currentTrelloTask.checklist);
+};
+
+window.deleteTrelloChecklistItem = function(itemId) {
+    if (!currentTrelloTask || !currentTrelloTask.checklist) return;
+    currentTrelloTask.checklist = currentTrelloTask.checklist.filter((item, idx) => {
+        return !(item.id === itemId || String(idx) === String(itemId));
+    });
+    renderTrelloChecklist(currentTrelloTask.checklist);
+    saveTrelloTaskField('checklist', currentTrelloTask.checklist);
+};
+
+function renderTrelloComments(comments) {
+    const container = document.getElementById('trello-comments-stream');
+    if (!container) return;
+    if (comments.length === 0) {
+        container.innerHTML = '<p style="color:#8c9bab;font-size:0.775rem;margin:0;">No comments yet. Write a comment above to log activity.</p>';
+        return;
     }
 
-    window.deleteTrelloComment = function(commentId) {
-        if (!commentId || !currentTrelloTask) return;
-        if (!confirm('Are you sure you want to delete this comment?')) return;
+    container.innerHTML = comments.map(c => `
+        <div class="comment-bubble-item" style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#0c66e4;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;">
+                ${(c.user || 'U').slice(0, 2).toUpperCase()}
+            </div>
+            <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:0.75rem;">
+                    <strong style="color:#dee4ea;">${c.user}</strong>
+                    <span style="color:#8c9bab;">${c.time_ago || c.created_at}</span>
+                </div>
+                <div style="background:#16181d;border:1px solid #22272b;border-radius:6px;padding:8px 12px;color:#dee4ea;font-size:0.825rem;line-height:1.45;white-space:pre-wrap;">${c.content}</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:4px;font-size:0.725rem;color:#8c9bab;">
+                    <span style="cursor:pointer;text-decoration:underline;">Reply</span>
+                    <span>•</span>
+                    <span style="cursor:pointer;text-decoration:underline;">Edit</span>
+                    ${c.id ? `<span>•</span><span onclick="deleteTrelloComment(${c.id})" style="cursor:pointer;color:#f87171;text-decoration:underline;">Delete</span>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
 
-        const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-        fetch(`/task/comment/${commentId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                if (currentTrelloTask.comments) {
-                    currentTrelloTask.comments = currentTrelloTask.comments.filter(c => c.id !== commentId);
-                    renderTrelloComments(currentTrelloTask.comments);
-                }
-                if (window.showToast) window.showToast('Comment deleted', 'info');
-            }
-        })
-        .catch(err => console.error('Error deleting comment:', err));
-    };
+window.deleteTrelloComment = function(commentId) {
+    if (!commentId || !currentTrelloTask) return;
+    if (!confirm('Are you sure you want to delete this comment?')) return;
 
-    window.submitTrelloComment = function() {
-        const textarea = document.getElementById('trello-comment-input');
-        if (!textarea) return;
-        const content = textarea.value.trim();
-        if (!content || !currentTrelloTask) return;
-
-        const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-        fetch(`/task/${currentTrelloTask.id}/comment/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ content: content })
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success && data.comment) {
-                textarea.value = '';
-                if (!currentTrelloTask.comments) currentTrelloTask.comments = [];
-                currentTrelloTask.comments.unshift(data.comment);
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch(`/task/comment/${commentId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (currentTrelloTask.comments) {
+                currentTrelloTask.comments = currentTrelloTask.comments.filter(c => c.id !== commentId);
                 renderTrelloComments(currentTrelloTask.comments);
-                if (window.showToast) window.showToast('Comment added!', 'success');
             }
-        })
-        .catch(err => console.error('Error posting comment:', err));
-    };
+            if (window.showToast) window.showToast('Comment deleted', 'info');
+        }
+    })
+    .catch(err => console.error('Error deleting comment:', err));
+};
+
+window.submitTrelloComment = function() {
+    const textarea = document.getElementById('trello-comment-input');
+    if (!textarea) return;
+    const content = textarea.value.trim();
+    if (!content || !currentTrelloTask) return;
+
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch(`/task/${currentTrelloTask.id}/comment/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ content: content })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.comment) {
+            textarea.value = '';
+            if (!currentTrelloTask.comments) currentTrelloTask.comments = [];
+            currentTrelloTask.comments.unshift(data.comment);
+            renderTrelloComments(currentTrelloTask.comments);
+            if (window.showToast) window.showToast('Comment added!', 'success');
+        }
+    })
+    .catch(err => console.error('Error posting comment:', err));
+};
 
     window.copyTrelloTitle = function() {
         const titleInput = document.getElementById('trello-task-title-input');
