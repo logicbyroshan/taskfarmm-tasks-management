@@ -1230,38 +1230,38 @@ function renderTrelloComments(comments = [], task = null) {
     if (!container) return;
 
     const t = task || currentTrelloTask;
-    const author = (t && t.user) ? t.user : 'prakash ahuja';
+    const author = (t && t.user) ? t.user : 'You';
     const initials = author.slice(0, 2).toUpperCase();
     const avatarBg = initials === 'AC' ? '#d97706' : '#0c66e4';
-    const listName = (t && (t.category_name || t.status_display)) ? (t.category_name || t.status_display) : 'Tasks for Roshan (D-G)';
-    const timeText = (t && t.created_at) ? t.created_at : 'Jul 22, 2026, 12:52 PM';
+    const listName = (t && (t.category_name || t.status_display)) ? (t.category_name || t.status_display) : 'General';
+    const timeText = (t && t.created_at) ? t.created_at : 'Just now';
 
     let html = '';
 
     // Render Comments first
     if (comments && comments.length > 0) {
         html += comments.map(c => {
-            const cUser = c.user || 'adarsh computer';
+            const cUser = c.user || 'User';
             const cInitials = cUser.slice(0, 2).toUpperCase();
-            const cBg = cInitials === 'AC' ? '#d97706' : '#0c66e4';
-            const cTime = c.time_ago || c.created_at || 'just now';
+            const cBg = cInitials === 'AC' ? '#d97706' : (cInitials === 'PA' ? '#7c3aed' : '#0c66e4');
+            const cTime = c.time_ago || c.created_at || 'Just now';
 
             return `
-                <div class="comment-item-row" style="display: flex; gap: 10px; align-items: flex-start;">
-                    <div style="width: 30px; height: 30px; border-radius: 50%; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
+                <div class="comment-item-row" id="comment-row-${c.id}" style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; aspect-ratio: 1/1; border-radius: 50% !important; background: ${cBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
                         ${cInitials}
                     </div>
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.825rem; margin-bottom: 3px;">
+                        <div style="font-size: 0.825rem; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
                             <strong style="color: #dee4ea;">${cUser}</strong>
-                            <span style="color: #579dff; font-size: 0.775rem; text-decoration: underline; margin-left: 6px; cursor: pointer;">${cTime}</span>
-                            ${c.is_edited ? '<span style="color: #8c9bab; font-size: 0.725rem; margin-left: 4px;">(edited)</span>' : ''}
+                            <span style="color: #8c9bab; font-size: 0.75rem;">${cTime}</span>
+                            ${c.is_edited ? '<span style="color: #579dff; font-size: 0.7rem; font-style: italic;">(edited)</span>' : ''}
                         </div>
-                        <div style="background: #22272b; border-radius: 4px; padding: 10px 14px; color: #dee4ea; font-size: 0.85rem; line-height: 1.5; word-break: break-word; white-space: pre-wrap;">${c.content}</div>
-                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px; font-size: 0.75rem; color: #8c9bab;">
-                            <span style="cursor: pointer; text-decoration: underline;" onclick="replyToTrelloComment('${cUser}')">• Reply</span>
-                            <span style="cursor: pointer; text-decoration: underline;" onclick="editTrelloCommentInline(${c.id})">• Edit</span>
-                            ${c.id ? `<span style="cursor: pointer; text-decoration: underline;" onclick="deleteTrelloComment(${c.id})">• Delete</span>` : ''}
+                        <div id="comment-bubble-${c.id}" style="background: #181b1f; border: 1px solid #282e33; border-radius: 6px; padding: 8px 12px; color: #dee4ea; font-size: 0.85rem; line-height: 1.5; word-break: break-word; white-space: pre-wrap;">${escapeHtml(c.content)}</div>
+                        <div id="comment-actions-${c.id}" style="display: flex; align-items: center; gap: 10px; margin-top: 4px; font-size: 0.75rem; color: #8c9bab;">
+                            <span style="cursor: pointer; color: #8c9bab; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="replyToTrelloComment('${cUser}')">Reply</span>
+                            <span style="cursor: pointer; color: #8c9bab; transition: color 0.15s ease;" onmouseenter="this.style.color='#579dff'" onmouseleave="this.style.color='#8c9bab'" onclick="editTrelloCommentInline(${c.id})">Edit</span>
+                            ${c.id ? `<span style="cursor: pointer; color: #ef4444; transition: opacity 0.15s ease;" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'" onclick="deleteTrelloComment(${c.id})">Delete</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -1269,19 +1269,19 @@ function renderTrelloComments(comments = [], task = null) {
         }).join('');
     }
 
-    // Activity Log Entry at bottom of feed (e.g. prakash ahuja added this card to Tasks for Roshan)
+    // Activity Log Entry at bottom of feed
     html += `
         <div class="activity-log-item" style="display: flex; gap: 10px; align-items: flex-start; margin-top: 6px;">
-            <div style="width: 30px; height: 30px; border-radius: 50%; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
+            <div style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; max-width: 28px; max-height: 28px; aspect-ratio: 1/1; border-radius: 50% !important; background: ${avatarBg}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700; flex-shrink: 0; box-sizing: border-box;">
                 ${initials}
             </div>
-            <div style="flex: 1; font-size: 0.85rem; line-height: 1.4;">
+            <div style="flex: 1; font-size: 0.825rem; line-height: 1.4;">
                 <div>
                     <strong style="color: #dee4ea;">${author}</strong> 
-                    <span style="color: #9fadbc;">added this card to</span> 
+                    <span style="color: #8c9bab;">added this card to</span> 
                     <strong style="color: #dee4ea;">${listName}</strong>
                 </div>
-                <div style="color: #579dff; font-size: 0.75rem; text-decoration: underline; cursor: pointer; margin-top: 2px;">
+                <div style="color: #579dff; font-size: 0.75rem; margin-top: 2px;">
                     ${timeText}
                 </div>
             </div>
@@ -1296,7 +1296,6 @@ window.replyToTrelloComment = function(username) {
     if (input) {
         input.value = `@${username} `;
         input.focus();
-        document.getElementById('trello-comment-save-btn').style.display = 'inline-block';
     }
 };
 
@@ -1304,18 +1303,68 @@ window.editTrelloCommentInline = function(commentId) {
     if (!commentId || !currentTrelloTask || !currentTrelloTask.comments) return;
     const comment = currentTrelloTask.comments.find(c => c.id === commentId);
     if (!comment) return;
-    const newContent = prompt('Edit comment:', comment.content);
-    if (newContent === null || newContent.trim() === '' || newContent.trim() === comment.content) return;
 
-    comment.content = newContent.trim();
-    comment.is_edited = true;
+    const bubble = document.getElementById(`comment-bubble-${commentId}`);
+    const actions = document.getElementById(`comment-actions-${commentId}`);
+    if (!bubble) return;
+
+    if (actions) actions.style.display = 'none';
+
+    bubble.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <textarea id="edit-comment-input-${commentId}" 
+                      style="width: 100%; background: #121417; border: 1px solid #579dff; border-radius: 6px; color: #dee4ea; font-size: 0.85rem; padding: 8px 10px; resize: vertical; min-height: 48px; box-sizing: border-box; outline: none; font-family: inherit;"
+                      onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); saveEditedTrelloComment(${commentId}); }">${comment.content}</textarea>
+            <div style="display: flex; gap: 6px;">
+                <button type="button" onclick="saveEditedTrelloComment(${commentId})" style="background: #579dff; color: #000000; font-size: 0.75rem; font-weight: 700; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer;">Save</button>
+                <button type="button" onclick="cancelEditTrelloComment(${commentId})" style="background: transparent; color: #8c9bab; font-size: 0.75rem; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    `;
+    const textarea = document.getElementById(`edit-comment-input-${commentId}`);
+    if (textarea) {
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }
+};
+
+window.saveEditedTrelloComment = function(commentId) {
+    const textarea = document.getElementById(`edit-comment-input-${commentId}`);
+    if (!textarea) return;
+    const content = textarea.value.trim();
+    if (!content) return;
+
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch(`/task/comment/${commentId}/edit/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ content: content })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const comment = currentTrelloTask.comments.find(c => c.id === commentId);
+            if (comment) {
+                comment.content = content;
+                comment.is_edited = true;
+            }
+            renderTrelloComments(currentTrelloTask.comments);
+            if (window.showToast) window.showToast('Comment updated', 'success', 1000);
+        }
+    })
+    .catch(err => console.error('Error updating comment:', err));
+};
+
+window.cancelEditTrelloComment = function(commentId) {
     renderTrelloComments(currentTrelloTask.comments);
-    if (window.showToast) window.showToast('Comment updated', 'info', 1200);
 };
 
 window.deleteTrelloComment = function(commentId) {
     if (!commentId || !currentTrelloTask) return;
-    if (!confirm('Are you sure you want to delete this comment?')) return;
 
     const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
     fetch(`/task/comment/${commentId}/delete/`, {
@@ -1332,7 +1381,7 @@ window.deleteTrelloComment = function(commentId) {
                 currentTrelloTask.comments = currentTrelloTask.comments.filter(c => c.id !== commentId);
                 renderTrelloComments(currentTrelloTask.comments);
             }
-            if (window.showToast) window.showToast('Comment deleted', 'info');
+            if (window.showToast) window.showToast('Comment deleted', 'info', 1000);
         }
     })
     .catch(err => console.error('Error deleting comment:', err));

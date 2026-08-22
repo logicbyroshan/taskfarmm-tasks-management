@@ -451,6 +451,37 @@ def task_add_comment(request, pk):
 
 
 @login_required
+@require_http_methods(['POST', 'PUT'])
+def task_comment_edit(request, pk):
+    """Edits a task comment (comment author only)."""
+    comment = get_object_or_404(
+        TaskComment.objects.filter(user=request.user),
+        pk=pk
+    )
+    try:
+        data = json.loads(request.body)
+        content = data.get('content', '').strip()
+    except (json.JSONDecodeError, AttributeError):
+        content = request.POST.get('content', '').strip()
+
+    if not content:
+        return JsonResponse({'success': False, 'error': 'Comment content cannot be empty.'}, status=400)
+
+    comment.content = content
+    comment.save(update_fields=['content', 'updated_at'])
+    return JsonResponse({
+        'success': True,
+        'message': 'Comment updated.',
+        'comment': {
+            'id': comment.id,
+            'user': comment.user.username,
+            'content': comment.content,
+            'is_edited': True,
+        }
+    })
+
+
+@login_required
 @require_http_methods(['POST', 'DELETE'])
 def task_comment_delete(request, pk):
     """Deletes a task comment (comment author or task owner)."""
