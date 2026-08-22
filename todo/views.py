@@ -247,6 +247,51 @@ def logout_view(request):
     return redirect('dashboard')
 
 
+def switch_user(request):
+    """Allows instant switching between collaborator profiles for multi-user live testing."""
+    from django.contrib.auth import login as auth_login
+    from django.contrib.auth.models import User as AuthUser
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username', '').strip()
+        except Exception:
+            username = request.POST.get('username', '').strip()
+
+        if not username:
+            return JsonResponse({'success': False, 'message': 'Username required.'}, status=400)
+
+        display_names = {
+            'prakash_ahuja': ('Prakash', 'Ahuja'),
+            'adarsh_computer': ('Adarsh', 'Computer'),
+            'kamal_dewnani': ('Kamal', 'Dewnani'),
+            'roshan_damor': ('Roshan', 'Damor'),
+            'demo_user': ('Demo', 'User')
+        }
+        first_name, last_name = display_names.get(username, (username.capitalize(), ''))
+
+        user, _ = AuthUser.objects.get_or_create(
+            username=username,
+            defaults={
+                'first_name': first_name,
+                'last_name': last_name,
+                'email': f'{username}@taskflix.com'
+            }
+        )
+        auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        return JsonResponse({
+            'success': True,
+            'message': f'Switched to {user.username}',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'initials': user.username[:2].upper()
+            }
+        })
+    return JsonResponse({'success': False, 'message': 'POST required.'}, status=405)
+
+
 @login_required
 def ai_assistant_page(request):
     """Renders the AI Assistant page."""

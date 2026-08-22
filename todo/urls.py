@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/export/tasks/', views.tasks_export_api, name='tasks_export_api'),
 
     # Auth & AI endpoints
+    path('api/auth/switch-user/', views.switch_user, name='switch_user'),
     path('api/auth/verify-token/', api_auth.api_verify_token, name='api_verify_token'),
     path('api/auth/create-session/', api_auth.api_create_session, name='api_create_session'),
     path('api/auth/user-info/', api_auth.api_user_info, name='api_user_info'),

@@ -1659,3 +1659,118 @@ function setupWaveBackground() {
     animationFrameId = requestAnimationFrame(render);
 }
 
+// ==============================================================================
+//  MULTI-USER LIVE COLLABORATION & CARD SYNC ENGINE
+// ==============================================================================
+
+window.toggleUserSwitcherMenu = function(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('user-switcher-menu');
+    if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+};
+
+window.switchCollaboratorUser = function(username) {
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch('/api/auth/switch-user/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ username: username })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (window.showToast) window.showToast(`Switched account to ${username}!`, 'success', 1000);
+            setTimeout(() => { window.location.reload(); }, 350);
+        }
+    })
+    .catch(err => console.error('Error switching user:', err));
+};
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#user-switcher-btn')) {
+        const menu = document.getElementById('user-switcher-menu');
+        if (menu) menu.style.display = 'none';
+    }
+});
+
+// Periodic Multi-User Card Sync Poller (Live Real-Time updates when viewing cards)
+let trelloLiveSyncTimer = null;
+
+function startTrelloLiveSync() {
+    if (trelloLiveSyncTimer) clearInterval(trelloLiveSyncTimer);
+    trelloLiveSyncTimer = setInterval(() => {
+        if (!currentTrelloTask) return;
+        const modal = document.getElementById('trello-task-modal');
+        if (!modal || modal.style.display === 'none') return;
+        
+        // Skip polling if the current user is actively typing in title, description, or comment
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+
+        fetch(`/task/${currentTrelloTask.id}/update/`, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.task && currentTrelloTask && data.task.id === currentTrelloTask.id) {
+                const oldCommentCount = (currentTrelloTask.comments || []).length;
+                const newCommentCount = (data.task.comments || []).length;
+                
+                // Status sync
+                if (data.task.status !== currentTrelloTask.status) {
+                    currentTrelloTask.status = data.task.status;
+                    const statusSelect = document.getElementById('trello-status-select');
+                    if (statusSelect) statusSelect.value = data.task.status;
+                    const statusNames = {
+                        'not-started': 'To Do', 'in-progress': 'In Progress', 'backlog': 'Backlog',
+                        'on-hold': 'On Hold', 'completed': 'Done', 'canceled': 'Canceled'
+                    };
+                    const statusPillText = document.getElementById('trello-status-pill-text');
+                    if (statusPillText) statusPillText.textContent = statusNames[data.task.status] || data.task.status;
+                    updateTrelloStatusBadge(data.task.status);
+                    updateTrelloCompleteIcon(data.task.status === 'completed');
+                }
+
+                // Checklist sync
+                if (JSON.stringify(data.task.checklist) !== JSON.stringify(currentTrelloTask.checklist)) {
+                    currentTrelloTask.checklist = data.task.checklist;
+                    renderTrelloChecklist(data.task.checklist);
+                }
+
+                // Description sync
+                if (data.task.description !== currentTrelloTask.description) {
+                    currentTrelloTask.description = data.task.description;
+                    const descDisplay = document.getElementById('trello-desc-display');
+                    if (descDisplay && descDisplay.style.display !== 'none') {
+                        if (data.task.description && data.task.description.trim()) {
+                            descDisplay.textContent = data.task.description;
+                            descDisplay.style.color = '#dee4ea';
+                        } else {
+                            descDisplay.textContent = 'Add a more detailed description...';
+                            descDisplay.style.color = '#8c9bab';
+                        }
+                    }
+                }
+
+                // Comments & activity sync
+                if (newCommentCount !== oldCommentCount || JSON.stringify(data.task.comments) !== JSON.stringify(currentTrelloTask.comments)) {
+                    currentTrelloTask.comments = data.task.comments;
+                    renderTrelloComments(data.task.comments, data.task);
+                    if (newCommentCount > oldCommentCount && window.showToast) {
+                        window.showToast('💬 New activity received from collaborator', 'info', 1500);
+                    }
+                }
+            }
+        })
+        .catch(err => console.debug('Sync poll check:', err));
+    }, 3500);
+}
+
+// Start live sync poller on page initialization
+startTrelloLiveSync();
+
