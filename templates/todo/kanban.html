@@ -24,7 +24,7 @@
     backdrop-filter: blur(12px);
     border: 1px solid #282e33;
     border-radius: 10px;
-    padding: 8px 14px;
+    padding: 12px 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -333,17 +333,29 @@
     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         
         {% if board_members %}
-        <!-- Board Members Stack with Filter -->
-        <div style="display: flex; align-items: center; gap: 6px; background: #16181d; border: 1px solid #282e33; border-radius: 6px; height: 34px; padding: 0 8px; box-sizing: border-box;">
-            <span style="font-size: 0.75rem; color: #8c9bab; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+        <!-- Stacked Square Team Members Component (Inspired by Image 2) -->
+        <div style="display: flex; align-items: center; gap: 8px; background: #16181d; border: 1px solid #282e33; border-radius: 8px; height: 34px; padding: 0 8px; box-sizing: border-box;">
+            <span style="font-size: 0.725rem; color: #8c9bab; font-weight: 700; display: flex; align-items: center; gap: 5px; text-transform: uppercase; letter-spacing: 0.04em;">
                 <i class="fas fa-users" style="color: #579dff; font-size: 0.75rem;"></i> Team:
             </span>
-            <button type="button" onclick="filterBoardByMember('all')" class="member-filter-btn" id="filter-member-all" style="height: 24px; background: #0c66e4; color: #ffffff; border: none; border-radius: 4px; padding: 0 10px; font-size: 0.725rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease;">
-                All
-            </button>
-            <div style="display: flex; align-items: center; gap: 4px; margin-left: 2px;">
+            <div class="team-avatar-stack" style="display: flex; align-items: center; margin-left: 2px;">
+                <button type="button" 
+                        onclick="filterBoardByMember('all')" 
+                        class="member-filter-btn team-stack-square-avatar active" 
+                        id="filter-member-all" 
+                        title="Show all tasks"
+                        style="height: 24px; padding: 0 8px; border-radius: 5px; background: #2563eb; color: #ffffff; border: 1.5px solid #000000; font-size: 0.725rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease; z-index: 20; position: relative; box-shadow: 0 1px 4px rgba(0,0,0,0.5);">
+                    All
+                </button>
                 {% for member in board_members %}
-                <button type="button" onclick="filterBoardByMember('{{ member.username }}')" class="member-filter-btn" id="filter-member-{{ member.username }}" title="Filter cards for {{ member.username }}" style="width: 24px; height: 24px; min-width: 24px; border-radius: 4px; background: {% cycle '#0c66e4' '#d97706' '#216e4e' '#7c3aed' %}; color: #ffffff; font-size: 0.65rem; font-weight: 700; border: 1px solid #282e33; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease;" onmouseenter="this.style.transform='scale(1.08)'" onmouseleave="this.style.transform='scale(1)'">
+                <button type="button" 
+                        onclick="filterBoardByMember('{{ member.username }}')" 
+                        class="member-filter-btn team-stack-square-avatar" 
+                        id="filter-member-{{ member.username }}" 
+                        title="Filter tasks for {{ member.username }}"
+                        style="position: relative; z-index: {{ forloop.revcounter }}; margin-left: -6px; width: 24px; height: 24px; min-width: 24px; border-radius: 5px; background: {% cycle 'linear-gradient(135deg, #0284c7, #0369a1)' 'linear-gradient(135deg, #7c3aed, #6d28d9)' 'linear-gradient(135deg, #059669, #047857)' 'linear-gradient(135deg, #d97706, #b45309)' 'linear-gradient(135deg, #db2777, #be185d)' %}; color: #ffffff; font-size: 0.65rem; font-weight: 700; border: 1.5px solid #000000; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease, z-index 0.15s ease, border-color 0.15s ease; box-shadow: 0 1px 4px rgba(0,0,0,0.5);"
+                        onmouseenter="this.style.transform='translateY(-2px) scale(1.1)'; this.style.zIndex='40'; this.style.borderColor='#3b82f6';"
+                        onmouseleave="this.style.transform='translateY(0) scale(1)'; this.style.zIndex='{{ forloop.revcounter }}'; if(!this.classList.contains('active')) this.style.borderColor='#000000';">
                     {{ member.username|slice:":2"|upper }}
                 </button>
                 {% endfor %}
@@ -415,12 +427,12 @@
                             {% endif %}
                             <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
                                 {% for assignee in task.assignees.all %}
-                                    <span title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                    <span title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; min-width: 22px; border-radius: 5px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(96, 165, 250, 0.4); box-shadow: 0 1px 3px rgba(0,0,0,0.4);">
                                         {{ assignee.username|slice:":2"|upper }}
                                     </span>
                                 {% empty %}
                                     {% if task.user %}
-                                    <span title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                    <span title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; min-width: 22px; border-radius: 5px; background: linear-gradient(135deg, #1e293b, #0f172a); color: #94a3b8; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #334155; box-shadow: 0 1px 3px rgba(0,0,0,0.4);">
                                         {{ task.user.username|slice:":2"|upper }}
                                     </span>
                                     {% endif %}
@@ -616,13 +628,25 @@
 
     function filterBoardByMember(username) {
         document.querySelectorAll('.member-filter-btn').forEach(btn => {
-            btn.style.background = '#16181d';
-            btn.style.color = '#8c9bab';
+            btn.classList.remove('active');
+            if (btn.id === 'filter-member-all') {
+                btn.style.background = '#16181d';
+                btn.style.color = '#8c9bab';
+                btn.style.borderColor = '#000000';
+            } else {
+                btn.style.borderColor = '#000000';
+            }
         });
         const activeBtn = document.getElementById(username === 'all' ? 'filter-member-all' : `filter-member-${username}`);
         if (activeBtn) {
-            activeBtn.style.background = '#0c66e4';
-            activeBtn.style.color = '#ffffff';
+            activeBtn.classList.add('active');
+            if (username === 'all') {
+                activeBtn.style.background = '#2563eb';
+                activeBtn.style.color = '#ffffff';
+            } else {
+                activeBtn.style.borderColor = '#3b82f6';
+                activeBtn.style.zIndex = '35';
+            }
         }
 
         document.querySelectorAll('.kanban-card').forEach(card => {
