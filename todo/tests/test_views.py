@@ -265,3 +265,16 @@ class ViewTests(TestCase):
         self.assertEqual(rename_res.status_code, 200)
         self.project.refresh_from_db()
         self.assertEqual(self.project.get_column_title('not-started'), 'Up Next')
+
+    def test_autocorrect_api(self):
+        res = self.client.post(
+            reverse('api_autocorrect'),
+            data=json.dumps({'text': 'FLex print krna hai Sned to : Gopal Ji'}),
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['success'])
+        self.assertIn('karna', data['corrected'].lower())
+        self.assertIn('send to:', data['corrected'].lower())
+        self.assertTrue(data['changed'])

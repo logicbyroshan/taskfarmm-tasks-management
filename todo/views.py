@@ -34,6 +34,7 @@ from django.core.files.base import ContentFile
 # Local models, forms, and services
 from .models import Task, Category, UserProfile, TaskComment, TaskAttachment
 from .forms import TaskForm, CategoryForm, UserUpdateForm, UserProfileForm, PasswordUpdateForm
+from .autocorrect import autocorrect_text
 from .services import (
     TaskService, CategoryService, ExportService,
     PreDefinedTaskService, StatsService,
@@ -1054,4 +1055,27 @@ def ai_create_project(request):
         })
     except Exception as e:
         logger.error('AI create project error: %s', e)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def api_autocorrect(request):
+    """
+    Intelligent multi-lingual spell correction and text normalization
+    endpoint supporting English, Hindi, and Hinglish.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body)
+        text = data.get('text', '')
+        result = autocorrect_text(text)
+        return JsonResponse({
+            'success': True,
+            'original': result['original'],
+            'corrected': result['corrected'],
+            'changed': result['changed'],
+        })
+    except Exception as e:
+        logger.error('Auto-correct error: %s', e)
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

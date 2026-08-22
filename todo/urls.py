@@ -54,4 +54,5 @@ urlpatterns = [
     path('api/ai/suggest/', views.api_ai_suggest, name='api_ai_suggest'),
     path('api/ai/create-task/', views.ai_create_task, name='ai_create_task'),
     path('api/ai/create-project/', views.ai_create_project, name='ai_create_project'),
+    path('api/autocorrect/', views.api_autocorrect, name='api_autocorrect'),
 ]

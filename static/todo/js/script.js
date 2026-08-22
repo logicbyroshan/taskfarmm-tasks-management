@@ -131,6 +131,51 @@ window.openAddProjectModal = function() {
 };
 
 /**
+ * Global Intelligent Auto-Correct & Spell-Check helper
+ * Corrects spelling in English, Hindi & Hinglish with subtle animation & toast.
+ */
+window.autoCorrectInput = function(inputElementOrId) {
+    const el = typeof inputElementOrId === 'string' ? document.getElementById(inputElementOrId) : inputElementOrId;
+    if (!el) return;
+    const originalText = el.value;
+    if (!originalText || !originalText.trim()) return;
+
+    fetch('/api/autocorrect/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ text: originalText })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.corrected) {
+            el.value = data.corrected;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+
+            // Visual feedback flash
+            const prevTransition = el.style.transition;
+            el.style.transition = 'background 0.3s ease, border-color 0.3s ease';
+            el.style.background = 'rgba(59, 130, 246, 0.15)';
+            el.style.borderColor = '#579dff';
+            setTimeout(() => {
+                el.style.background = '';
+                el.style.borderColor = '';
+                el.style.transition = prevTransition;
+            }, 600);
+
+            if (data.changed && window.showToast) {
+                window.showToast('✨ Auto-corrected spelling & Hinglish!', 'info', 1800);
+            }
+        }
+    })
+    .catch(err => console.error('Auto-correct error:', err));
+};
+
+/**
  * Global Toast Notification System
  */
 window.showToast = function(message, type = 'success', duration = 3500) {

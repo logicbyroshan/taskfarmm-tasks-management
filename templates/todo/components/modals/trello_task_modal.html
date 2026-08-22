@@ -78,14 +78,18 @@
                     <button type="button" id="trello-title-check-btn" onclick="toggleTrelloComplete()" title="Mark complete" style="background: transparent; border: none; cursor: pointer; padding: 0; color: #8c9bab; font-size: 1.25rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <i class="far fa-circle" id="trello-circle-icon"></i>
                     </button>
-                    <div style="flex: 1; min-width: 0;">
+                    <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;">
                         <input type="text" id="trello-task-title-input" 
                                class="trello-title-input" 
                                placeholder="Task title..."
-                               style="width: 100%; background: transparent; border: 1px solid transparent; border-radius: 4px; font-size: 1.45rem; font-weight: 700; color: #dee4ea; padding: 2px 4px; outline: none; box-sizing: border-box; font-family: inherit; letter-spacing: -0.01em;"
+                               spellcheck="true"
+                               style="flex: 1; background: transparent; border: 1px solid transparent; border-radius: 4px; font-size: 1.45rem; font-weight: 700; color: #dee4ea; padding: 2px 4px; outline: none; box-sizing: border-box; font-family: inherit; letter-spacing: -0.01em;"
                                onfocus="this.style.background='#22272b'; this.style.borderColor='#579dff';" 
                                onblur="this.style.background='transparent'; this.style.borderColor='transparent'; saveTrelloTaskField('title', this.value);"
                                onkeydown="if(event.key === 'Enter'){ this.blur(); }">
+                        <button type="button" onclick="autoCorrectInput('trello-task-title-input')" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 4px; padding: 4px 8px; font-size: 0.725rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Auto-correct title">
+                            <i class="fas fa-magic"></i> Auto-Correct
+                        </button>
                     </div>
                 </div>
 
@@ -157,11 +161,17 @@
 
                 <!-- Description Section with seamless Auto-save & Paste Upload -->
                 <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
-                    <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-align-left" style="color: #9fadbc; font-size: 0.85rem;"></i> Description
-                    </h4>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-align-left" style="color: #9fadbc; font-size: 0.85rem;"></i> Description
+                        </h4>
+                        <button type="button" onclick="autoCorrectInput('trello-description-input')" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 4px; padding: 2px 8px; font-size: 0.725rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;" title="Auto-correct description in English & Hinglish">
+                            <i class="fas fa-magic"></i> Auto-Correct
+                        </button>
+                    </div>
                     <textarea id="trello-description-input" 
                               rows="3" 
+                              spellcheck="true"
                               placeholder="Add a more detailed description or paste (Ctrl+V) images/files..."
                               style="width: 100%; background: #22272b; border: 1px solid transparent; border-radius: 6px; color: #dee4ea; padding: 10px 14px; font-size: 0.875rem; line-height: 1.5; outline: none; font-family: inherit; box-sizing: border-box; resize: vertical; min-height: 64px; transition: border-color 0.15s ease, background 0.15s ease;"
                               onfocus="this.style.background='#1d2125'; this.style.borderColor='#579dff';"
@@ -188,6 +198,7 @@
                             <i class="fas fa-check-square" style="color: #579dff; font-size: 0.95rem;"></i>
                             <input type="text" id="trello-checklist-title-input" value="Checklist" 
                                    title="Click to edit checklist name"
+                                   spellcheck="true"
                                    style="font-size: 0.95rem; font-weight: 600; color: #dee4ea; background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 2px 6px; outline: none; width: auto; max-width: 240px; transition: all 0.15s ease;"
                                    onfocus="this.style.background='#1d2125'; this.style.borderColor='#579dff';"
                                    onblur="this.style.background='transparent'; this.style.borderColor='transparent'; saveTrelloChecklistTitle(this.value);"
@@ -209,6 +220,7 @@
                     <div id="trello-checklist-items" style="display: flex; flex-direction: column; gap: 8px;"></div>
                     <div style="display: flex; gap: 8px; margin-top: 6px;">
                         <input type="text" id="trello-new-item-input" placeholder="Add an item..." 
+                               spellcheck="true"
                                style="flex: 1; height: 34px; font-size: 0.85rem; background: #22272b; border: 1px solid #2e353b; border-radius: 6px; padding: 0 12px; color: #dee4ea; outline: none; transition: border-color 0.15s ease;"
                                onfocus="this.style.borderColor='#579dff'; this.style.background='#1d2125';"
                                onblur="this.style.borderColor='#2e353b'; this.style.background='#22272b';"
@@ -227,12 +239,16 @@
                     <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-comment-alt" style="color: #579dff; font-size: 0.85rem;"></i> Comments and activity
                     </h4>
+                    <button type="button" onclick="autoCorrectInput('trello-comment-input')" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 4px; padding: 2px 8px; font-size: 0.725rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;" title="Auto-correct comment in English & Hinglish">
+                        <i class="fas fa-magic"></i> Auto-Correct
+                    </button>
                 </div>
 
                 <!-- Write Comment Box (Auto-submit on Enter) -->
                 <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
                     <textarea id="trello-comment-input" 
                               rows="2" 
+                              spellcheck="true"
                               placeholder="Write a comment... (Press Enter to post)" 
                               style="width: 100%; background: #181b1f; border: 1px solid #282e33; border-radius: 8px; color: #dee4ea; font-size: 0.85rem; padding: 10px 14px; resize: vertical; min-height: 46px; box-sizing: border-box; outline: none; font-family: inherit; transition: border-color 0.15s ease;"
                               onfocus="this.style.borderColor='#579dff'; this.style.background='#14171a';"

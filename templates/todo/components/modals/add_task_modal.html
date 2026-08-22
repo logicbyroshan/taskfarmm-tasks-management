@@ -12,15 +12,24 @@
             {% csrf_token %}
             <div class="modal-body" style="padding: 18px; display: flex; flex-direction: column; gap: 14px;">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label for="add-task-title-input" style="font-size: 0.85rem; font-weight: 600; color: #dee4ea; margin-bottom: 6px; display: block;">
-                        Task Title *
-                    </label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label for="add-task-title-input" style="font-size: 0.85rem; font-weight: 600; color: #dee4ea; margin: 0;">
+                            Task Title *
+                        </label>
+                        <button type="button" 
+                                onclick="autoCorrectInput('add-task-title-input')" 
+                                style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; border-radius: 4px; padding: 2px 8px; font-size: 0.725rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;"
+                                title="Auto-correct spelling in English, Hindi & Hinglish">
+                            <i class="fas fa-magic"></i> Auto-Correct
+                        </button>
+                    </div>
                     <input type="text" 
                            id="add-task-title-input" 
                            name="title" 
                            required 
+                           spellcheck="true"
                            class="form-control" 
-                           placeholder="e.g. Design hero section layout" 
+                           placeholder="e.g. Flex print karna hai Send to: Gopal Ji" 
                            style="background: #121316; border: 1px solid #27272a; color: #dee4ea; font-size: 0.9rem; padding: 10px 12px; border-radius: 6px; width: 100%; box-sizing: border-box; outline: none; font-family: inherit;"
                            onfocus="this.style.borderColor='#3b82f6';"
                            onblur="this.style.borderColor='#27272a';">
