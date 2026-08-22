@@ -172,7 +172,7 @@
         </p>
     </div>
 
-    <div class="kanban-actions" style="display: flex; align-items: center; gap: 10px;">
+    <div class="kanban-actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <!-- Project Switcher Dropdown -->
         <div class="project-filter-box" style="display: flex; align-items: center; gap: 8px;">
             <label for="kanban-project-select" style="font-size: 0.825rem; font-weight: 600; color: var(--text-muted);"><i class="fas fa-folder"></i> Project:</label>
@@ -184,6 +184,21 @@
                 {% endfor %}
             </select>
         </div>
+
+        {% if board_members %}
+        <!-- Board Members Bar & Filter -->
+        <div class="board-members-bar" style="display: flex; align-items: center; gap: 6px; background: #14171a; border: 1px solid #282e33; border-radius: 999px; padding: 3px 10px;">
+            <span style="font-size: 0.775rem; color: #8c9bab; font-weight: 600; margin-right: 2px;"><i class="fas fa-users" style="color: #579dff; font-size: 0.75rem;"></i> Members:</span>
+            <button type="button" onclick="filterBoardByMember('all')" class="member-filter-btn" id="filter-member-all" style="background: #0c66e4; color: #ffffff; border: none; border-radius: 999px; padding: 2px 10px; font-size: 0.725rem; font-weight: 700; cursor: pointer;">
+                All
+            </button>
+            {% for member in board_members %}
+            <button type="button" onclick="filterBoardByMember('{{ member.username }}')" class="member-filter-btn" id="filter-member-{{ member.username }}" title="Filter cards for {{ member.username }}" style="width: 26px; height: 26px; border-radius: 50%; background: #282e33; color: #dee4ea; font-size: 0.7rem; font-weight: 700; border: 1px solid #333c43; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;">
+                {{ member.username|slice:":2"|upper }}
+            </button>
+            {% endfor %}
+        </div>
+        {% endif %}
 
         <button type="button" class="trello-pill-action" onclick="openShareProjectModal({{ selected_project_id|default:'null' }})" style="height: 38px; background: #282e33; color: #b6c2cf; border: 1px solid #333c43; border-radius: 6px; padding: 0 14px; font-size: 0.825rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
             <i class="fas fa-user-plus" style="color: #579dff;"></i> Share Board
@@ -213,6 +228,7 @@
                     <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
                          id="kanban-card-{{ task.id }}" 
                          data-task-id="{{ task.id }}" 
+                         data-assignees="{% for a in task.assignees.all %}{{ a.username }},{% endfor %}{{ task.user.username }}"
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
@@ -233,10 +249,23 @@
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
+                            <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                                {% for assignee in task.assignees.all %}
+                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                        {{ assignee.username|slice:":2"|upper }}
+                                    </span>
+                                {% empty %}
+                                    {% if task.user %}
+                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                        {{ task.user.username|slice:":2"|upper }}
+                                    </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 {% empty %}
@@ -260,6 +289,7 @@
                     <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
                          id="kanban-card-{{ task.id }}" 
                          data-task-id="{{ task.id }}" 
+                         data-assignees="{% for a in task.assignees.all %}{{ a.username }},{% endfor %}{{ task.user.username }}"
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
@@ -280,10 +310,23 @@
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
+                            <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                                {% for assignee in task.assignees.all %}
+                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                        {{ assignee.username|slice:":2"|upper }}
+                                    </span>
+                                {% empty %}
+                                    {% if task.user %}
+                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                        {{ task.user.username|slice:":2"|upper }}
+                                    </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 {% empty %}
@@ -307,6 +350,7 @@
                     <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
                          id="kanban-card-{{ task.id }}" 
                          data-task-id="{{ task.id }}" 
+                         data-assignees="{% for a in task.assignees.all %}{{ a.username }},{% endfor %}{{ task.user.username }}"
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
@@ -327,10 +371,23 @@
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
+                            <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                                {% for assignee in task.assignees.all %}
+                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                        {{ assignee.username|slice:":2"|upper }}
+                                    </span>
+                                {% empty %}
+                                    {% if task.user %}
+                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                        {{ task.user.username|slice:":2"|upper }}
+                                    </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 {% empty %}
@@ -354,6 +411,7 @@
                     <div class="kanban-card is-completed" 
                          id="kanban-card-{{ task.id }}" 
                          data-task-id="{{ task.id }}" 
+                         data-assignees="{% for a in task.assignees.all %}{{ a.username }},{% endfor %}{{ task.user.username }}"
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
@@ -374,10 +432,23 @@
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
+                            <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                                {% for assignee in task.assignees.all %}
+                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                        {{ assignee.username|slice:":2"|upper }}
+                                    </span>
+                                {% empty %}
+                                    {% if task.user %}
+                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                        {{ task.user.username|slice:":2"|upper }}
+                                    </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 {% empty %}
@@ -401,6 +472,7 @@
                     <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
                          id="kanban-card-{{ task.id }}" 
                          data-task-id="{{ task.id }}" 
+                         data-assignees="{% for a in task.assignees.all %}{{ a.username }},{% endfor %}{{ task.user.username }}"
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
@@ -421,10 +493,23 @@
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
+                            <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                                {% for assignee in task.assignees.all %}
+                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                        {{ assignee.username|slice:":2"|upper }}
+                                    </span>
+                                {% empty %}
+                                    {% if task.user %}
+                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                        {{ task.user.username|slice:":2"|upper }}
+                                    </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 {% empty %}
@@ -448,6 +533,7 @@
                     <div class="kanban-card" 
                          id="kanban-card-{{ task.id }}" 
                          data-task-id="{{ task.id }}" 
+                         data-assignees="{% for a in task.assignees.all %}{{ a.username }},{% endfor %}{{ task.user.username }}"
                          draggable="true" 
                          ondragstart="handleDragStart(event)" 
                          onclick="openTrelloModal({{ task.id }})">
@@ -468,10 +554,23 @@
                             </span>
                             {% endif %}
                             {% if task.due_date %}
-                            <span style="color: #71717a; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                            <span style="color: #71717a; display: flex; align-items: center; gap: 4px;">
                                 <i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}
                             </span>
                             {% endif %}
+                            <div class="card-assignees" style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                                {% for assignee in task.assignees.all %}
+                                    <span class="user-avatar-badge" title="Assigned to {{ assignee.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.65rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                                        {{ assignee.username|slice:":2"|upper }}
+                                    </span>
+                                {% empty %}
+                                    {% if task.user %}
+                                    <span class="user-avatar-badge" title="Created by {{ task.user.username }}" style="width: 22px; height: 22px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                                        {{ task.user.username|slice:":2"|upper }}
+                                    </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 {% empty %}
@@ -618,11 +717,36 @@
                     const step = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 70);
                     scrollWrapper.scrollBy({
                         left: step,
-                        behavior: 'smooth'
-                    });
                 }
             }, { passive: false });
         }
     });
+
+    function filterBoardByMember(username) {
+        document.querySelectorAll('.member-filter-btn').forEach(btn => {
+            btn.style.background = '#282e33';
+            btn.style.color = '#dee4ea';
+            btn.style.border = '1px solid #333c43';
+        });
+        const activeBtn = document.getElementById(username === 'all' ? 'filter-member-all' : `filter-member-${username}`);
+        if (activeBtn) {
+            activeBtn.style.background = '#0c66e4';
+            activeBtn.style.color = '#ffffff';
+            activeBtn.style.border = 'none';
+        }
+
+        document.querySelectorAll('.kanban-card').forEach(card => {
+            if (username === 'all') {
+                card.style.display = 'block';
+            } else {
+                const assignees = (card.getAttribute('data-assignees') || '').toLowerCase();
+                if (assignees.includes(username.toLowerCase())) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+        });
+    }
 </script>
 {% endblock scripts %}

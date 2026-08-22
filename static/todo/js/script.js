@@ -571,12 +571,129 @@ window.openTrelloModal = function(taskId) {
                 }
 
                 renderTrelloComments(data.task.comments || [], data.task);
+                renderTrelloMembers(data.task.assignees || []);
 
                 modal.style.display = 'flex';
             }
         })
         .catch(err => console.error('Error opening trello modal:', err));
 };
+
+window.renderTrelloMembers = function(assignees) {
+    const container = document.getElementById('trello-members-container');
+    const chips = document.getElementById('trello-members-chips');
+    if (!container || !chips) return;
+
+    if (!assignees || assignees.length === 0) {
+        container.style.display = 'none';
+        chips.innerHTML = '';
+        return;
+    }
+
+    container.style.display = 'block';
+    chips.innerHTML = assignees.map(a => `
+        <div title="${a.username}" style="width: 28px; height: 28px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; border: 1px solid #282e33;">
+            ${a.initials}
+        </div>
+    `).join('') + `
+        <button type="button" onclick="toggleTrelloMembersPopup(event)" style="width: 28px; height: 28px; border-radius: 50%; background: #282e33; color: #b6c2cf; border: 1px dashed #579dff; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+            <i class="fas fa-plus"></i>
+        </button>
+    `;
+};
+
+window.toggleTrelloMembersPopup = function(e) {
+    if (e) e.stopPropagation();
+    const popup = document.getElementById('trello-members-popup');
+    if (!popup) return;
+
+    if (popup.style.display === 'block') {
+        popup.style.display = 'none';
+        return;
+    }
+
+    if (!currentTrelloTask) return;
+
+    const pid = currentTrelloTask.category;
+    if (!pid) {
+        populateTrelloMembersChecklist([{ id: 1, username: currentTrelloTask.user || 'demo_user', initials: (currentTrelloTask.user || 'DE').slice(0, 2).toUpperCase() }]);
+        popup.style.display = 'block';
+        return;
+    }
+
+    fetch(`/project/${pid}/share/`, {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const allMembers = [data.owner, ...(data.members || [])];
+            populateTrelloMembersChecklist(allMembers);
+            popup.style.display = 'block';
+        }
+    })
+    .catch(err => console.error('Error fetching project members:', err));
+};
+
+function populateTrelloMembersChecklist(members) {
+    const list = document.getElementById('trello-members-checkbox-list');
+    if (!list || !currentTrelloTask) return;
+
+    const assignedIds = new Set((currentTrelloTask.assignees || []).map(a => a.id));
+
+    list.innerHTML = members.map(m => `
+        <label style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; background: #1d2125; color: #dee4ea; font-size: 0.825rem;">
+            <input type="checkbox" ${assignedIds.has(m.id) ? 'checked' : ''} onchange="toggleTrelloAssignee(${m.id}, this.checked)" style="accent-color: #579dff; cursor: pointer;">
+            <div style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700;">
+                ${m.initials}
+            </div>
+            <span>${m.username}</span>
+        </label>
+    `).join('');
+}
+
+window.closeTrelloMembersPopup = function() {
+    const popup = document.getElementById('trello-members-popup');
+    if (popup) popup.style.display = 'none';
+};
+
+window.toggleTrelloAssignee = function(memberId, isChecked) {
+    if (!currentTrelloTask) return;
+    const currentAssigneeIds = (currentTrelloTask.assignees || []).map(a => a.id);
+    let newAssigneeIds;
+    if (isChecked) {
+        newAssigneeIds = Array.from(new Set([...currentAssigneeIds, memberId]));
+    } else {
+        newAssigneeIds = currentAssigneeIds.filter(id => id !== memberId);
+    }
+
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch(`/task/${currentTrelloTask.id}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ assignees: newAssigneeIds })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.task) {
+            currentTrelloTask.assignees = data.task.assignees;
+            renderTrelloMembers(data.task.assignees);
+            if (window.showToast) window.showToast('Card members updated', 'success', 1000);
+        }
+    })
+    .catch(err => console.error('Error updating assignees:', err));
+};
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#trello-members-popup') && !e.target.closest('.trello-pill-action')) {
+        closeTrelloMembersPopup();
+    }
+});
 
 window.toggleTrelloProjectDropdown = function(e) {
     if (e) e.stopPropagation();

@@ -90,13 +90,28 @@
                 <button type="button" class="trello-pill-action" onclick="focusTrelloChecklist()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fas fa-check-square" style="font-size: 0.8rem; color: #579dff;"></i> Checklist
                 </button>
-                <button type="button" class="trello-pill-action" onclick="openShareProjectModal()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" class="trello-pill-action" onclick="toggleTrelloMembersPopup(event)" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fas fa-user-friends" style="font-size: 0.8rem; color: #579dff;"></i> Members
                 </button>
             </div>
 
-            <!-- Labels / Dates Badges Row (if active) -->
-            <div id="trello-metadata-badges-row" style="display: none; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-left: 28px;">
+            <!-- Members Dropdown Popup -->
+            <div id="trello-members-popup" style="display: none; position: absolute; top: 120px; left: 160px; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 12px; width: 230px; z-index: 2800; box-shadow: 0 14px 40px rgba(0,0,0,0.85);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #282e33; padding-bottom: 6px;">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #dee4ea;">Assign Members</span>
+                    <button type="button" onclick="closeTrelloMembersPopup()" style="background: transparent; border: none; color: #8c9bab; cursor: pointer; font-size: 0.9rem;"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="trello-members-checkbox-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Members / Labels / Dates Badges Row (if active) -->
+            <div id="trello-metadata-badges-row" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-left: 28px;">
+                <div id="trello-members-container" style="display: none;">
+                    <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 4px;">MEMBERS</span>
+                    <div id="trello-members-chips" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"></div>
+                </div>
                 <div id="trello-labels-container" style="display: none;">
                     <span style="font-size: 0.725rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 4px;">LABELS</span>
                     <div style="display: flex; align-items: center; gap: 6px;">

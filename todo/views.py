@@ -153,10 +153,22 @@ def manage_kanban(request):
     project_id = request.GET.get('project')
     data = TaskService.get_kanban_columns(request.user, project_id)
 
+    board_members = []
+    if data['selected_project']:
+        proj = data['selected_project']
+        if proj.user:
+            board_members.append(proj.user)
+        for m in proj.members.all():
+            if m not in board_members:
+                board_members.append(m)
+    else:
+        board_members.append(request.user)
+
     context = {
         'all_projects': data['all_projects'],
         'selected_project': data['selected_project'],
         'selected_project_id': data['selected_project_id'],
+        'board_members': board_members,
         'backlog_tasks': data['columns']['backlog'],
         'to_do_tasks': data['columns']['not-started'],
         'in_progress_tasks': data['columns']['in-progress'],
@@ -377,7 +389,11 @@ def task_update(request, pk):
             try:
                 data = json.loads(request.body)
                 task = TaskService.partial_update_task(task, data, request.user)
-                return JsonResponse({'success': True, 'message': 'Task updated!'})
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Task updated!',
+                    'task': TaskService.get_task_detail_data(task)
+                })
             except Exception as e:
                 logger.warning('Task update failed: pk=%d error=%s', pk, e)
                 return JsonResponse({'success': False, 'error': str(e)}, status=400)

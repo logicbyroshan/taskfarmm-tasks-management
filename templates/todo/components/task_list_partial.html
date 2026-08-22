@@ -34,6 +34,19 @@
                 {% if task.due_date %}
                 <span style="font-size: 0.725rem; color: var(--text-muted);"><i class="far fa-calendar-alt"></i> {{ task.due_date|date:"d M" }}</span>
                 {% endif %}
+                <div class="card-assignees" style="display: flex; align-items: center; gap: 3px;">
+                    {% for assignee in task.assignees.all %}
+                        <span title="Assigned to {{ assignee.username }}" style="width: 20px; height: 20px; border-radius: 50%; background: #0c66e4; color: #ffffff; font-size: 0.6rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #18181b;">
+                            {{ assignee.username|slice:":2"|upper }}
+                        </span>
+                    {% empty %}
+                        {% if task.user %}
+                        <span title="Created by {{ task.user.username }}" style="width: 20px; height: 20px; border-radius: 50%; background: #282e33; color: #8c9bab; font-size: 0.6rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #333c43;">
+                            {{ task.user.username|slice:":2"|upper }}
+                        </span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
                 <span class="status {{ task.status }}">{{ task.get_status_display }}</span>
             </div>
         </div>

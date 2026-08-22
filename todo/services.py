@@ -295,6 +295,12 @@ class TaskService:
         if 'checklist' in data:
             task.checklist = data['checklist']
 
+        if 'assignees' in data:
+            assignee_ids = data['assignees']
+            if isinstance(assignee_ids, list):
+                from django.contrib.auth.models import User as AuthUser
+                task.assignees.set(AuthUser.objects.filter(id__in=assignee_ids))
+
         task.save()
         logger.info('Task updated: id=%d user=%s fields=%s', task.id, user.username, list(data.keys()))
         return task

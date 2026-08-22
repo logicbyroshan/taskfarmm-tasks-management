@@ -82,40 +82,25 @@
                     <span>Loading...</span>
                 </div>
 
-                <!-- Collaborator Account Switcher -->
+                <!-- User Profile Menu -->
                 <div class="user-switcher-dropdown" style="position: relative;">
                     <button type="button" id="user-switcher-btn" onclick="toggleUserSwitcherMenu(event)" style="display: flex; align-items: center; gap: 8px; background: #1c2b41; border: 1px solid #1f3b64; border-radius: 999px; padding: 4px 12px 4px 6px; color: #dee4ea; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
                         <div style="width: 26px; height: 26px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.725rem; font-weight: 700;">
-                            {{ user.username|slice:":2"|upper|default:"PA" }}
+                            {{ user.username|slice:":2"|upper|default:"ME" }}
                         </div>
-                        <span>{{ user.username|default:"prakash_ahuja" }}</span>
+                        <span>{{ user.username }}</span>
                         <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab;"></i>
                     </button>
-                    <div id="user-switcher-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 6px 0; min-width: 210px; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
-                        <div style="padding: 6px 14px; font-size: 0.7rem; font-weight: 700; color: #8c9bab; text-transform: uppercase; border-bottom: 1px solid #282e33; margin-bottom: 4px;">
-                            Switch Collaborator
+                    <div id="user-switcher-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #22272b; border: 1px solid #333c43; border-radius: 8px; padding: 6px 0; min-width: 180px; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
+                        <div style="padding: 8px 14px; font-size: 0.825rem; font-weight: 600; color: #dee4ea; border-bottom: 1px solid #282e33; margin-bottom: 4px;">
+                            <div style="font-size: 0.725rem; color: #8c9bab;">Signed in as</div>
+                            <strong>{{ user.username }}</strong>
                         </div>
-                        <div class="user-switch-item" onclick="switchCollaboratorUser('prakash_ahuja')" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; cursor: pointer; font-size: 0.825rem; color: #dee4ea;">
-                            <div style="width: 22px; height: 22px; border-radius: 50%; background: #0c66e4; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700;">PA</div>
-                            <span>Prakash Ahuja</span>
-                        </div>
-                        <div class="user-switch-item" onclick="switchCollaboratorUser('adarsh_computer')" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; cursor: pointer; font-size: 0.825rem; color: #dee4ea;">
-                            <div style="width: 22px; height: 22px; border-radius: 50%; background: #d97706; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700;">AC</div>
-                            <span>Adarsh Computer</span>
-                        </div>
-                        <div class="user-switch-item" onclick="switchCollaboratorUser('kamal_dewnani')" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; cursor: pointer; font-size: 0.825rem; color: #dee4ea;">
-                            <div style="width: 22px; height: 22px; border-radius: 50%; background: #216e4e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700;">KD</div>
-                            <span>Kamal Dewnani</span>
-                        </div>
-                        <div class="user-switch-item" onclick="switchCollaboratorUser('roshan_damor')" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; cursor: pointer; font-size: 0.825rem; color: #dee4ea;">
-                            <div style="width: 22px; height: 22px; border-radius: 50%; background: #7c3aed; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700;">RD</div>
-                            <span>Roshan Damor</span>
-                        </div>
+                        <a href="{% url 'settings' %}" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; color: #dee4ea; text-decoration: none; font-size: 0.825rem;">
+                            <i class="fas fa-cog" style="color: #579dff;"></i> Profile Settings
+                        </a>
                         <div style="border-top: 1px solid #282e33; margin-top: 4px; padding-top: 4px;">
-                            <a href="{% url 'settings' %}" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; color: #8c9bab; text-decoration: none; font-size: 0.8rem;">
-                                <i class="fas fa-cog"></i> Profile Settings
-                            </a>
-                            <a href="{% url 'logout' %}" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; color: #f87171; text-decoration: none; font-size: 0.8rem;">
+                            <a href="{% url 'logout' %}" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; color: #f87171; text-decoration: none; font-size: 0.825rem;">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a>
                         </div>
