@@ -172,7 +172,7 @@
         </p>
     </div>
 
-    <div class="kanban-actions" style="display: flex; align-items: center; gap: 14px;">
+    <div class="kanban-actions" style="display: flex; align-items: center; gap: 10px;">
         <!-- Project Switcher Dropdown -->
         <div class="project-filter-box" style="display: flex; align-items: center; gap: 8px;">
             <label for="kanban-project-select" style="font-size: 0.825rem; font-weight: 600; color: var(--text-muted);"><i class="fas fa-folder"></i> Project:</label>
@@ -184,6 +184,10 @@
                 {% endfor %}
             </select>
         </div>
+
+        <button type="button" class="trello-pill-action" onclick="openShareProjectModal({{ selected_project_id|default:'null' }})" style="height: 38px; background: #282e33; color: #b6c2cf; border: 1px solid #333c43; border-radius: 6px; padding: 0 14px; font-size: 0.825rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fas fa-user-plus" style="color: #579dff;"></i> Share Board
+        </button>
 
         <button class="invite-btn" type="button" aria-label="Add new task" onclick="openAddTaskModal()">
             <i class="fas fa-plus" aria-hidden="true"></i> Add Task

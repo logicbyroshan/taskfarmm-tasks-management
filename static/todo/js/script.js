@@ -22,11 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global expose so onclick="openAddTaskModal()" and "openAddProjectModal()" work from HTML
 window.openAddTaskModal = function(initialStatus = 'not-started', initialCategory = '') {
     const trelloModal = document.getElementById('trello-task-modal');
-    if (!trelloModal) {
-        const taskModal = document.getElementById('add-task-modal');
-        if (taskModal) taskModal.style.display = 'flex';
-        return;
-    }
+    if (!trelloModal) return;
 
     currentTrelloTask = null;
     const titleInput = document.getElementById('trello-task-title-input');
@@ -40,14 +36,38 @@ window.openAddTaskModal = function(initialStatus = 'not-started', initialCategor
     const checklistSec = document.getElementById('trello-checklist-section');
     const metadataRow = document.getElementById('trello-metadata-badges-row');
 
+    const statusNames = {
+        'not-started': 'To Do',
+        'in-progress': 'In Progress',
+        'backlog': 'Backlog',
+        'on-hold': 'On Hold',
+        'completed': 'Done',
+        'canceled': 'Canceled'
+    };
+
+    const activeProjSelect = document.getElementById('kanban-project-select');
+    const currentProjId = initialCategory || (activeProjSelect ? activeProjSelect.value : '');
+    const currentProjName = activeProjSelect && activeProjSelect.selectedIndex >= 0 
+        ? activeProjSelect.options[activeProjSelect.selectedIndex].text.replace(/^[📁\s]+|\s*\(\d+\)$/g, '').trim()
+        : 'General';
+
     if (titleInput) {
         titleInput.value = '';
-        titleInput.placeholder = 'ds';
+        titleInput.placeholder = 'Enter card title...';
     }
-    if (projText) projText.textContent = 'Tasks for Roshan (D-G)';
+    if (projText) projText.textContent = currentProjName || 'General';
+    
+    const statusPillText = document.getElementById('trello-status-pill-text');
+    if (statusPillText) statusPillText.textContent = statusNames[initialStatus] || 'To Do';
+
+    const prioPillText = document.getElementById('trello-priority-pill-text');
+    const prioDot = document.getElementById('trello-priority-dot');
+    if (prioPillText) prioPillText.textContent = 'Moderate';
+    if (prioDot) prioDot.textContent = '🟡';
+
     if (statusSelect) statusSelect.value = initialStatus || 'not-started';
     if (prioSelect) prioSelect.value = 'moderate';
-    if (projSelect) projSelect.value = initialCategory || '';
+    if (projSelect) projSelect.value = currentProjId || '';
     if (dueInput) dueInput.value = '';
     if (descDisplay) {
         descDisplay.textContent = 'Add a more detailed description...';
@@ -64,16 +84,16 @@ window.openAddTaskModal = function(initialStatus = 'not-started', initialCategor
     if (stream) {
         stream.innerHTML = `
             <div class="activity-log-item" style="display: flex; gap: 10px; align-items: flex-start;">
-                <div style="width: 28px; height: 28px; border-radius: 50%; background: #d97706; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
-                    AC
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: #0c66e4; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
+                    PA
                 </div>
-                <div style="flex: 1; font-size: 0.825rem; line-height: 1.4;">
+                <div style="flex: 1; font-size: 0.85rem; line-height: 1.4;">
                     <div>
-                        <strong style="color: #dee4ea;">adarsh computer</strong> 
-                        <span style="color: #9fadbc;">added this card to</span> 
-                        <strong style="color: #dee4ea;">Tasks for Roshan (D-G)</strong>
+                        <strong style="color: #dee4ea;">You</strong> 
+                        <span style="color: #9fadbc;">are creating this card in</span> 
+                        <strong style="color: #dee4ea;">${statusNames[initialStatus] || 'To Do'}</strong>
                     </div>
-                    <div style="color: #579dff; font-size: 0.75rem; margin-top: 2px;">
+                    <div style="color: #579dff; font-size: 0.75rem; text-decoration: underline; margin-top: 2px;">
                         just now
                     </div>
                 </div>
@@ -82,7 +102,7 @@ window.openAddTaskModal = function(initialStatus = 'not-started', initialCategor
     }
 
     trelloModal.style.display = 'flex';
-    if (titleInput) setTimeout(() => titleInput.focus(), 60);
+    setTimeout(() => { if (titleInput) titleInput.focus(); }, 80);
 };
 
 window.openAddProjectModal = function() {
@@ -499,8 +519,31 @@ window.openTrelloModal = function(taskId) {
                 const checklistSec = document.getElementById('trello-checklist-section');
 
                 if (titleInput) titleInput.value = data.task.title;
-                if (projText) projText.textContent = data.task.category_name || 'Tasks for Roshan (D-G)';
+                if (projText) projText.textContent = data.task.category_name || 'General';
                 
+                const statusNames = {
+                    'not-started': 'To Do',
+                    'in-progress': 'In Progress',
+                    'backlog': 'Backlog',
+                    'on-hold': 'On Hold',
+                    'completed': 'Done',
+                    'canceled': 'Canceled'
+                };
+                const prioInfo = {
+                    'high': { text: 'High', dot: '🔴' },
+                    'moderate': { text: 'Moderate', dot: '🟡' },
+                    'low': { text: 'Low', dot: '🟢' }
+                };
+
+                const statusPillText = document.getElementById('trello-status-pill-text');
+                if (statusPillText) statusPillText.textContent = statusNames[data.task.status] || data.task.status_display || 'To Do';
+
+                const prioPillText = document.getElementById('trello-priority-pill-text');
+                const prioDot = document.getElementById('trello-priority-dot');
+                const pInfo = prioInfo[data.task.priority] || { text: 'Moderate', dot: '🟡' };
+                if (prioPillText) prioPillText.textContent = pInfo.text;
+                if (prioDot) prioDot.textContent = pInfo.dot;
+
                 if (statusSelect) statusSelect.value = data.task.status;
                 if (prioSelect) prioSelect.value = data.task.priority;
                 if (projSelect) projSelect.value = data.task.category || '';
@@ -533,6 +576,215 @@ window.openTrelloModal = function(taskId) {
             }
         })
         .catch(err => console.error('Error opening trello modal:', err));
+};
+
+window.toggleTrelloProjectDropdown = function(e) {
+    if (e) e.stopPropagation();
+    closeAllTrelloDropdowns();
+    const menu = document.getElementById('trello-project-dropdown-menu');
+    if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+};
+
+window.selectTrelloProject = function(id, name) {
+    const projText = document.getElementById('trello-project-text');
+    if (projText) projText.textContent = name;
+    saveTrelloTaskField('category', id);
+    closeAllTrelloDropdowns();
+};
+
+window.toggleTrelloStatusDropdown = function(e) {
+    if (e) e.stopPropagation();
+    closeAllTrelloDropdowns();
+    const menu = document.getElementById('trello-status-dropdown-menu');
+    if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+};
+
+window.selectTrelloStatus = function(status, name) {
+    const statusText = document.getElementById('trello-status-pill-text');
+    if (statusText) statusText.textContent = name;
+    const select = document.getElementById('trello-status-select');
+    if (select) select.value = status;
+    saveTrelloTaskField('status', status);
+    updateTrelloCompleteIcon(status === 'completed');
+    closeAllTrelloDropdowns();
+};
+
+window.toggleTrelloPriorityDropdown = function(e) {
+    if (e) e.stopPropagation();
+    closeAllTrelloDropdowns();
+    const menu = document.getElementById('trello-priority-dropdown-menu');
+    if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+};
+
+window.selectTrelloPriority = function(priority, label) {
+    const prioText = document.getElementById('trello-priority-pill-text');
+    const prioDot = document.getElementById('trello-priority-dot');
+    const prioInfo = {
+        'high': { text: 'High', dot: '🔴' },
+        'moderate': { text: 'Moderate', dot: '🟡' },
+        'low': { text: 'Low', dot: '🟢' }
+    };
+    const p = prioInfo[priority] || { text: 'Moderate', dot: '🟡' };
+    if (prioText) prioText.textContent = p.text;
+    if (prioDot) prioDot.textContent = p.dot;
+
+    const select = document.getElementById('trello-priority-select');
+    if (select) select.value = priority;
+    saveTrelloTaskField('priority', priority);
+    closeAllTrelloDropdowns();
+};
+
+function closeAllTrelloDropdowns() {
+    const menus = [
+        'trello-project-dropdown-menu',
+        'trello-status-dropdown-menu',
+        'trello-priority-dropdown-menu'
+    ];
+    menus.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#trello-project-pill-btn') &&
+        !e.target.closest('#trello-status-pill-btn') &&
+        !e.target.closest('#trello-priority-pill-btn')) {
+        closeAllTrelloDropdowns();
+    }
+});
+
+let currentShareProjectId = null;
+
+window.openShareProjectModal = function(projectId) {
+    const modal = document.getElementById('share-project-modal');
+    if (!modal) return;
+
+    const pid = projectId || (currentTrelloTask ? currentTrelloTask.category : null) || document.getElementById('kanban-project-select')?.value;
+    if (!pid) {
+        if (window.showToast) window.showToast('Please select a project first', 'info');
+        return;
+    }
+    currentShareProjectId = pid;
+
+    fetch(`/project/${pid}/share/`, {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const input = document.getElementById('share-project-link-input');
+            if (input) input.value = data.share_url;
+
+            const list = document.getElementById('share-project-members-list');
+            if (list) {
+                let html = `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#22272b;border-radius:4px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:#0c66e4;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">
+                                ${data.owner.initials}
+                            </div>
+                            <div>
+                                <strong style="font-size:0.85rem;color:#dee4ea;">${data.owner.username}</strong>
+                                <span style="font-size:0.75rem;color:#8c9bab;margin-left:6px;">(Owner)</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (data.members && data.members.length > 0) {
+                    html += data.members.map(m => `
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#22272b;border-radius:4px;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="width:28px;height:28px;border-radius:50%;background:#d97706;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">
+                                    ${m.initials}
+                                </div>
+                                <div>
+                                    <strong style="font-size:0.85rem;color:#dee4ea;">${m.username}</strong>
+                                    <span style="font-size:0.75rem;color:#579dff;margin-left:6px;">(Collaborator)</span>
+                                </div>
+                            </div>
+                            ${data.is_owner ? `
+                                <button type="button" onclick="removeProjectMember(${m.id})" style="background:transparent;border:none;color:#f87171;font-size:0.8rem;cursor:pointer;">
+                                    <i class="fas fa-user-minus"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                }
+                list.innerHTML = html;
+            }
+
+            modal.style.display = 'flex';
+        }
+    })
+    .catch(err => console.error('Error fetching project share info:', err));
+};
+
+window.closeShareProjectModal = function() {
+    const modal = document.getElementById('share-project-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.copyShareProjectLink = function() {
+    const input = document.getElementById('share-project-link-input');
+    if (input) {
+        navigator.clipboard.writeText(input.value).then(() => {
+            if (window.showToast) window.showToast('📋 Project invite link copied to clipboard!', 'success');
+        });
+    }
+};
+
+window.addProjectMember = function() {
+    const input = document.getElementById('share-project-username-input');
+    if (!input || !input.value.trim() || !currentShareProjectId) return;
+    const username = input.value.trim();
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+    fetch(`/project/${currentShareProjectId}/share/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ action: 'add_member', username: username })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            if (window.showToast) window.showToast(data.message, 'success');
+            openShareProjectModal(currentShareProjectId);
+        } else {
+            if (window.showToast) window.showToast(data.message || 'Could not add member', 'error');
+        }
+    })
+    .catch(err => console.error('Error adding member:', err));
+};
+
+window.removeProjectMember = function(memberId) {
+    if (!memberId || !currentShareProjectId) return;
+    if (!confirm('Remove this collaborator from the board?')) return;
+    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+    fetch(`/project/${currentShareProjectId}/share/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ action: 'remove_member', member_id: memberId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (window.showToast) window.showToast(data.message, 'info');
+            openShareProjectModal(currentShareProjectId);
+        }
+    })
+    .catch(err => console.error('Error removing member:', err));
 };
 
 function updateTrelloStatusBadge(status) {

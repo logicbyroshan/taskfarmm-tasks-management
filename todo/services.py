@@ -38,11 +38,18 @@ class TaskService:
 
     @staticmethod
     def get_base_queryset(user):
-        """Returns the base queryset for a user's tasks with select_related pre-applied."""
+        """Returns the base queryset for tasks accessible by the user (owned or shared projects or assigned)."""
         return (
             Task.objects
-            .filter(user=user)
+            .filter(
+                Q(user=user) | 
+                Q(category__members=user) | 
+                Q(category__user=user) |
+                Q(assignees=user)
+            )
+            .distinct()
             .select_related('category', 'user')
+            .prefetch_related('assignees', 'category__members')
         )
 
     @staticmethod
@@ -53,7 +60,7 @@ class TaskService:
         Uses a single DB aggregation query instead of multiple .count() calls,
         reducing round-trips from 8 → 1.
         """
-        tasks = Task.objects.filter(user=user)
+        tasks = TaskService.get_base_queryset(user)
         today = timezone.now().date()
 
         # Single aggregation pass for all status counts
@@ -92,21 +99,18 @@ class TaskService:
 
     @staticmethod
     def get_recent_tasks(user, limit=6):
-        """Returns the most recently created tasks for the dashboard."""
+        """Returns the most recently created tasks accessible by the user."""
         return (
-            Task.objects
-            .filter(user=user)
-            .select_related('category')
+            TaskService.get_base_queryset(user)
             .order_by('-created_at')[:limit]
         )
 
     @staticmethod
-    def get_recently_completed(user, limit=5):
-        """Returns recently completed tasks for the dashboard sidebar."""
+    def get_recently_completed(user, limit=6):
+        """Returns recently completed tasks for the dashboard."""
         return (
-            Task.objects
-            .filter(user=user, status='completed')
-            .select_related('category')
+            TaskService.get_base_queryset(user)
+            .filter(status='completed')
             .order_by('-completed_at')[:limit]
         )
 
@@ -114,20 +118,19 @@ class TaskService:
     def filter_and_sort(user, search='', status='all', priority='all',
                         project='all', sort='newest'):
         """
-        Returns a filtered and sorted queryset for the manage-tasks view.
-        Called by both the HTML view and the DRF API endpoint.
+        Returns a filtered and sorted queryset for the manage-tasks view and REST API.
         """
-        qs = Task.objects.filter(user=user).select_related('category')
+        qs = TaskService.get_base_queryset(user)
 
         if search:
             qs = qs.filter(
                 Q(title__icontains=search) | Q(description__icontains=search)
             )
 
-        if status != 'all':
+        if status != 'all' and status:
             qs = qs.filter(status=status)
 
-        if priority != 'all':
+        if priority != 'all' and priority:
             qs = qs.filter(priority=priority)
 
         if project == 'none':
@@ -139,29 +142,42 @@ class TaskService:
         return qs.order_by(ordering)
 
     @staticmethod
+    def filter_and_sort_tasks(user, category=None, priority=None, status=None,
+                              sort='newest', query=None):
+        return TaskService.filter_and_sort(
+            user=user, search=query or '', status=status or 'all',
+            priority=priority or 'all', project=category or 'all', sort=sort
+        )
+
+    @staticmethod
     def get_kanban_columns(user, project_id=None):
         """
         Returns tasks split by status for the Kanban board.
-        Defaults to the first project if project_id is not provided.
+        Supports shared projects where user is owner or member.
         """
         all_projects = (
             Category.objects
-            .filter(user=user)
-            .annotate(task_count=Count('tasks'))
+            .filter(Q(user=user) | Q(members=user))
+            .distinct()
+            .annotate(task_count=Count('tasks', distinct=True))
+            .prefetch_related('members')
         )
 
-        qs = Task.objects.filter(user=user).select_related('category')
         selected_project = None
-
         if project_id:
             selected_project = all_projects.filter(pk=project_id).first()
-            if selected_project:
-                qs = qs.filter(category=selected_project)
-        else:
+        if not selected_project and all_projects.exists():
             selected_project = all_projects.first()
-            if selected_project:
-                project_id = selected_project.id
-                qs = qs.filter(category=selected_project)
+
+        if selected_project:
+            selected_project_id = selected_project.id
+            selected_project.ensure_share_token()
+            # For a selected project, show all tasks in that project
+            qs = Task.objects.filter(category=selected_project).select_related('category', 'user').prefetch_related('assignees')
+        else:
+            selected_project_id = None
+            # If no project selected, show accessible tasks
+            qs = TaskService.get_base_queryset(user)
 
         columns = {
             'backlog': qs.filter(status='backlog').order_by('-created_at'),
@@ -175,7 +191,7 @@ class TaskService:
         return {
             'all_projects': all_projects,
             'selected_project': selected_project,
-            'selected_project_id': int(project_id) if project_id else None,
+            'selected_project_id': selected_project_id,
             'columns': columns,
         }
 
@@ -200,9 +216,18 @@ class TaskService:
             }
             for c in comments
         ]
+        assignees_data = [
+            {
+                'id': u.id,
+                'username': u.username,
+                'initials': u.username[:2].upper()
+            }
+            for u in task.assignees.all()
+        ]
         return {
             'id': task.id,
             'title': task.title,
+            'user': task.user.username if task.user else '',
             'description': task.description or '',
             'category': task.category_id,
             'category_name': task.category.name if task.category else 'General',
@@ -215,15 +240,18 @@ class TaskService:
             'created_at': task.created_at.strftime('%d %b %Y, %H:%M'),
             'checklist': task.checklist or [],
             'comments': comments_data,
+            'assignees': assignees_data,
         }
 
     @staticmethod
     def create_task(user, validated_data):
-        """Creates a new task for the given user."""
+        """Creates a new task for the given user, supporting shared categories."""
         category_id = validated_data.pop('category_id', None)
         category = None
         if category_id:
-            category = Category.objects.filter(pk=category_id, user=user).first()
+            category = Category.objects.filter(
+                Q(pk=category_id) & (Q(user=user) | Q(members=user))
+            ).distinct().first()
 
         task = Task.objects.create(
             user=user,
@@ -252,15 +280,17 @@ class TaskService:
         if 'priority' in data and data['priority'] in Task.Priority.values:
             task.priority = data['priority']
 
+        if 'due_date' in data:
+            task.due_date = data['due_date'] if data['due_date'] else None
+
         if 'category' in data:
             cat_id = data['category']
             if cat_id:
-                task.category = Category.objects.filter(pk=cat_id, user=user).first()
+                task.category = Category.objects.filter(
+                    Q(pk=cat_id) & (Q(user=user) | Q(members=user))
+                ).distinct().first()
             else:
                 task.category = None
-
-        if 'due_date' in data:
-            task.due_date = data['due_date'] if data['due_date'] else None
 
         if 'checklist' in data:
             task.checklist = data['checklist']
@@ -311,22 +341,26 @@ class CategoryService:
     @staticmethod
     def get_with_stats(user):
         """
-        Returns all categories for a user annotated with task counts
+        Returns all categories owned by or shared with a user annotated with task counts
         and a computed progress percentage.
         """
         categories = list(
             Category.objects
-            .filter(user=user)
+            .filter(Q(user=user) | Q(members=user))
+            .distinct()
             .annotate(
-                task_count=Count('tasks'),
-                completed_count=Count('tasks', filter=Q(tasks__status='completed'))
+                task_count=Count('tasks', distinct=True),
+                completed_count=Count('tasks', filter=Q(tasks__status='completed'), distinct=True)
             )
+            .prefetch_related('members')
         )
         for cat in categories:
             cat.progress = (
                 int((cat.completed_count / cat.task_count) * 100)
                 if cat.task_count > 0 else 0
             )
+            cat.is_owner = (cat.user_id == user.id)
+            cat.ensure_share_token()
         return categories
 
     @staticmethod
@@ -336,10 +370,11 @@ class CategoryService:
         """
         categories = (
             Category.objects
-            .filter(user=user)
+            .filter(Q(user=user) | Q(members=user))
+            .distinct()
             .annotate(
-                task_count=Count('tasks'),
-                completed_count=Count('tasks', filter=Q(tasks__status='completed'))
+                task_count=Count('tasks', distinct=True),
+                completed_count=Count('tasks', filter=Q(tasks__status='completed'), distinct=True)
             )
             .order_by('name')
         )

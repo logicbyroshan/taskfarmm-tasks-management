@@ -21,6 +21,7 @@ import logging
 # Django core
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
+from django.db.models import Q
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash, logout as auth_logout
@@ -47,6 +48,19 @@ def get_or_create_profile(user):
     """Returns or creates the UserProfile for a user."""
     profile, _ = UserProfile.objects.get_or_create(user=user)
     return profile
+
+
+def get_accessible_task(user, pk):
+    """Returns a task accessible by user (owned, shared project, or assigned)."""
+    return get_object_or_404(
+        Task.objects.filter(
+            Q(user=user) | 
+            Q(category__members=user) | 
+            Q(category__user=user) | 
+            Q(assignees=user)
+        ).distinct(),
+        pk=pk
+    )
 
 
 # ============================================================
@@ -262,8 +276,7 @@ def task_detail(request, pk):
     if is_ajax:
         data = TaskService.get_task_detail_data(task)
         return JsonResponse({'success': True, 'task': data})
-
-    return render(request, 'todo/task_detail.html', {'task': task, 'active_page': 'manage_tasks'})
+    return render(request, 'todo/task_detail.html', {'task': task})
 
 
 @login_required
@@ -305,7 +318,7 @@ def task_update(request, pk):
     POST (JSON body): partial update for live editing.
     POST (form): quick status update or full form update.
     """
-    task = get_object_or_404(Task, pk=pk, user=request.user)
+    task = get_accessible_task(request.user, pk)
 
     if request.method == 'GET':
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -352,7 +365,7 @@ def task_update(request, pk):
 @require_http_methods(['POST'])
 def task_add_comment(request, pk):
     """Adds a new activity comment to a task."""
-    task = get_object_or_404(Task, pk=pk, user=request.user)
+    task = get_accessible_task(request.user, pk)
     try:
         data = json.loads(request.body)
         content = data.get('content', '').strip()
@@ -379,8 +392,15 @@ def task_add_comment(request, pk):
 @login_required
 @require_http_methods(['POST', 'DELETE'])
 def task_comment_delete(request, pk):
-    """Deletes a task comment (owner only)."""
-    comment = get_object_or_404(TaskComment, pk=pk, user=request.user)
+    """Deletes a task comment (comment author or task owner)."""
+    comment = get_object_or_404(
+        TaskComment.objects.filter(
+            Q(user=request.user) | 
+            Q(task__user=request.user) | 
+            Q(task__category__user=request.user)
+        ).distinct(),
+        pk=pk
+    )
     comment.delete()
     return JsonResponse({'success': True, 'message': 'Comment deleted.'})
 
@@ -388,26 +408,23 @@ def task_comment_delete(request, pk):
 @login_required
 @require_http_methods(['POST'])
 def task_update_checklist(request, pk):
-    """Replaces the checklist for a task."""
-    task = get_object_or_404(Task, pk=pk, user=request.user)
+    """Replaces task checklist."""
+    task = get_accessible_task(request.user, pk)
     try:
         data = json.loads(request.body)
         checklist = data.get('checklist', [])
-        if not isinstance(checklist, list):
-            raise ValueError('checklist must be a list.')
-        task = TaskService.update_checklist(task, checklist)
-        return JsonResponse({'success': True, 'checklist': task.checklist})
-    except (json.JSONDecodeError, ValueError) as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except (json.JSONDecodeError, AttributeError):
+        checklist = []
+    TaskService.update_checklist(task, checklist)
+    return JsonResponse({'success': True, 'message': 'Checklist updated!'})
 
 
 @login_required
 @require_http_methods(['POST'])
 def task_toggle_status(request, pk):
-    """Toggles a task between Done and To Do."""
-    task = get_object_or_404(Task, pk=pk, user=request.user)
-    task = TaskService.toggle_status(task)
-
+    """Toggles task status between DONE and TO_DO."""
+    task = get_accessible_task(request.user, pk)
+    TaskService.toggle_status(task)
     if request.headers.get('HX-Request'):
         return render(request, 'todo/components/task_card.html', {'task': task})
 
@@ -426,7 +443,10 @@ def task_toggle_status(request, pk):
 @login_required
 def task_delete(request, pk):
     """Deletes a task."""
-    task = get_object_or_404(Task, pk=pk, user=request.user)
+    task = get_object_or_404(
+        Task.objects.filter(Q(user=request.user) | Q(category__user=request.user)).distinct(),
+        pk=pk
+    )
     if request.method == 'POST':
         title = task.title
         task.delete()
@@ -440,7 +460,7 @@ def task_delete(request, pk):
 
 
 # ============================================================
-#  CATEGORY CRUD
+#  CATEGORY / PROJECT CRUD & SHARING
 # ============================================================
 
 @login_required
@@ -459,6 +479,7 @@ def category_create(request):
             category = form.save(commit=False)
             category.user = request.user
             category.save()
+            category.ensure_share_token()
             is_ajax_or_json = (
                 request.headers.get('X-Requested-With') == 'XMLHttpRequest'
                 or (request.content_type and 'application/json' in request.content_type)
@@ -471,6 +492,7 @@ def category_create(request):
                         'id': category.id,
                         'name': category.name,
                         'color': category.color,
+                        'share_token': category.share_token,
                     }
                 })
             messages.success(request, f'Project "{category.name}" created.')
@@ -512,6 +534,97 @@ def category_delete(request, pk):
         messages.success(request, f'Project "{name}" deleted.')
         return redirect('task_categories')
     return render(request, 'todo/confirm_delete.html', {'object': category, 'type': 'project'})
+
+
+@login_required
+def project_share(request, pk):
+    """
+    GET: Returns project sharing info (share URL, members, is_owner).
+    POST: Adds or removes project members by username/email.
+    """
+    from django.contrib.auth.models import User as AuthUser
+    category = get_object_or_404(
+        Category.objects.filter(Q(user=request.user) | Q(members=request.user)).distinct(),
+        pk=pk
+    )
+    token = category.ensure_share_token()
+    share_url = request.build_absolute_uri(f"/project/join/{token}/")
+    is_owner = (category.user_id == request.user.id)
+
+    if request.method == 'POST':
+        if not is_owner:
+            return JsonResponse({'success': False, 'message': 'Only project owner can manage members.'}, status=403)
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            data = request.POST
+
+        action = data.get('action')
+        if action == 'add_member':
+            query = data.get('username', '').strip()
+            user_to_add = AuthUser.objects.filter(Q(username__iexact=query) | Q(email__iexact=query)).first()
+            if not user_to_add:
+                return JsonResponse({'success': False, 'message': f'User "{query}" not found.'}, status=404)
+            if user_to_add.id == category.user_id:
+                return JsonResponse({'success': False, 'message': 'User is already the project owner.'}, status=400)
+            category.members.add(user_to_add)
+            return JsonResponse({
+                'success': True,
+                'message': f'{user_to_add.username} added to project!',
+                'member': {
+                    'id': user_to_add.id,
+                    'username': user_to_add.username,
+                    'initials': user_to_add.username[:2].upper()
+                }
+            })
+        elif action == 'remove_member':
+            member_id = data.get('member_id')
+            user_to_remove = AuthUser.objects.filter(pk=member_id).first()
+            if user_to_remove:
+                category.members.remove(user_to_remove)
+                return JsonResponse({'success': True, 'message': f'{user_to_remove.username} removed from project.'})
+            return JsonResponse({'success': False, 'message': 'Member not found.'}, status=404)
+
+    members = [
+        {
+            'id': m.id,
+            'username': m.username,
+            'initials': m.username[:2].upper(),
+            'is_owner': False
+        }
+        for m in category.members.all()
+    ]
+    owner_info = {
+        'id': category.user.id,
+        'username': category.user.username,
+        'initials': category.user.username[:2].upper(),
+        'is_owner': True
+    }
+
+    return JsonResponse({
+        'success': True,
+        'project_id': category.id,
+        'project_name': category.name,
+        'share_url': share_url,
+        'is_owner': is_owner,
+        'owner': owner_info,
+        'members': members
+    })
+
+
+@login_required
+def project_join(request, token):
+    """
+    Allows a user with an invite/share link to join a shared project.
+    """
+    category = get_object_or_404(Category, share_token=token)
+    if category.user != request.user and not category.members.filter(pk=request.user.pk).exists():
+        category.members.add(request.user)
+        messages.success(request, f'🎉 You have joined project "{category.name}"!')
+    else:
+        messages.info(request, f'You are currently viewing project "{category.name}".')
+
+    return redirect(f"/kanban/?project={category.id}")
 
 
 # ============================================================

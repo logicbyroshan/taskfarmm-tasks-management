@@ -26,11 +26,13 @@ urlpatterns = [
     path('task/comment/<int:pk>/delete/', views.task_comment_delete, name='task_comment_delete'),
     path('task/<int:pk>/checklist/', views.task_update_checklist, name='task_update_checklist'),
 
-    # Project / Category CRUD
+    # Project / Category CRUD & Collaboration
     path('projects/create/', views.category_create, name='project_create'),
     path('category/create/', views.category_create, name='category_create'),
     path('category/<int:pk>/update/', views.category_update, name='category_update'),
     path('category/<int:pk>/delete/', views.category_delete, name='category_delete'),
+    path('project/<int:pk>/share/', views.project_share, name='project_share'),
+    path('project/join/<str:token>/', views.project_join, name='project_join'),
 
     # Predefined Tasks (Template Library)
     path('api/predefined-tasks/', views.predefined_tasks_api, name='predefined_tasks_api'),

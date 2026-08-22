@@ -1,0 +1,69 @@
+<!-- Share Project Board & Collaboration Modal -->
+<div id="share-project-modal" class="task-modal" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" onclick="closeShareProjectModal()"></div>
+    <div class="modal-content" style="max-width: 520px; width: 92%; background: #1d2125; border: 1px solid #282e33; border-radius: 12px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95); padding: 0; overflow: hidden; color: #b6c2cf; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        
+        <!-- Header -->
+        <div style="padding: 16px 20px; border-bottom: 1px solid #282e33; display: flex; align-items: center; justify-content: space-between; background: #16181d;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-user-plus" style="color: #579dff; font-size: 1rem;"></i>
+                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #dee4ea;">Share Board & Collaborate</h3>
+            </div>
+            <button type="button" onclick="closeShareProjectModal()" style="background: transparent; border: none; color: #9fadbc; cursor: pointer; font-size: 1.2rem; padding: 2px 6px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 18px;">
+            
+            <!-- Shareable Link Box -->
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 6px; text-transform: uppercase;">
+                    🔗 Shareable Invite Link
+                </label>
+                <p style="font-size: 0.775rem; color: #8c9bab; margin: 0 0 8px 0;">Anyone with this link can view this board, add cards, check items, and write comments.</p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="share-project-link-input" readonly 
+                           style="flex: 1; height: 36px; background: #22272b; border: 1px solid #333c43; border-radius: 4px; padding: 0 12px; color: #579dff; font-size: 0.825rem; font-family: monospace; outline: none;"
+                           onclick="this.select();">
+                    <button type="button" onclick="copyShareProjectLink()" style="background: #579dff; color: #000000; font-weight: 700; border: none; border-radius: 4px; padding: 0 16px; font-size: 0.825rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <i class="far fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Invite by Username / Email -->
+            <div id="share-project-invite-section">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 6px; text-transform: uppercase;">
+                    👤 Invite Collaborator
+                </label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="share-project-username-input" placeholder="Enter username or email..." 
+                           style="flex: 1; height: 36px; background: #22272b; border: 1px solid #333c43; border-radius: 4px; padding: 0 12px; color: #dee4ea; font-size: 0.85rem; outline: none;"
+                           onkeydown="if(event.key==='Enter'){ event.preventDefault(); addProjectMember(); }">
+                    <button type="button" onclick="addProjectMember()" style="background: #282e33; border: 1px solid #333c43; color: #dee4ea; font-weight: 600; border-radius: 4px; padding: 0 16px; font-size: 0.825rem; cursor: pointer;">
+                        Invite
+                    </button>
+                </div>
+            </div>
+
+            <!-- Board Members List -->
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 700; color: #9fadbc; display: block; margin-bottom: 8px; text-transform: uppercase;">
+                    👥 Board Members
+                </label>
+                <div id="share-project-members-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 12px 20px; background: #16181d; border-top: 1px solid #282e33; display: flex; justify-content: flex-end;">
+            <button type="button" onclick="closeShareProjectModal()" style="background: #282e33; border: none; color: #dee4ea; border-radius: 4px; padding: 6px 16px; font-size: 0.825rem; cursor: pointer;">
+                Done
+            </button>
+        </div>
+    </div>
+</div>

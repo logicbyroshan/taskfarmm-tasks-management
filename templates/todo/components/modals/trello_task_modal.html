@@ -6,18 +6,58 @@
         <!-- LEFT PANEL: Task Details, Title, Action Pills, Description, Checklist -->
         <div class="trello-modal-left">
             
-            <!-- Breadcrumb Dropdown Pill (e.g. Tasks for Roshan (D-G)) -->
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div id="trello-project-pill-btn" style="display: inline-flex; align-items: center; gap: 6px; background: #282e33; color: #b6c2cf; border-radius: 4px; padding: 5px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer;" onclick="document.getElementById('trello-project-select').focus()">
-                    <span id="trello-project-text">Tasks for Roshan (D-G)</span>
-                    <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab; margin-left: 2px;"></i>
+            <!-- Top Metadata Bar: Project Pill, Kanban List Pill, Priority Pill -->
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                
+                <!-- Project Pill -->
+                <div style="position: relative;">
+                    <button type="button" id="trello-project-pill-btn" onclick="toggleTrelloProjectDropdown(event)" style="display: inline-flex; align-items: center; gap: 6px; background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 5px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer;">
+                        <i class="fas fa-folder" style="color: #579dff; font-size: 0.75rem;"></i>
+                        <span id="trello-project-text">General</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab; margin-left: 2px;"></i>
+                    </button>
+                    <div id="trello-project-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 6px; padding: 6px 0; min-width: 180px; z-index: 2500; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                        <div style="padding: 4px 12px; font-size: 0.725rem; font-weight: 700; color: #8c9bab; text-transform: uppercase;">Project</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloProject('', 'General')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📁 General</div>
+                        {% for p in all_projects %}
+                        <div class="trello-dropdown-item" onclick="selectTrelloProject('{{ p.id }}', '{{ p.name }}')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📁 {{ p.name }}</div>
+                        {% endfor %}
+                    </div>
                 </div>
-                <select id="trello-project-select" onchange="saveTrelloTaskField('category', this.value); document.getElementById('trello-project-text').textContent = this.options[this.selectedIndex].text;" style="display: none;">
-                    <option value="">Tasks for Roshan (D-G)</option>
-                    {% for p in user.categories.all %}
-                    <option value="{{ p.id }}">{{ p.name }}</option>
-                    {% endfor %}
-                </select>
+
+                <!-- Kanban List / Column Pill -->
+                <div style="position: relative;">
+                    <button type="button" id="trello-status-pill-btn" onclick="toggleTrelloStatusDropdown(event)" style="display: inline-flex; align-items: center; gap: 6px; background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 5px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer;">
+                        <i class="fas fa-columns" style="color: #579dff; font-size: 0.75rem;"></i>
+                        <span style="color: #8c9bab; font-size: 0.8rem;">in list</span>
+                        <span id="trello-status-pill-text" style="color: #579dff; font-weight: 600;">To Do</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab; margin-left: 2px;"></i>
+                    </button>
+                    <div id="trello-status-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 6px; padding: 6px 0; min-width: 160px; z-index: 2500; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                        <div style="padding: 4px 12px; font-size: 0.725rem; font-weight: 700; color: #8c9bab; text-transform: uppercase;">Move to List</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloStatus('not-started', 'To Do')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📋 To Do</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloStatus('in-progress', 'In Progress')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📋 In Progress</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloStatus('backlog', 'Backlog')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📋 Backlog</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloStatus('on-hold', 'On Hold')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📋 On Hold</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloStatus('completed', 'Done')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📋 Done</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloStatus('canceled', 'Canceled')" style="padding: 6px 12px; font-size: 0.825rem; color: #dee4ea; cursor: pointer;">📋 Canceled</div>
+                    </div>
+                </div>
+
+                <!-- Priority Pill -->
+                <div style="position: relative;">
+                    <button type="button" id="trello-priority-pill-btn" onclick="toggleTrelloPriorityDropdown(event)" style="display: inline-flex; align-items: center; gap: 6px; background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 5px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer;">
+                        <span id="trello-priority-dot">🟡</span>
+                        <span id="trello-priority-pill-text">Moderate</span>
+                        <i class="fas fa-chevron-down" style="font-size: 0.65rem; color: #8c9bab; margin-left: 2px;"></i>
+                    </button>
+                    <div id="trello-priority-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: #22272b; border: 1px solid #333c43; border-radius: 6px; padding: 6px 0; min-width: 140px; z-index: 2500; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                        <div style="padding: 4px 12px; font-size: 0.725rem; font-weight: 700; color: #8c9bab; text-transform: uppercase;">Priority</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloPriority('high', '🔴 High')" style="padding: 6px 12px; font-size: 0.825rem; color: #f87171; cursor: pointer;">🔴 High</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloPriority('moderate', '🟡 Moderate')" style="padding: 6px 12px; font-size: 0.825rem; color: #facc15; cursor: pointer;">🟡 Moderate</div>
+                        <div class="trello-dropdown-item" onclick="selectTrelloPriority('low', '🟢 Low')" style="padding: 6px 12px; font-size: 0.825rem; color: #4ade80; cursor: pointer;">🟢 Low</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Card Title Line with Circle Complete Button -->
@@ -41,7 +81,7 @@
                 <button type="button" class="trello-pill-action" onclick="cycleTrelloStatus()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fas fa-plus" style="font-size: 0.75rem;"></i> Add
                 </button>
-                <button type="button" class="trello-pill-action" onclick="cycleTrelloStatus()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" class="trello-pill-action" onclick="toggleTrelloStatusDropdown(event)" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fas fa-tag" style="font-size: 0.75rem; color: #579dff;"></i> Labels
                 </button>
                 <button type="button" class="trello-pill-action" onclick="openTrelloDatePicker()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
@@ -50,7 +90,7 @@
                 <button type="button" class="trello-pill-action" onclick="focusTrelloChecklist()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fas fa-check-square" style="font-size: 0.8rem; color: #579dff;"></i> Checklist
                 </button>
-                <button type="button" class="trello-pill-action" onclick="copyTrelloFullSummary()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" class="trello-pill-action" onclick="openShareProjectModal()" style="background: #282e33; color: #b6c2cf; border: none; border-radius: 4px; padding: 6px 12px; font-size: 0.825rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fas fa-user-friends" style="font-size: 0.8rem; color: #579dff;"></i> Members
                 </button>
             </div>
@@ -81,6 +121,17 @@
                 <option value="completed">Done</option>
                 <option value="on-hold">On Hold</option>
                 <option value="canceled">Canceled</option>
+            </select>
+            <select id="trello-project-select" onchange="saveTrelloTaskField('category', this.value)" style="display: none;">
+                <option value="">General</option>
+                {% for p in all_projects %}
+                <option value="{{ p.id }}">{{ p.name }}</option>
+                {% endfor %}
+            </select>
+            <select id="trello-priority-select" onchange="saveTrelloTaskField('priority', this.value)" style="display: none;">
+                <option value="high">High</option>
+                <option value="moderate" selected>Moderate</option>
+                <option value="low">Low</option>
             </select>
 
             <!-- Description Section -->
@@ -142,8 +193,8 @@
                 <button type="button" onclick="toggleTrelloExpand()" title="Expand" style="background: transparent; border: none; color: #9fadbc; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 0.85rem;">
                     <i class="fas fa-expand-alt"></i>
                 </button>
-                <button type="button" onclick="copyTrelloFullSummary()" title="More actions" style="background: transparent; border: none; color: #9fadbc; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 0.85rem;">
-                    <i class="fas fa-ellipsis-h"></i>
+                <button type="button" onclick="openShareProjectModal()" title="Share & Members" style="background: transparent; border: none; color: #9fadbc; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 0.85rem;">
+                    <i class="fas fa-user-plus"></i>
                 </button>
                 <button type="button" class="close-modal" onclick="closeTrelloModal()" aria-label="Close modal" style="font-size: 1.25rem; color: #9fadbc; background: transparent; border: none; cursor: pointer; padding: 2px 6px; line-height: 1;">
                     <i class="fas fa-times"></i>
