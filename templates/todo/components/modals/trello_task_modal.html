@@ -139,32 +139,17 @@
             <input type="hidden" id="trello-project-select" value="">
             <input type="hidden" id="trello-priority-select" value="moderate">
 
-            <!-- Description Section -->
-            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+            <!-- Description Section with seamless Auto-save -->
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
                 <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #dee4ea; display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-align-left" style="color: #9fadbc; font-size: 0.85rem;"></i> Description
                 </h4>
-                
-                <!-- Description Box -->
-                <div id="trello-desc-display" 
-                     onclick="openTrelloDescEdit()" 
-                     style="background: #22272b; border-radius: 4px; padding: 12px 14px; min-height: 56px; color: #8c9bab; font-size: 0.875rem; cursor: pointer; line-height: 1.5; white-space: pre-wrap;">Add a more detailed description...</div>
-                
-                <!-- Inline Textarea Edit Mode -->
-                <div id="trello-desc-edit-wrapper" style="display: none; flex-direction: column; gap: 8px;">
-                    <textarea id="trello-description-input" 
-                              rows="4" 
-                              placeholder="Add a more detailed description..."
-                              style="width: 100%; background: #22272b; border: 1px solid #579dff; border-radius: 6px; color: #dee4ea; padding: 10px 12px; font-size: 0.875rem; line-height: 1.5; outline: none; font-family: inherit; box-sizing: border-box; resize: vertical;"></textarea>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" onclick="saveTrelloDesc()" style="background: #579dff; color: #000000; font-weight: 700; border: none; border-radius: 4px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer;">
-                            Save
-                        </button>
-                        <button type="button" onclick="closeTrelloDescEdit()" style="background: transparent; border: none; color: #b6c2cf; border-radius: 4px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer;">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
+                <textarea id="trello-description-input" 
+                          rows="3" 
+                          placeholder="Add a more detailed description..."
+                          style="width: 100%; background: #22272b; border: 1px solid transparent; border-radius: 6px; color: #dee4ea; padding: 10px 14px; font-size: 0.875rem; line-height: 1.5; outline: none; font-family: inherit; box-sizing: border-box; resize: vertical; min-height: 64px; transition: border-color 0.15s ease, background 0.15s ease;"
+                          onfocus="this.style.background='#1d2125'; this.style.borderColor='#579dff';"
+                          onblur="this.style.background='#22272b'; this.style.borderColor='transparent'; saveTrelloTaskField('description', this.value);"></textarea>
             </div>
 
             <!-- Checklist Section (Dynamically shown if active) -->
@@ -216,17 +201,15 @@
                 </button>
             </div>
 
-            <!-- Write Comment Box -->
+            <!-- Write Comment Box (Auto-submit on Enter) -->
             <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
                 <textarea id="trello-comment-input" 
                           rows="2" 
-                          placeholder="Write a comment..." 
-                          style="width: 100%; background: #22272b; border: 1px solid #333c43; border-radius: 6px; color: #dee4ea; font-size: 0.85rem; padding: 10px 14px; resize: vertical; min-height: 40px; box-sizing: border-box; outline: none; font-family: inherit;"
-                          onfocus="this.style.borderColor='#579dff'; this.style.background='#1d2125'; document.getElementById('trello-comment-save-btn').style.display='inline-block';"
-                          onblur="this.style.borderColor='#333c43'; this.style.background='#22272b';"></textarea>
-                <button type="button" onclick="submitTrelloComment()" style="align-self: flex-start; padding: 5px 14px; font-size: 0.775rem; background: #579dff; color: #000000; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; display: none;" id="trello-comment-save-btn">
-                    Save
-                </button>
+                          placeholder="Write a comment... (Press Enter to post)" 
+                          style="width: 100%; background: #22272b; border: 1px solid #333c43; border-radius: 6px; color: #dee4ea; font-size: 0.85rem; padding: 10px 14px; resize: vertical; min-height: 44px; box-sizing: border-box; outline: none; font-family: inherit; transition: border-color 0.15s ease;"
+                          onfocus="this.style.borderColor='#579dff'; this.style.background='#1d2125';"
+                          onblur="this.style.borderColor='#333c43'; this.style.background='#22272b';"
+                          onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); submitTrelloComment(); }"></textarea>
             </div>
 
             <!-- Dynamic Activity & Comments Stream -->
