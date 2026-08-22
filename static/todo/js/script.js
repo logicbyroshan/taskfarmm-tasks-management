@@ -21,16 +21,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupSidebarCollapse() {
     const isCollapsed = localStorage.getItem('taskflixx_sidebar_collapsed') === '1';
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar && isCollapsed) {
-        sidebar.classList.add('collapsed');
+    const sidebar = document.getElementById('sidebar') || document.querySelector('.sidebar');
+    if (isCollapsed) {
+        document.documentElement.classList.add('sidebar-collapsed-mode');
+        if (sidebar) sidebar.classList.add('collapsed');
+    } else {
+        document.documentElement.classList.remove('sidebar-collapsed-mode');
+        if (sidebar) sidebar.classList.remove('collapsed');
     }
 }
 
 window.toggleSidebarCollapse = function() {
-    const sidebar = document.querySelector('.sidebar');
+    const sidebar = document.getElementById('sidebar') || document.querySelector('.sidebar');
     if (!sidebar) return;
+
+    // Enable smooth animation during user interactive click
+    sidebar.style.transition = 'width 0.22s cubic-bezier(0.4, 0, 0.2, 1), padding 0.22s ease';
+
     const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (isCollapsed) {
+        document.documentElement.classList.add('sidebar-collapsed-mode');
+    } else {
+        document.documentElement.classList.remove('sidebar-collapsed-mode');
+    }
     localStorage.setItem('taskflixx_sidebar_collapsed', isCollapsed ? '1' : '0');
 };
 

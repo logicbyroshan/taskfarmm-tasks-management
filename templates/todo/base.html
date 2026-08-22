@@ -8,6 +8,15 @@
     
     <title>{% block title %}TaskFlixx - Smart Task & Project Management{% endblock title %}</title>
     
+    <!-- Anti-FOUC Synchronous Sidebar State Check (Zero Flash/Jerk on Page Switch) -->
+    <script>
+        try {
+            if (localStorage.getItem('taskflixx_sidebar_collapsed') === '1') {
+                document.documentElement.classList.add('sidebar-collapsed-mode');
+            }
+        } catch (e) {}
+    </script>
+    
     <meta name="description" content="TaskFlixx - Next-generation OLED pitch-black task and project orchestration platform with 6-column Kanban and AI assistant.">
     <meta name="author" content="TaskFlixx">
     <meta name="robots" content="index, follow">

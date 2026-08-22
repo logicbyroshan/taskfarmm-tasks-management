@@ -161,6 +161,35 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 }
 
 /* Collapsed Sidebar (Icon-Only Mode) */
+html.sidebar-collapsed-mode .sidebar {
+    width: 68px !important;
+    min-width: 68px !important;
+    padding: 14px 8px !important;
+    transition: none !important;
+}
+
+html.sidebar-collapsed-mode .sidebar .sidebar-link-text {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+html.sidebar-collapsed-mode .sidebar .sidebar-nav a,
+html.sidebar-collapsed-mode .sidebar .sidebar-settings-link a {
+    justify-content: center !important;
+    padding: 10px 0 !important;
+    gap: 0 !important;
+}
+
+html.sidebar-collapsed-mode .sidebar .logout-btn a {
+    padding: 0 !important;
+    justify-content: center !important;
+}
+
+html.sidebar-collapsed-mode .sidebar .sidebar-divider {
+    width: 100%;
+    margin: 4px 0 8px 0;
+}
+
 .sidebar.collapsed {
     width: 68px !important;
     min-width: 68px !important;

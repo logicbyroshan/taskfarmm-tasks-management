@@ -1,4 +1,11 @@
-<aside class="sidebar" role="navigation" aria-label="Main navigation">
+<aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+    <script>
+        try {
+            if (localStorage.getItem('taskflixx_sidebar_collapsed') === '1') {
+                document.getElementById('sidebar')?.classList.add('collapsed');
+            }
+        } catch(e) {}
+    </script>
     {% if user.is_authenticated %}
     
     <nav class="sidebar-nav">
