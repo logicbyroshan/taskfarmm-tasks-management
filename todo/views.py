@@ -21,6 +21,7 @@ import base64
 
 # Django core
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.views.decorators.http import require_POST, require_http_methods
@@ -80,8 +81,6 @@ def dashboard(request):
     all_projects_progress = CategoryService.get_dashboard_project_progress(request.user)
 
     context = {
-        # Stats (single DB aggregation)
-        'total_tasks': stats['total_count'],
         'total_count': stats['total_count'],
         'backlog_count': stats['backlog_count'],
         'to_do_count': stats['to_do_count'],
@@ -89,15 +88,12 @@ def dashboard(request):
         'done_count': stats['done_count'],
         'on_hold_count': stats['on_hold_count'],
         'canceled_count': stats['canceled_count'],
-        'completion_rate': stats['completion_rate'],
         'overdue_count': stats['overdue_count'],
         'due_today_count': stats['due_today_count'],
-        # Lists
+        'completion_rate': stats['completion_rate'],
         'recent_tasks': recent_tasks,
-        'recently_completed': recently_completed,
         'recently_completed_tasks': recently_completed,
-        'category_stats': category_stats,
-        'projects': category_stats,
+        'categories': category_stats,
         'all_projects_progress': all_projects_progress,
         'active_page': 'dashboard',
     }
@@ -106,44 +102,11 @@ def dashboard(request):
 
 @login_required
 def manage_tasks(request):
-    """
-    Displays a grid/list of all tasks with live HTMX search, filtering, and sorting.
-    Requires at least one project to exist; otherwise shows guided empty state.
-    """
-    projects = Category.objects.filter(Q(user=request.user) | Q(members=request.user)).distinct()
-    has_projects = projects.exists()
-
-    if has_projects:
-        tasks = TaskService.filter_and_sort(
-            user=request.user,
-            search=request.GET.get('search', '').strip(),
-            status=request.GET.get('status', 'all'),
-            priority=request.GET.get('priority', 'all'),
-            project=request.GET.get('project', 'all'),
-            sort=request.GET.get('sort', 'newest'),
-        )
-        task_count = tasks.count()
-    else:
-        tasks = Task.objects.none()
-        task_count = 0
-
-    context = {
-        'tasks': tasks,
-        'projects': projects,
-        'has_projects': has_projects,
-        'status_filter': request.GET.get('status', 'all'),
-        'priority_filter': request.GET.get('priority', 'all'),
-        'project_filter': request.GET.get('project', 'all'),
-        'sort_by': request.GET.get('sort', 'newest'),
-        'search_query': request.GET.get('search', '').strip(),
-        'task_count': task_count,
-        'active_page': 'manage_tasks',
-    }
-
-    if request.headers.get('HX-Request'):
-        return render(request, 'todo/components/task_list_partial.html', context)
-
-    return render(request, 'todo/manage-tasks.html', context)
+    """Redirects legacy manage-tasks requests to the centralized Kanban Board."""
+    project = request.GET.get('project')
+    if project:
+        return redirect(f"{reverse('manage_kanban')}?project={project}")
+    return redirect('manage_kanban')
 
 
 @login_required
@@ -629,7 +592,7 @@ def task_delete(request, pk):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': f'Task "{title}" deleted.'})
         messages.success(request, f'Task "{title}" deleted.')
-        return redirect('manage_tasks')
+        return redirect('manage_kanban')
     return render(request, 'todo/confirm_delete.html', {'object': task, 'type': 'task'})
 
 

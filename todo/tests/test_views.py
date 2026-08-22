@@ -38,18 +38,15 @@ class ViewTests(TestCase):
         self.assertIn('all_projects_progress', response.context)
         self.assertIn('recently_completed_tasks', response.context)
 
-    def test_manage_tasks_view_and_htmx(self):
+    def test_manage_tasks_redirects_to_kanban(self):
         response = self.client.get(reverse('manage_tasks'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'todo/manage-tasks.html')
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('manage_kanban'))
 
-        # HTMX partial response
-        htmx_response = self.client.get(
-            reverse('manage_tasks'),
-            HTTP_HX_REQUEST='true'
-        )
-        self.assertEqual(htmx_response.status_code, 200)
-        self.assertTemplateUsed(htmx_response, 'todo/components/task_list_partial.html')
+        # With project param
+        res_proj = self.client.get(reverse('manage_tasks') + f'?project={self.project.id}')
+        self.assertEqual(res_proj.status_code, 302)
+        self.assertRedirects(res_proj, f"{reverse('manage_kanban')}?project={self.project.id}")
 
     def test_manage_kanban_view(self):
         response = self.client.get(reverse('manage_kanban'))
@@ -230,9 +227,8 @@ class ViewTests(TestCase):
         self.assertContains(kanban_res, 'No Projects Found')
 
         tasks_res = self.client.get(reverse('manage_tasks'))
-        self.assertEqual(tasks_res.status_code, 200)
-        self.assertFalse(tasks_res.context['has_projects'])
-        self.assertContains(tasks_res, 'No Projects Found')
+        self.assertEqual(tasks_res.status_code, 302)
+        self.assertRedirects(tasks_res, reverse('manage_kanban'))
 
     def test_category_board_template_smart_vs_super(self):
         smart_proj = Category.objects.create(

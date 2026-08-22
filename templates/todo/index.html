@@ -86,7 +86,7 @@
                     <i class="fas fa-clock" style="color: var(--accent-color);"></i> Recent Tasks
                 </h2>
                 <div class="filter-options">
-                    <a href="{% url 'manage_tasks' %}" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+                    <a href="{% url 'manage_kanban' %}" class="view-all-link">Kanban Board <i class="fas fa-arrow-right"></i></a>
                     <button class="invite-btn" type="button" onclick="openAddTaskModal()">
                         <i class="fas fa-plus" aria-hidden="true"></i> Add Task
                     </button>
@@ -199,27 +199,27 @@
         <section class="task-status-cards" aria-labelledby="status-heading">
             <h2 id="status-heading" style="font-size: 1rem; margin: 0 0 12px 0; font-weight: 600; color: #ffffff;">Task Status</h2>
             <div class="status-grid-2x3">
-                <a href="{% url 'manage_tasks' %}?status=backlog" class="status-item" style="text-decoration: none; display: flex;">
+                <a href="{% url 'manage_kanban' %}" class="status-item" style="text-decoration: none; display: flex;">
                     <span class="status-label">Backlog</span>
                     <span class="status-count backlog">{{ backlog_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=not-started" class="status-item" style="text-decoration: none; display: flex;">
+                <a href="{% url 'manage_kanban' %}" class="status-item" style="text-decoration: none; display: flex;">
                     <span class="status-label">To Do</span>
                     <span class="status-count to-do">{{ to_do_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=in-progress" class="status-item" style="text-decoration: none; display: flex;">
+                <a href="{% url 'manage_kanban' %}" class="status-item" style="text-decoration: none; display: flex;">
                     <span class="status-label">In Progress</span>
                     <span class="status-count in-progress">{{ in_progress_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=completed" class="status-item" style="text-decoration: none; display: flex;">
+                <a href="{% url 'manage_kanban' %}" class="status-item" style="text-decoration: none; display: flex;">
                     <span class="status-label">Done</span>
                     <span class="status-count done">{{ done_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=on-hold" class="status-item" style="text-decoration: none; display: flex;">
+                <a href="{% url 'manage_kanban' %}" class="status-item" style="text-decoration: none; display: flex;">
                     <span class="status-label">On Hold</span>
                     <span class="status-count on-hold">{{ on_hold_count }}</span>
                 </a>
-                <a href="{% url 'manage_tasks' %}?status=canceled" class="status-item" style="text-decoration: none; display: flex;">
+                <a href="{% url 'manage_kanban' %}" class="status-item" style="text-decoration: none; display: flex;">
                     <span class="status-label">Canceled</span>
                     <span class="status-count canceled">{{ canceled_count }}</span>
                 </a>

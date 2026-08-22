@@ -34,9 +34,6 @@
                 <a href="{% url 'manage_kanban' %}?project={{ category.id }}" class="dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #60a5fa; border-radius: 6px; text-decoration: none;">
                     <i class="fas fa-columns"></i> View Kanban
                 </a>
-                <a href="{% url 'manage_tasks' %}?project={{ category.id }}" class="dropdown-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.825rem; color: #a1a1aa; border-radius: 6px; text-decoration: none;">
-                    <i class="fas fa-list"></i> View Tasks
-                </a>
                 <button type="button" 
                         class="dropdown-item edit-project-trigger-btn" 
                         data-id="{{ category.id }}" 
