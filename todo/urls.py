@@ -1,4 +1,5 @@
 from django.urls import path
+from django.http import JsonResponse
 from . import views
 from . import api_auth
 from . import google_auth
@@ -57,7 +58,12 @@ urlpatterns = [
     path('api/stats/', views.stats_api, name='stats_api'),
     path('api/export/tasks/', views.tasks_export_api, name='tasks_export_api'),
 
-    # Auth & AI endpoints
+    # Auth & Health endpoints
+    path('api/health/', api_auth.api_health_check, name='api_health'),
+    path('api/v1/health/', api_auth.api_health_check, name='api_v1_health'),
+    path('api/auth/login/', api_auth.api_auth_login, name='api_auth_login'),
+    path('api/auth/me/', api_auth.api_user_info, name='api_auth_me'),
+    path('api/auth/csrf/', api_auth.api_auth_csrf, name='api_auth_csrf'),
     path('api/auth/switch-user/', views.switch_user, name='switch_user'),
     path('api/auth/verify-token/', api_auth.api_verify_token, name='api_verify_token'),
     path('api/auth/create-session/', api_auth.api_create_session, name='api_create_session'),
@@ -69,6 +75,7 @@ urlpatterns = [
 
     # In-App Notifications API
     path('api/notifications/', views.api_notifications_list, name='api_notifications_list'),
+    path('api/notifications/unread-count/', lambda r: JsonResponse({'unread_count': views.NotificationService.get_unread_count(r.user)}), name='api_notifications_unread_count'),
     path('api/notifications/<int:pk>/read/', views.api_notification_mark_read, name='api_notification_mark_read'),
     path('api/notifications/read-all/', views.api_notification_mark_all_read, name='api_notification_mark_all_read'),
 ]

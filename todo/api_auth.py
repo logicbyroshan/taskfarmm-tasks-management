@@ -135,3 +135,65 @@ def api_user_info(request):
         'success': False,
         'error': 'Not authenticated'
     }, status=401)
+
+
+@csrf_exempt
+def api_auth_login(request):
+    """
+    Direct API login endpoint accepting JSON credentials.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body) if request.body else request.POST
+        login_input = data.get('username') or data.get('email', '').strip()
+        password = data.get('password', '').strip()
+
+        if not login_input or not password:
+            return JsonResponse({'success': False, 'error': 'Username/Email and password required'}, status=400)
+
+        # Authenticate by username or email
+        user = None
+        if '@' in login_input:
+            user_obj = User.objects.filter(email__iexact=login_input).first()
+            if user_obj:
+                user = authenticate(request, username=user_obj.username, password=password)
+        if not user:
+            user = authenticate(request, username=login_input, password=password)
+
+        if user is None:
+            return JsonResponse({'success': False, 'error': 'Invalid credentials'}, status=401)
+
+        if not user.is_active:
+            return JsonResponse({'success': False, 'error': 'Account is inactive'}, status=403)
+
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        return JsonResponse({
+            'success': True,
+            'message': 'Logged in successfully',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'name': user.get_full_name() or user.username
+            }
+        })
+    except Exception as e:
+        logger.error('API login error: %s', e)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def api_auth_csrf(request):
+    """Returns CSRF token for API clients."""
+    from django.middleware.csrf import get_token
+    token = get_token(request)
+    return JsonResponse({'csrfToken': token, 'success': True})
+
+
+def api_health_check(request):
+    """Health check endpoint for monitoring."""
+    return JsonResponse({
+        'status': 'healthy',
+        'app': 'TaskFlixx',
+        'version': '2.0.0',
+    })
