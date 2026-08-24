@@ -9,6 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 try:
     from dotenv import load_dotenv
     load_dotenv(BASE_DIR / '.env')
+    load_dotenv(BASE_DIR / '.github' / '.env')
 except ImportError:
     pass
 
@@ -88,8 +89,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
-ENABLE_DEMO_AUTH = os.environ.get('ENABLE_DEMO_AUTH', str(DEBUG)).strip().lower() in ['true', '1', 'yes', 't']
+ENABLE_DEMO_AUTH = os.environ.get('ENABLE_DEMO_AUTH', 'False').strip().lower() in ['true', '1', 'yes', 't']
 
 # ============================================================
 #  TEMPLATES
@@ -252,7 +254,14 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -319,3 +328,10 @@ LOGGING = {
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# ============================================================
+#  GOOGLE SSO / OAUTH2 CONFIGURATION
+# ============================================================
+
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip()
