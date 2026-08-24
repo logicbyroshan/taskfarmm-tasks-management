@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import api_auth
+from . import google_auth
 
 urlpatterns = [
     # Main dashboard
@@ -19,6 +20,12 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('signup/', views.register_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
+
+    # Google SSO (OAuth2 & GIS)
+    path('auth/google/login/', google_auth.google_login, name='google_login'),
+    path('auth/google/callback/', google_auth.google_callback, name='google_callback'),
+    path('auth/google/credential/', google_auth.google_credential_callback, name='google_credential'),
+    path('auth/google/dev-login/', google_auth.google_dev_demo_login, name='google_dev_login'),
 
     # Task CRUD
     path('task/<int:pk>/', views.task_detail, name='task_detail'),
@@ -59,4 +66,9 @@ urlpatterns = [
     path('api/ai/create-task/', views.ai_create_task, name='ai_create_task'),
     path('api/ai/create-project/', views.ai_create_project, name='ai_create_project'),
     path('api/autocorrect/', views.api_autocorrect, name='api_autocorrect'),
+
+    # In-App Notifications API
+    path('api/notifications/', views.api_notifications_list, name='api_notifications_list'),
+    path('api/notifications/<int:pk>/read/', views.api_notification_mark_read, name='api_notification_mark_read'),
+    path('api/notifications/read-all/', views.api_notification_mark_all_read, name='api_notification_mark_all_read'),
 ]

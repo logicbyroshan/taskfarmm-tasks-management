@@ -1,7 +1,8 @@
 import json
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from todo.models import Task, Category, PreDefinedTask
 
 User = get_user_model()
@@ -320,3 +321,84 @@ class ViewTests(TestCase):
         self.assertTrue(data['success'])
         self.assertIn('projects_count', data['stats'])
         self.assertEqual(data['stats']['total_count'], 1)
+
+    @override_settings(DEBUG=False, ENABLE_DEMO_AUTH=False)
+    def test_switch_user_blocked_in_production(self):
+        res = self.client.post(
+            reverse('switch_user'),
+            data=json.dumps({'username': 'prakash_ahuja'}),
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, 403)
+        self.assertFalse(res.json()['success'])
+
+    @override_settings(DEBUG=True, ENABLE_DEMO_AUTH=True)
+    def test_switch_user_allowed_for_demo_accounts_only(self):
+        # Disallowed arbitrary user
+        res_bad = self.client.post(
+            reverse('switch_user'),
+            data=json.dumps({'username': 'evil_hacker'}),
+            content_type='application/json'
+        )
+        self.assertEqual(res_bad.status_code, 400)
+
+        # Allowed demo user
+        res_ok = self.client.post(
+            reverse('switch_user'),
+            data=json.dumps({'username': 'prakash_ahuja'}),
+            content_type='application/json'
+        )
+        self.assertEqual(res_ok.status_code, 200)
+        self.assertTrue(res_ok.json()['success'])
+
+    def test_task_detail_accessible_by_collaborator(self):
+        collab_user = User.objects.create_user(username='collab1', password='password123')
+        self.project.members.add(collab_user)
+
+        self.client.force_login(collab_user)
+        res = self.client.get(
+            reverse('task_detail', args=[self.task.id]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['task']['id'], self.task.id)
+
+    def test_task_upload_attachment_valid_file(self):
+        file_content = b"fake image content"
+        upload = SimpleUploadedFile("test_photo.png", file_content, content_type="image/png")
+
+        res = self.client.post(
+            reverse('task_upload_attachment', args=[self.task.id]),
+            {'files': [upload]},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.json()['success'])
+        self.assertEqual(self.task.attachments.count(), 1)
+
+    def test_task_upload_attachment_blocked_extension(self):
+        file_content = b"malicious code"
+        upload = SimpleUploadedFile("danger.exe", file_content, content_type="application/octet-stream")
+
+        res = self.client.post(
+            reverse('task_upload_attachment', args=[self.task.id]),
+            {'files': [upload]},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('not permitted', res.json()['error'])
+
+    def test_kanban_non_numeric_project_param_does_not_crash(self):
+        res = self.client.get(reverse('manage_kanban') + '?project=non_numeric_slug')
+        self.assertEqual(res.status_code, 200)
+
+    def test_profile_update_duplicate_email_rejected(self):
+        User.objects.create_user(username='otheruser', email='other@example.com', password='password123')
+        res = self.client.post(
+            reverse('settings'),
+            data={'action': 'update_profile', 'username': 'viewuser', 'email': 'other@example.com'}
+        )
+        # Should re-render with error, not redirect
+        self.assertEqual(res.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertNotEqual(self.user.email, 'other@example.com')

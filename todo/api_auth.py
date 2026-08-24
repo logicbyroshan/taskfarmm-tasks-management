@@ -39,10 +39,13 @@ def api_verify_token(request):
             user_id = token['user_id']
             user = User.objects.get(id=user_id)
         except (InvalidToken, TokenError, User.DoesNotExist) as e:
-            if settings.DEBUG and token_str == 'demo-token':
+            if settings.DEBUG and getattr(settings, 'ENABLE_DEMO_AUTH', False) and token_str == 'demo-token':
                 user, _ = User.objects.get_or_create(username='demo_user', defaults={'email': 'demo@taskflix.com'})
             else:
                 return JsonResponse({'success': False, 'error': 'Invalid or expired token'}, status=401)
+
+        if not user.is_active:
+            return JsonResponse({'success': False, 'error': 'Account is disabled.'}, status=401)
 
         return JsonResponse({
             'success': True,
@@ -80,7 +83,7 @@ def api_create_session(request):
             user_id = token['user_id']
             user = User.objects.get(id=user_id)
         except (InvalidToken, TokenError, User.DoesNotExist):
-            if settings.DEBUG and token_str == 'demo-token':
+            if settings.DEBUG and getattr(settings, 'ENABLE_DEMO_AUTH', False) and token_str == 'demo-token':
                 username = user_data.get('username', 'demo_user')
                 user, _ = User.objects.get_or_create(
                     username=username,
@@ -92,6 +95,9 @@ def api_create_session(request):
                 )
             else:
                 return JsonResponse({'success': False, 'error': 'Invalid or expired token'}, status=401)
+
+        if not user.is_active:
+            return JsonResponse({'success': False, 'error': 'Account is disabled.'}, status=401)
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 

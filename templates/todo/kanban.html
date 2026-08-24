@@ -590,14 +590,9 @@
     });
 
     function openAddTaskModalWithStatus(status) {
-        openAddTaskModal();
-        setTimeout(() => {
-            const statusSelect = document.querySelector('#add-task-form select[name="status"]');
-            if (statusSelect) {
-                statusSelect.value = status;
-                statusSelect.dispatchEvent(new Event('change'));
-            }
-        }, 100);
+        const projSelect = document.getElementById('kanban-project-select');
+        const projId = projSelect ? projSelect.value : '';
+        openAddTaskModal(status, projId);
     }
 
     // Enable smooth mouse wheel horizontal panning over Kanban board

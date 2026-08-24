@@ -2,6 +2,7 @@ from django import forms
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import password_validation
 from .models import Task, Category, UserProfile
 
 
@@ -81,6 +82,26 @@ class UserUpdateForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip()
+        if email:
+            existing = User.objects.filter(email__iexact=email)
+            if self.instance and self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            if existing.exists():
+                raise forms.ValidationError("This email address is already in use by another account.")
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if username:
+            existing = User.objects.filter(username__iexact=username)
+            if self.instance and self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            if existing.exists():
+                raise forms.ValidationError("This username is already taken.")
+        return username
 
 
 class UserProfileForm(forms.ModelForm):
@@ -195,7 +216,17 @@ class RegisterForm(forms.ModelForm):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         confirm_password = cleaned_data.get('confirm_password')
+        username = cleaned_data.get('username')
+        email = cleaned_data.get('email')
 
-        if password and confirm_password and password != confirm_password:
-            self.add_error('confirm_password', "Passwords do not match.")
+        if password and confirm_password:
+            if password != confirm_password:
+                self.add_error('confirm_password', "Passwords do not match.")
+            else:
+                user_instance = User(username=username, email=email)
+                try:
+                    password_validation.validate_password(password, user=user_instance)
+                except forms.ValidationError as error:
+                    self.add_error('password', error)
+
         return cleaned_data

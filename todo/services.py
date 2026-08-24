@@ -10,11 +10,13 @@ business layer.
 """
 
 import logging
+from collections import defaultdict
 from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.timesince import timesince
 
-from .models import Task, Category, TaskComment, PreDefinedTask
+from .models import Task, Category, TaskComment, PreDefinedTask, Notification
+from .notifications import NotificationService
 
 logger = logging.getLogger('todo')
 
@@ -160,6 +162,7 @@ class TaskService:
         """
         Returns tasks split by status for the Kanban board.
         Supports shared projects where user is owner or member.
+        Optimized with a single database round-trip.
         """
         all_projects = (
             Category.objects
@@ -170,8 +173,8 @@ class TaskService:
         )
 
         selected_project = None
-        if project_id:
-            selected_project = all_projects.filter(pk=project_id).first()
+        if project_id and str(project_id).isdigit():
+            selected_project = all_projects.filter(pk=int(project_id)).first()
         if not selected_project and all_projects.exists():
             selected_project = all_projects.first()
 
@@ -191,21 +194,26 @@ class TaskService:
             # If no project selected, show user's accessible tasks
             qs = TaskService.get_base_queryset(user)
 
+        all_board_tasks = list(qs.order_by('-created_at'))
+        tasks_by_status = defaultdict(list)
+        for t in all_board_tasks:
+            tasks_by_status[t.status].append(t)
+
         columns = {
-            'backlog': qs.filter(status='backlog').order_by('-created_at'),
-            'not-started': qs.filter(status='not-started').order_by('-created_at'),
-            'in-progress': qs.filter(status='in-progress').order_by('-created_at'),
-            'completed': qs.filter(status='completed').order_by('-created_at'),
-            'on-hold': qs.filter(status='on-hold').order_by('-created_at'),
-            'canceled': qs.filter(status='canceled').order_by('-created_at'),
+            'backlog': tasks_by_status['backlog'],
+            'not-started': tasks_by_status['not-started'],
+            'in-progress': tasks_by_status['in-progress'],
+            'completed': tasks_by_status['completed'],
+            'on-hold': tasks_by_status['on-hold'],
+            'canceled': tasks_by_status['canceled'],
         }
 
         active_columns = []
         if selected_project:
             for col_def in selected_project.get_board_columns():
                 col = dict(col_def)
-                col['tasks'] = columns.get(col['key'], qs.none())
-                col['count'] = col['tasks'].count()
+                col['tasks'] = columns.get(col['key'], [])
+                col['count'] = len(col['tasks'])
                 active_columns.append(col)
 
         return {
@@ -383,6 +391,23 @@ class TaskService:
         else:
             task.status = Task.Status.DONE
             task.completed_at = timezone.now()
+            # Queue task completed notification to task owner if exists
+            if task.user:
+                try:
+                    NotificationService.queue_notification(
+                        user=task.user,
+                        event_type=Notification.EventType.TASK_COMPLETED,
+                        title=f"Task completed: {task.title}",
+                        message=f"Task '{task.title}' has been marked as completed.",
+                        action_url=f"/kanban/?project={task.category_id}" if task.category_id else "/kanban/",
+                        context={
+                            'task_title': task.title,
+                            'project_name': task.category.name if task.category else 'General Tasks',
+                        }
+                    )
+                except Exception as e:
+                    logger.warning('Failed to queue completion notification: %s', e)
+
         task.save(update_fields=['status', 'completed_at', 'updated_at'])
         return task
 
@@ -395,7 +420,7 @@ class TaskService:
 
     @staticmethod
     def add_comment(task, user, content):
-        """Creates a new comment on a task."""
+        """Creates a new comment on a task and notifies stakeholders."""
         if not content or not content.strip():
             raise ValueError('Comment content cannot be empty.')
         comment = TaskComment.objects.create(
@@ -403,6 +428,32 @@ class TaskService:
             user=user,
             content=content.strip()
         )
+
+        # Notify task creator and assignees (excluding author)
+        recipients = set()
+        if task.user and task.user != user:
+            recipients.add(task.user)
+        for assignee in task.assignees.exclude(id=user.id):
+            recipients.add(assignee)
+
+        for r in recipients:
+            try:
+                NotificationService.queue_notification(
+                    user=r,
+                    event_type=Notification.EventType.TASK_COMMENT,
+                    title=f"New comment on: {task.title}",
+                    message=f"{user.get_full_name() or user.username} commented on '{task.title}'",
+                    action_url=f"/kanban/?project={task.category_id}" if task.category_id else "/kanban/",
+                    context={
+                        'task_title': task.title,
+                        'comment_text': comment.content,
+                        'author_name': user.get_full_name() or user.username,
+                        'project_name': task.category.name if task.category else 'General Tasks',
+                    }
+                )
+            except Exception as e:
+                logger.warning('Failed to queue comment notification: %s', e)
+
         return comment
 
 
@@ -475,18 +526,21 @@ class CategoryService:
         return result
 
     @staticmethod
-    def create_category(user, name, color='#3b82f6', description=''):
+    def create_category(user, name, color='#3b82f6', description='', board_template=Category.BoardTemplate.SMART):
         """Creates a new project/category for the user."""
         import re
         if not re.match(r'^#[0-9A-Fa-f]{6}$', color):
             color = '#3b82f6'
+        if board_template not in Category.BoardTemplate.values:
+            board_template = Category.BoardTemplate.SMART
         category = Category.objects.create(
             user=user,
             name=name,
             color=color,
             description=description,
+            board_template=board_template,
         )
-        logger.info('Category created: id=%d user=%s', category.id, user.username)
+        logger.info('Category created: id=%d user=%s template=%s', category.id, user.username, board_template)
         return category
 
 

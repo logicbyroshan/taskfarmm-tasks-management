@@ -14,12 +14,15 @@ because they use Django's session auth and return task-specific HTML fragments.
 External consumers should use the REST API (/api/v1/).
 """
 
+import os
+import re
 import csv
 import json
 import logging
 import base64
 
 # Django core
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
@@ -34,18 +37,28 @@ from django.utils.timesince import timesince
 from django.core.files.base import ContentFile
 
 # Local models, forms, and services
-from .models import Task, Category, UserProfile, TaskComment, TaskAttachment
+from .models import Task, Category, UserProfile, TaskComment, TaskAttachment, Notification
 from .forms import (
     TaskForm, CategoryForm, UserUpdateForm, UserProfileForm, 
     PasswordUpdateForm, LoginForm, RegisterForm
 )
 from .autocorrect import autocorrect_text
+from .notifications import NotificationService
 from .services import (
     TaskService, CategoryService, ExportService,
     PreDefinedTaskService, StatsService,
 )
 
 logger = logging.getLogger('todo')
+
+MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024  # 10 MB
+ALLOWED_ATTACHMENT_EXTENSIONS = {
+    'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt', 'ppt', 'pptx', 'zip'
+}
+BLOCKED_ATTACHMENT_EXTENSIONS = {
+    'exe', 'bat', 'cmd', 'sh', 'php', 'py', 'js', 'vbs', 'jar', 'scr', 'msi', 'com', 'pif'
+}
 
 
 # ============================================================
@@ -328,7 +341,10 @@ def logout_view(request):
 
 
 def switch_user(request):
-    """Allows instant switching between collaborator profiles for multi-user live testing."""
+    """Allows instant switching between collaborator profiles for multi-user live testing (Debug/Demo only)."""
+    if not (settings.DEBUG and getattr(settings, 'ENABLE_DEMO_AUTH', False)):
+        return JsonResponse({'success': False, 'message': 'Demo user switching is disabled in production.'}, status=403)
+
     from django.contrib.auth import login as auth_login
     from django.contrib.auth.models import User as AuthUser
 
@@ -342,14 +358,18 @@ def switch_user(request):
         if not username:
             return JsonResponse({'success': False, 'message': 'Username required.'}, status=400)
 
-        display_names = {
+        allowed_demo_users = {
             'prakash_ahuja': ('Prakash', 'Ahuja'),
             'adarsh_computer': ('Adarsh', 'Computer'),
             'kamal_dewnani': ('Kamal', 'Dewnani'),
             'roshan_damor': ('Roshan', 'Damor'),
             'demo_user': ('Demo', 'User')
         }
-        first_name, last_name = display_names.get(username, (username.capitalize(), ''))
+
+        if username not in allowed_demo_users:
+            return JsonResponse({'success': False, 'message': 'Only pre-configured demo accounts can be switched to.'}, status=400)
+
+        first_name, last_name = allowed_demo_users[username]
 
         user, _ = AuthUser.objects.get_or_create(
             username=username,
@@ -359,6 +379,10 @@ def switch_user(request):
                 'email': f'{username}@taskflix.com'
             }
         )
+
+        if user.is_staff or user.is_superuser:
+            return JsonResponse({'success': False, 'message': 'Cannot switch to administrative accounts.'}, status=403)
+
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return JsonResponse({
             'success': True,
@@ -392,7 +416,7 @@ def ai_assistant_page(request):
 @login_required
 def task_detail(request, pk):
     """Returns task detail as JSON for the Trello modal."""
-    task = get_object_or_404(Task, pk=pk, user=request.user)
+    task = get_accessible_task(request.user, pk)
 
     is_ajax = (
         request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -583,30 +607,74 @@ def task_update_checklist(request, pk):
 @require_http_methods(['POST'])
 def task_upload_attachment(request, pk):
     """
-    Uploads one or multiple files or pasted image (base64) to a task.
+    Uploads one or multiple files or pasted image (base64) to a task with strict validation.
     """
     task = get_accessible_task(request.user, pk)
     attachments_created = []
+
+    def validate_and_sanitize(uploaded_file, filename):
+        # Sanitize filename
+        safe_filename = os.path.basename(filename).strip()
+        safe_filename = re.sub(r'[\r\n\t\x00]', '', safe_filename)
+        if not safe_filename:
+            safe_filename = f'attachment_{timezone.now().strftime("%Y%m%d_%H%M%S")}.dat'
+
+        # Check size
+        file_size = getattr(uploaded_file, 'size', None)
+        if file_size is None:
+            try:
+                if hasattr(uploaded_file, 'file'):
+                    cur = uploaded_file.file.tell()
+                    uploaded_file.file.seek(0, os.SEEK_END)
+                    file_size = uploaded_file.file.tell()
+                    uploaded_file.file.seek(cur)
+                else:
+                    file_size = len(uploaded_file)
+            except Exception:
+                file_size = 0
+        if file_size > MAX_ATTACHMENT_SIZE:
+            raise ValueError(f'File "{safe_filename}" exceeds the maximum allowed size of 10 MB.')
+
+        # Check extension
+        ext = safe_filename.rsplit('.', 1)[-1].lower() if '.' in safe_filename else ''
+        if ext in BLOCKED_ATTACHMENT_EXTENSIONS or (ext and ext not in ALLOWED_ATTACHMENT_EXTENSIONS):
+            raise ValueError(f'File type ".{ext}" is not permitted for upload.')
+
+        return safe_filename
 
     # Handle standard multipart file uploads
     if request.FILES:
         files = request.FILES.getlist('files') or ([request.FILES['file']] if 'file' in request.FILES else [])
         for f in files:
-            att = TaskService.add_attachment(task, request.user, f)
-            attachments_created.append(att)
+            try:
+                safe_name = validate_and_sanitize(f, f.name)
+                f.name = safe_name
+                att = TaskService.add_attachment(task, request.user, f)
+                attachments_created.append(att)
+            except ValueError as e:
+                return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
     # Handle JSON base64 pasted images
     elif request.body:
         try:
             data = json.loads(request.body)
             image_data = data.get('image_data', '')
-            filename = data.get('filename', f'pasted_image_{timezone.now().strftime("%Y%m%d_%H%M%S")}.png')
+            raw_filename = data.get('filename', f'pasted_image_{timezone.now().strftime("%Y%m%d_%H%M%S")}.png')
             if image_data and ';base64,' in image_data:
                 fmt, imgstr = image_data.split(';base64,')
-                ext = fmt.split('/')[-1] if '/' in fmt else 'png'
-                if not filename.endswith(f'.{ext}'):
-                    filename = f'{filename}.{ext}'
-                content = ContentFile(base64.b64decode(imgstr), name=filename)
+                ext = fmt.split('/')[-1].lower() if '/' in fmt else 'png'
+                if ext not in ('png', 'jpg', 'jpeg', 'gif', 'webp'):
+                    ext = 'png'
+                if not raw_filename.lower().endswith(f'.{ext}'):
+                    raw_filename = f'{raw_filename}.{ext}'
+
+                decoded_data = base64.b64decode(imgstr)
+                if len(decoded_data) > MAX_ATTACHMENT_SIZE:
+                    return JsonResponse({'success': False, 'error': 'Pasted image exceeds 10 MB limit.'}, status=400)
+
+                content = ContentFile(decoded_data, name=raw_filename)
+                safe_name = validate_and_sanitize(content, raw_filename)
+                content.name = safe_name
                 att = TaskService.add_attachment(task, request.user, content)
                 attachments_created.append(att)
         except Exception as e:
@@ -1029,7 +1097,9 @@ def api_ai_suggest(request):
             'description': suggestion,
             'prompt': prompt,
         })
-    except (json.JSONDecodeError, Exception) as e:
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON body'}, status=400)
+    except Exception as e:
         logger.error('AI suggest error: %s', e)
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -1133,3 +1203,49 @@ def api_autocorrect(request):
     except Exception as e:
         logger.error('Auto-correct error: %s', e)
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ============================================================
+#  NOTIFICATION AJAX ENDPOINTS
+# ============================================================
+
+@login_required
+def api_notifications_list(request):
+    """Returns recent in-app notifications and unread counter for current user."""
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    data = [
+        {
+            'id': n.id,
+            'event_type': n.event_type,
+            'title': n.title,
+            'message': n.message,
+            'action_url': n.action_url,
+            'is_read': n.is_read,
+            'created_at': n.created_at.strftime('%d %b %Y, %H:%M'),
+            'time_ago': timesince(n.created_at) + ' ago',
+        }
+        for n in notifications
+    ]
+    return JsonResponse({
+        'success': True,
+        'unread_count': unread_count,
+        'notifications': data,
+    })
+
+
+@login_required
+@require_POST
+def api_notification_mark_read(request, pk):
+    """Marks a single notification as read."""
+    NotificationService.mark_as_read(pk, request.user)
+    unread_count = NotificationService.get_unread_count(request.user)
+    return JsonResponse({'success': True, 'unread_count': unread_count})
+
+
+@login_required
+@require_POST
+def api_notification_mark_all_read(request):
+    """Marks all notifications for current user as read."""
+    NotificationService.mark_all_as_read(request.user)
+    return JsonResponse({'success': True, 'unread_count': 0})

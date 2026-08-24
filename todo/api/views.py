@@ -94,9 +94,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         category_id = data.pop('category_id', None)
         category = None
         if category_id:
-            category = Category.objects.filter(pk=category_id, user=self.request.user).first()
+            category = Category.objects.filter(
+                Q(pk=category_id) & (Q(user=self.request.user) | Q(members=self.request.user))
+            ).first()
             if not category:
-                raise ValidationError({'category_id': 'Project not found or does not belong to you.'})
+                raise ValidationError({'category_id': 'Project not found or you do not have permission to access it.'})
         serializer.save(user=self.request.user, category=category)
 
     def perform_update(self, serializer):
@@ -107,17 +109,25 @@ class TaskViewSet(viewsets.ModelViewSet):
         if 'category_id' in self.request.data:
             category = None
             if category_id:
-                category = Category.objects.filter(pk=category_id, user=self.request.user).first()
+                category = Category.objects.filter(
+                    Q(pk=category_id) & (Q(user=self.request.user) | Q(members=self.request.user))
+                ).first()
                 if not category:
-                    raise ValidationError({'category_id': 'Project not found or does not belong to you.'})
+                    raise ValidationError({'category_id': 'Project not found or you do not have permission to access it.'})
             serializer.save(category=category)
         else:
             serializer.save()
 
     def get_object(self):
-        """Ensure users can only access their own tasks."""
+        """Ensure users can only access tasks they own, collaborate on, or are assigned to."""
         obj = super().get_object()
-        if obj.user != self.request.user:
+        user = self.request.user
+        is_owner = (obj.user == user)
+        is_project_owner = bool(obj.category and obj.category.user == user)
+        is_project_member = bool(obj.category and obj.category.members.filter(pk=user.pk).exists())
+        is_assignee = obj.assignees.filter(pk=user.pk).exists()
+
+        if not (is_owner or is_project_owner or is_project_member or is_assignee):
             raise PermissionDenied('You do not have permission to access this task.')
         return obj
 
@@ -200,11 +210,13 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return (
             Category.objects
-            .filter(user=self.request.user)
+            .filter(Q(user=self.request.user) | Q(members=self.request.user))
+            .distinct()
             .annotate(
-                task_count=Count('tasks'),
-                completed_count=Count('tasks', filter=Q(tasks__status='completed'))
+                task_count=Count('tasks', distinct=True),
+                completed_count=Count('tasks', filter=Q(tasks__status='completed'), distinct=True)
             )
+            .prefetch_related('members')
         )
 
     def perform_create(self, serializer):
@@ -212,7 +224,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         obj = super().get_object()
-        if obj.user != self.request.user:
+        user = self.request.user
+        if obj.user != user and not obj.members.filter(pk=user.pk).exists():
             raise PermissionDenied('You do not have permission to access this project.')
         return obj
 
@@ -326,19 +339,24 @@ class UserProfileAPIView(APIView):
 
 class TaskCommentDeleteView(APIView):
     """
-    DELETE /api/v1/comments/{id}/ — remove a comment (owner only).
+    DELETE /api/v1/comments/{id}/ — remove a comment (author, task owner, or project owner).
     """
 
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, pk):
         try:
-            comment = TaskComment.objects.select_related('task').get(pk=pk)
+            comment = TaskComment.objects.select_related('task', 'task__category').get(pk=pk)
         except TaskComment.DoesNotExist:
             return Response({'error': 'Comment not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if comment.user != request.user:
-            raise PermissionDenied('You can only delete your own comments.')
+        user = request.user
+        is_author = (comment.user == user)
+        is_task_owner = (comment.task.user == user)
+        is_proj_owner = bool(comment.task.category and comment.task.category.user == user)
+
+        if not (is_author or is_task_owner or is_proj_owner):
+            raise PermissionDenied('You do not have permission to delete this comment.')
 
         comment.delete()
         return Response({'success': True}, status=status.HTTP_204_NO_CONTENT)

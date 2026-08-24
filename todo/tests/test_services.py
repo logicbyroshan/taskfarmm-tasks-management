@@ -81,8 +81,8 @@ class ServiceTests(TestCase):
     def test_kanban_columns_grouping(self):
         data = TaskService.get_kanban_columns(self.user, project_id=self.project.id)
         self.assertEqual(data['selected_project'].id, self.project.id)
-        self.assertEqual(data['columns']['completed'].count(), 1)
-        self.assertEqual(data['columns']['in-progress'].count(), 1)
+        self.assertEqual(len(data['columns']['completed']), 1)
+        self.assertEqual(len(data['columns']['in-progress']), 1)
 
     def test_task_operations(self):
         # Toggle

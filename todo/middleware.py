@@ -33,7 +33,7 @@ class DemoAuthMiddleware:
             return None
 
     def __call__(self, request):
-        enable_demo = getattr(settings, 'ENABLE_DEMO_AUTH', True)
+        enable_demo = getattr(settings, 'ENABLE_DEMO_AUTH', False)
         
         # Don't auto-login on admin, auth pages (login/register), logout, or explicit API auth paths
         exempt_prefixes = ('/admin/', '/login/', '/register/', '/signup/', '/logout/', '/api/v1/auth/', '/api/auth/')

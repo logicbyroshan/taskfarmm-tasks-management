@@ -1,3 +1,4 @@
+import json
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -155,3 +156,48 @@ class RestApiV1Tests(APITestCase):
         )
         self.assertEqual(add_res.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Task.objects.filter(title='Configure SSL', user=self.user1).exists())
+
+    def test_collaborator_can_access_shared_project_and_tasks_in_rest_api(self):
+        # Add user2 as collaborator to user1's project
+        self.project1.members.add(self.user2)
+
+        self.client.force_authenticate(user=self.user2)
+
+        # User2 can see shared project in CategoryViewSet
+        proj_res = self.client.get(reverse('api-project-list'))
+        self.assertEqual(proj_res.status_code, status.HTTP_200_OK)
+        project_ids = [p['id'] for p in proj_res.data['results']]
+        self.assertIn(self.project1.id, project_ids)
+
+        # User2 can create a task in user1's shared project
+        create_res = self.client.post(
+            reverse('api-task-list'),
+            {
+                'title': 'Collaborator Task in Shared Project',
+                'priority': 'high',
+                'status': 'in-progress',
+                'category_id': self.project1.id
+            },
+            format='json'
+        )
+        self.assertEqual(create_res.status_code, status.HTTP_201_CREATED)
+
+    def test_inactive_user_token_rejection(self):
+        # Create inactive user
+        inactive_user = User.objects.create_user(
+            username='disableduser',
+            password='Password123!',
+            is_active=False
+        )
+
+        from rest_framework_simplejwt.tokens import RefreshToken
+        token = str(RefreshToken.for_user(inactive_user).access_token)
+
+        # Verify token endpoint
+        verify_res = self.client.post(
+            reverse('api_verify_token'),
+            data=json.dumps({'token': token}),
+            content_type='application/json'
+        )
+        self.assertEqual(verify_res.status_code, 401)
+        self.assertIn('disabled', verify_res.json()['error'].lower())
