@@ -39,25 +39,35 @@ TaskFlixx/
 │       ├── kanban.html              # 6-column drag-and-drop Kanban board
 │       ├── manage-tasks.html        # All tasks list, search, and template modal
 │       ├── manage-projects.html     # Project management and modals
-│       ├── task-categories.html     # Projects alias
 │       ├── ai_assistant.html        # ChatGPT-style AI Workspace
 │       ├── settings.html            # Profile, notification switches, JSON/CSV export
+│       ├── auth/                    # Dedicated OLED login, register, and Google SSO setup
 │       └── components/              # Modular template components & modals
+├── templates/emails/                # Responsive OLED Pitch-Black HTML Email Templates
+│   ├── base_email.html              # Master layout with glowing CTA button
+│   ├── task_assigned.html           # Task assignment alert
+│   ├── task_comment.html            # Comment quote box
+│   ├── task_due_soon.html           # Deadline reminder
+│   ├── task_completed.html          # Task completed confirmation
+│   ├── project_shared.html          # Project invite
+│   └── welcome.html                 # Welcome onboarding guide
 ├── todo/                            # Core Django Application
 │   ├── admin.py                     # Django admin model registrations
 │   ├── apps.py                      # Application configuration
-│   ├── context_processors.py        # Global template context injectors
+│   ├── autocorrect.py               # OpenHinglish multi-lingual spell correction pipeline
+│   ├── context_processors.py        # Global template context injectors (forms, notifications)
 │   ├── forms.py                     # ModelForms for Tasks, Projects, and Users
+│   ├── google_auth.py               # RFC 6749 Google OAuth 2.0 & GIS handler
 │   ├── middleware.py                # Authentication and demo middleware
-│   ├── models.py                    # Task, Category, PreDefinedTask, UserProfile
-│   ├── services.py                  # Domain service layer (Task, Category, Stats, Export)
+│   ├── models.py                    # Task, TaskAttachment, TaskComment, Category, Notification, UserProfile
+│   ├── notifications.py             # Enterprise Notification & Exponential Backoff Queue
+│   ├── services.py                  # Domain business logic & data aggregation services
 │   ├── serializers.py               # Django REST Framework serializers
 │   ├── api_auth.py                  # JWT session bridge & token verification
 │   ├── urls.py                      # Internal session/AJAX routes
-│   ├── api/                         # REST API v1 Package
-│   │   ├── urls.py                  # REST API v1 URL routes
-│   │   └── views.py                 # DRF ViewSets & API Views
-│   └── tests/                       # 32 Automated Unit & Integration Tests
+│   ├── api/                         # REST API v1 Package (DRF ViewSets & Views)
+│   ├── management/commands/         # Management CLI tools (process_notifications)
+│   └── tests/                       # Comprehensive test suite (63 tests)
 │       ├── test_models.py           # Model tests
 │       ├── test_services.py         # Service layer tests
 │       ├── test_views.py            # View & HTMX tests

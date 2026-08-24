@@ -52,6 +52,17 @@
 ### 🌊 Ambient Dynamic Cool-Gradient Wave Background
 - **Interactive 60fps HTML5 Canvas**: Smooth continuous wave crests and troughs with a vivid cool gradient spectrum (Teal, Cyan, Sky Blue, Sapphire, Indigo, Violet) and interactive mouse ripple.
 
+### 🔑 Google Single Sign-On (OAuth 2.0 & GIS)
+- **RFC 6749 Compliant OAuth 2.0**: Direct one-click login with Google accounts (`/auth/google/login/` ➔ `/auth/google/callback/`) with state token CSRF protection.
+- **Automatic Account Provisioning**: Auto-creates `UserProfile` and starter workspace upon first Google sign-in.
+- **Local Developer Testing Mode**: Includes dedicated developer fallback screen for testing OAuth user flows without active cloud credentials.
+
+### 📬 Enterprise Notification & Outbound Email Delivery Queue
+- **Asynchronous Delivery Queue**: High-performance database queue (`Notification` model) for task assignments, comments, deadlines, and project invites.
+- **Exponential Backoff Retries**: Automatic error recovery (`30s`, `2m`, `8m`, `30m`) for network/SMTP failures.
+- **In-App Notification Bell**: Topbar alert hub with unread badge counter, relative timestamps, and one-click read actions.
+- **Responsive OLED Email Templates**: 6 pitch-black email templates with glowing sapphire CTAs matching TaskFlixx aesthetics.
+
 ### 🤖 Intelligent AI Assistant & Side Drawer
 - **ChatGPT-Style AI Workspace**: Interactive AI assistant that suggests comprehensive task breakdowns and one-click creates tasks and structured projects.
 
@@ -67,7 +78,7 @@ TaskFlixx/
 │   ├── models.py       # Task, TaskAttachment, TaskComment, Category, UserProfile
 │   ├── views.py        # Dashboard, Kanban, Projects, Attachments, Comments, AI & Auto-Correct APIs
 │   ├── forms.py        # TaskForm, CategoryForm, UserUpdateForm, Preferences
-│   └── tests/          # Comprehensive test suite (36+ tests)
+│   └── tests/          # Comprehensive test suite (49+ tests)
 ├── templates/todo/     # Django HTML5 semantic templates
 │   ├── base.html       # Global navigation, cool wave canvas, AI drawer, modals
 │   ├── index.html      # Dashboard with live metrics & project toggle
