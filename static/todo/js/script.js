@@ -2661,3 +2661,80 @@ function startTrelloLiveSync() {
 // Start live sync poller on page initialization
 startTrelloLiveSync();
 
+// ==============================================================================
+//  IN-APP NOTIFICATION BELL & REAL-TIME ALERTS
+// ==============================================================================
+
+window.toggleNotificationDropdown = function(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('notification-dropdown');
+    if (!dropdown) return;
+    const isShowing = dropdown.style.display === 'flex' || dropdown.style.display === 'block';
+    dropdown.style.display = isShowing ? 'none' : 'flex';
+};
+
+window.markAllNotificationsRead = function(e) {
+    if (e) e.stopPropagation();
+    const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch('/api/notifications/read-all/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                badge.textContent = '0';
+                badge.style.display = 'none';
+            }
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+            });
+            if (window.showToast) window.showToast('All notifications marked as read', 'info', 1000);
+        }
+    })
+    .catch(err => console.debug('Mark all read error:', err));
+};
+
+window.handleNotificationClick = function(notifId, actionUrl) {
+    const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch(`/api/notifications/${notifId}/read/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        const badge = document.getElementById('notification-badge');
+        if (badge && data.unread_count !== undefined) {
+            badge.textContent = data.unread_count;
+            if (data.unread_count === 0) badge.style.display = 'none';
+        }
+        if (actionUrl && actionUrl.trim()) {
+            window.location.href = actionUrl;
+        }
+    })
+    .catch(() => {
+        if (actionUrl && actionUrl.trim()) {
+            window.location.href = actionUrl;
+        }
+    });
+};
+
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('notification-dropdown');
+    const btn = document.getElementById('notification-bell-btn');
+    if (dropdown && dropdown.style.display !== 'none' && (!dropdown.contains(e.target) && (!btn || !btn.contains(e.target)))) {
+        dropdown.style.display = 'none';
+    }
+});
+
+

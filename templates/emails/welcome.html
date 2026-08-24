@@ -1,0 +1,32 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2 style="font-size: 1.35rem; font-weight: 800; color: #ffffff; margin: 0 0 12px 0;">
+    🎉 Welcome to TaskFlixx, {{ recipient_name }}!
+</h2>
+<p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6; margin: 0 0 22px 0;">
+    Your next-generation pitch-black orchestration workspace is ready. You now have access to ultra-fast agile boards, multi-lingual OpenHinglish auto-correct, and ChatGPT-style AI sprint planning.
+</p>
+
+<!-- Feature Showcase List -->
+<div style="background: #141820; border: 1px solid #27272a; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+    <div style="font-size: 0.85rem; font-weight: 700; color: #60a5fa; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.04em;">
+        Quick Start Features:
+    </div>
+    
+    <div style="margin-bottom: 12px;">
+        <strong style="color: #ffffff; font-size: 0.875rem;">📋 Drag-and-Drop Kanban</strong>
+        <p style="color: #8c9bab; font-size: 0.775rem; margin: 2px 0 0 0;">Create tasks, add checklists, attachments, and move them smoothly across sprint columns.</p>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <strong style="color: #ffffff; font-size: 0.875rem;">🌐 OpenHinglish NLP</strong>
+        <p style="color: #8c9bab; font-size: 0.775rem; margin: 2px 0 0 0;">Type freely in English or Roman Hindi — spelling and shorthand auto-correct seamlessly.</p>
+    </div>
+
+    <div>
+        <strong style="color: #ffffff; font-size: 0.875rem;">🤖 AI Copilot Workspace</strong>
+        <p style="color: #8c9bab; font-size: 0.775rem; margin: 2px 0 0 0;">Ask the AI Assistant to breakdown features into structured sprint deliverables with 1 click.</p>
+    </div>
+</div>
+{% endblock %}

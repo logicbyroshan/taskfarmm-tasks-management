@@ -1,0 +1,25 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin: 0 0 12px 0;">
+    🤝 Project Invitation: "{{ project_name }}"
+</h2>
+<p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5; margin: 0 0 18px 0;">
+    <strong>{{ inviter_name }}</strong> has shared the project workspace <strong>"{{ project_name }}"</strong> with you on TaskFlixx.
+</p>
+
+<!-- Project Card Box -->
+<div style="background: #141820; border: 1px solid #27272a; border-radius: 10px; padding: 18px 20px; margin-bottom: 24px;">
+    <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">
+        📁 {{ project_name }}
+    </div>
+    {% if project_description %}
+    <p style="font-size: 0.825rem; color: #94a3b8; line-height: 1.5; margin: 0 0 10px 0;">
+        {{ project_description }}
+    </p>
+    {% endif %}
+    <div style="font-size: 0.775rem; color: #8c9bab;">
+        Workflow: <strong style="color: #60a5fa;">{{ template_name|default:"Smart Agile Kanban" }}</strong>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2 style="font-size: 1.25rem; font-weight: 700; color: #10b981; margin: 0 0 12px 0;">
+    🎉 Task Completed: "{{ task_title }}"
+</h2>
+<p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5; margin: 0 0 20px 0;">
+    Hi <strong>{{ recipient_name|default:"there" }}</strong>, the task <strong>"{{ task_title }}"</strong> in project <strong>"{{ project_name|default:'General Tasks' }}"</strong> has been completed!
+</p>
+
+<!-- Completion Box -->
+<div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 18px 20px; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+        <span style="display: inline-block; width: 22px; height: 22px; border-radius: 50%; background: #10b981; color: #000000; text-align: center; line-height: 22px; font-size: 0.75rem; font-weight: 800;">✓</span>
+        <span style="font-size: 1.05rem; font-weight: 700; color: #ffffff;">{{ task_title }}</span>
+    </div>
+    <div style="font-size: 0.775rem; color: #34d399; font-weight: 600;">
+        Status: COMPLETED
+    </div>
+</div>
+{% endblock %}

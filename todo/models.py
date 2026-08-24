@@ -266,6 +266,60 @@ class UserProfile(models.Model):
         return f"{self.user.username}'s Profile"
 
 
+class Notification(models.Model):
+    """
+    Enterprise Notification & Email Queue Model.
+    Tracks in-app notification alerts and outbound email deliveries with retry queue.
+    """
+    class EventType(models.TextChoices):
+        TASK_ASSIGNED = 'task_assigned', 'Task Assigned'
+        TASK_COMMENT = 'task_comment', 'Task Comment Added'
+        TASK_DUE_SOON = 'task_due_soon', 'Task Due Soon'
+        TASK_COMPLETED = 'task_completed', 'Task Completed'
+        PROJECT_SHARED = 'project_shared', 'Project Shared'
+        WELCOME = 'welcome', 'Welcome to TaskFlixx'
+        SYSTEM = 'system', 'System Notification'
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        SENDING = 'sending', 'Sending'
+        SENT = 'sent', 'Sent'
+        FAILED = 'failed', 'Failed'
+        CANCELLED = 'cancelled', 'Cancelled'
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    event_type = models.CharField(max_length=30, choices=EventType.choices, default=EventType.SYSTEM, db_index=True)
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    email = models.EmailField(blank=True)
+    html_content = models.TextField(blank=True)
+    action_url = models.CharField(max_length=500, blank=True)
+    
+    # Delivery Queue & Retry state
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True)
+    retry_count = models.PositiveIntegerField(default=0)
+    max_retries = models.PositiveIntegerField(default=3)
+    last_error = models.TextField(blank=True)
+    next_retry_at = models.DateTimeField(default=timezone.now, db_index=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    
+    # In-app bell status
+    is_read = models.BooleanField(default=False, db_index=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'next_retry_at']),
+            models.Index(fields=['user', 'is_read', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"[{self.get_event_type_display()}] {self.title} -> {self.user.username} ({self.status})"
+
+
 # Auto-create UserProfile when User is created
 from django.db.models.signals import post_save
 from django.dispatch import receiver

@@ -91,6 +91,51 @@
                     <i class="fas fa-folder-plus" aria-hidden="true"></i>
                     <span>New Project</span>
                 </a>
+
+                {% if user.is_authenticated %}
+                <!-- Notification Bell Hub -->
+                <div class="notification-bell-container" style="position: relative;">
+                    <button type="button" 
+                            class="notification-bell-btn" 
+                            id="notification-bell-btn" 
+                            onclick="toggleNotificationDropdown(event)" 
+                            title="Notifications"
+                            aria-label="View notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notification-badge" {% if not unread_notifications_count %}style="display: none;"{% endif %}>
+                            {{ unread_notifications_count|default:"0" }}
+                        </span>
+                    </button>
+
+                    <!-- Dropdown Panel -->
+                    <div class="notification-dropdown" id="notification-dropdown" style="display: none;">
+                        <div class="notification-dropdown-header">
+                            <h4><i class="fas fa-bell" style="color: #60a5fa;"></i> Notifications</h4>
+                            <button type="button" class="mark-all-read-btn" onclick="markAllNotificationsRead(event)">Mark all read</button>
+                        </div>
+                        <div class="notification-list" id="notification-list">
+                            {% for notif in latest_notifications %}
+                            <div class="notification-item {% if not notif.is_read %}unread{% endif %}" onclick="handleNotificationClick('{{ notif.id }}', '{{ notif.action_url }}')">
+                                <div class="notification-item-icon">
+                                    <i class="fas fa-{% if notif.event_type == 'task_assigned' %}user-check{% elif notif.event_type == 'task_comment' %}comment{% elif notif.event_type == 'task_due_soon' %}clock{% elif notif.event_type == 'task_completed' %}check-circle{% elif notif.event_type == 'project_shared' %}users{% else %}bell{% endif %}"></i>
+                                </div>
+                                <div class="notification-item-body">
+                                    <div class="notification-item-title">{{ notif.title }}</div>
+                                    <div class="notification-item-msg">{{ notif.message }}</div>
+                                    <div class="notification-item-time">{{ notif.created_at|timesince }} ago</div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="notification-empty">
+                                <i class="fas fa-bell-slash" style="font-size: 1.5rem; color: #52525b; margin-bottom: 8px; display: block;"></i>
+                                No notifications yet
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="date-day" role="status" aria-live="polite" id="live-date">
                     <span>Loading...</span>
                 </div>

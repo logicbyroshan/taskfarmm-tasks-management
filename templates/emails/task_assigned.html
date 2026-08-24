@@ -1,0 +1,38 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin: 0 0 12px 0;">
+    📌 You've been assigned a task
+</h2>
+<p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5; margin: 0 0 20px 0;">
+    Hi <strong>{{ recipient_name|default:"there" }}</strong>, <strong>{{ assigner_name|default:"A team member" }}</strong> assigned you to the following task in TaskFlixx:
+</p>
+
+<!-- Task Card Box -->
+<div style="background: #141820; border: 1px solid #27272a; border-radius: 10px; padding: 18px 20px; margin-bottom: 24px;">
+    <div style="font-size: 1.05rem; font-weight: 700; color: #ffffff; margin-bottom: 8px;">
+        {{ task_title }}
+    </div>
+    {% if task_description %}
+    <p style="font-size: 0.825rem; color: #94a3b8; line-height: 1.5; margin: 0 0 14px 0;">
+        {{ task_description|truncatewords:30 }}
+    </p>
+    {% endif %}
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="font-size: 0.775rem;">
+        <tr>
+            <td style="padding-right: 18px; color: #8c9bab;">
+                <strong>Project:</strong> <span style="color: #60a5fa;">{{ project_name|default:"General Tasks" }}</span>
+            </td>
+            <td style="padding-right: 18px; color: #8c9bab;">
+                <strong>Priority:</strong> <span style="color: #fbbf24; text-transform: uppercase;">{{ priority|default:"Moderate" }}</span>
+            </td>
+            {% if due_date %}
+            <td style="color: #8c9bab;">
+                <strong>Due:</strong> <span style="color: #f87171;">{{ due_date }}</span>
+            </td>
+            {% endif %}
+        </tr>
+    </table>
+</div>
+{% endblock %}
