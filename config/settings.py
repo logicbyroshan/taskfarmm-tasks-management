@@ -33,11 +33,7 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').strip().lower() in ['true', '1', 'yes', 't']
 
-ALLOWED_HOSTS = [
-    h.strip() for h in os.environ.get(
-        'ALLOWED_HOSTS', 'localhost,127.0.0.1'
-    ).split(',') if h.strip()
-]
+ALLOWED_HOSTS = ['*']
 
 # Production security headers (enabled when DEBUG=False)
 if not DEBUG:

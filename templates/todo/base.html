@@ -171,9 +171,7 @@
     {% include 'todo/components/modals/trello_task_modal.html' %}
     {% include 'todo/components/modals/add_project_modal.html' %}
     {% include 'todo/components/modals/share_project_modal.html' %}
-    {% if not user.profile.is_subuser %}
     {% include 'todo/components/modals/manage_subuser_modal.html' %}
-    {% endif %}
     {% endif %}
     {% include 'todo/components/toast_container.html' %}
 
@@ -264,7 +262,7 @@
         </div>
     </aside>
 
-    <script defer src="{% static 'todo/js/script.js' %}?v=110"></script>
+    <script defer src="{% static 'todo/js/script.js' %}?v=115"></script>
     {% block scripts %}{% endblock scripts %}
 </body>
 </html>

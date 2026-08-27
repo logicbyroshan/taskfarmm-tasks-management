@@ -22,6 +22,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from todo.api_auth import api_health_check
 from .views import (
     TaskViewSet,
     CategoryViewSet,
@@ -38,6 +39,9 @@ router.register(r'projects', CategoryViewSet, basename='api-project')
 router.register(r'templates', PreDefinedTaskViewSet, basename='api-template')
 
 urlpatterns = [
+    # Health check
+    path('health/', api_health_check, name='api-v1-health'),
+
     # JWT authentication
     path('auth/token/', TokenObtainPairView.as_view(), name='api-token-obtain'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='api-token-refresh'),

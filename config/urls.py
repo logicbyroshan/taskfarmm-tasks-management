@@ -4,9 +4,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
 
+from todo.api_auth import api_health_check
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('robots.txt', lambda r: HttpResponse("User-agent: *\nAllow: /\n", content_type="text/plain")),
+    path('api/health/', api_health_check, name='api_health_root'),
     # REST API v1
     path('api/v1/', include('todo.api.urls')),
     # Main web application
