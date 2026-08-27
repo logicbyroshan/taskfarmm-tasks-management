@@ -46,7 +46,7 @@ from .autocorrect import autocorrect_text
 from .notifications import NotificationService
 from .services import (
     TaskService, CategoryService, ExportService,
-    PreDefinedTaskService, StatsService,
+    PreDefinedTaskService, StatsService, SubUserService,
 )
 
 logger = logging.getLogger('todo')
@@ -90,12 +90,20 @@ def get_accessible_task(user, pk):
 
 @login_required
 def dashboard(request):
-    """Displays the main dashboard for an authenticated user."""
+    """Displays the main dashboard for an authenticated user with Recent Projects and Team Overview."""
+    profile = get_or_create_profile(request.user)
     stats = StatsService.get_stats(request.user)
     recent_tasks = TaskService.get_recent_tasks(request.user)
     recently_completed = TaskService.get_recently_completed(request.user)
+    recent_projects = CategoryService.get_recent_projects_for_dashboard(request.user, limit=8)
     category_stats = CategoryService.get_with_stats(request.user)
     all_projects_progress = CategoryService.get_dashboard_project_progress(request.user)
+
+    # Sub-user team management data (owner only)
+    is_owner = getattr(profile, 'is_owner', True)
+    subusers_data = SubUserService.get_subusers_data(request.user) if is_owner else []
+    subuser_count = len(subusers_data)
+    max_subusers = SubUserService.MAX_SUBUSERS
 
     context = {
         'total_count': stats['total_count'],
@@ -110,11 +118,18 @@ def dashboard(request):
         'completion_rate': stats['completion_rate'],
         'recent_tasks': recent_tasks,
         'recently_completed_tasks': recently_completed,
+        'recent_projects': recent_projects,
         'categories': category_stats,
         'all_projects_progress': all_projects_progress,
+        'is_owner': is_owner,
+        'subusers': subusers_data,
+        'subuser_count': subuser_count,
+        'max_subusers': max_subusers,
+        'remaining_subusers': max(0, max_subusers - subuser_count),
         'active_page': 'dashboard',
     }
     return render(request, 'todo/index.html', context)
+
 
 
 @login_required
@@ -885,10 +900,15 @@ def project_share(request, pk):
 
         action = data.get('action')
         if action == 'add_member':
+            user_id = data.get('user_id')
             query = data.get('username', '').strip()
-            user_to_add = AuthUser.objects.filter(Q(username__iexact=query) | Q(email__iexact=query)).first()
+            if user_id:
+                user_to_add = AuthUser.objects.filter(pk=user_id).first()
+            else:
+                user_to_add = AuthUser.objects.filter(Q(username__iexact=query) | Q(email__iexact=query)).first()
+
             if not user_to_add:
-                return JsonResponse({'success': False, 'message': f'User "{query}" not found.'}, status=404)
+                return JsonResponse({'success': False, 'message': f'User not found.'}, status=404)
             if user_to_add.id == category.user_id:
                 return JsonResponse({'success': False, 'message': 'User is already the project owner.'}, status=400)
             category.members.add(user_to_add)
@@ -913,6 +933,7 @@ def project_share(request, pk):
         {
             'id': m.id,
             'username': m.username,
+            'name': m.get_full_name() or m.username,
             'initials': m.username[:2].upper(),
             'is_owner': False
         }
@@ -921,9 +942,18 @@ def project_share(request, pk):
     owner_info = {
         'id': category.user.id,
         'username': category.user.username,
+        'name': category.user.get_full_name() or category.user.username,
         'initials': category.user.username[:2].upper(),
         'is_owner': True
     }
+
+    available_subusers = []
+    if is_owner:
+        subs = SubUserService.get_subusers(request.user).exclude(id__in=category.members.values_list('id', flat=True))
+        available_subusers = [
+            {'id': u.id, 'username': u.username, 'name': u.get_full_name() or u.username}
+            for u in subs
+        ]
 
     return JsonResponse({
         'success': True,
@@ -932,7 +962,8 @@ def project_share(request, pk):
         'share_url': share_url,
         'is_owner': is_owner,
         'owner': owner_info,
-        'members': members
+        'members': members,
+        'available_subusers': available_subusers
     })
 
 
@@ -1249,3 +1280,158 @@ def api_notification_mark_all_read(request):
     """Marks all notifications for current user as read."""
     NotificationService.mark_all_as_read(request.user)
     return JsonResponse({'success': True, 'unread_count': 0})
+
+
+# ============================================================
+#  SUB-USER / TEAM MANAGEMENT VIEWS & APIS
+# ============================================================
+
+@login_required
+def manage_subusers(request):
+    """Displays the Team & Sub-Users management hub."""
+    profile = get_or_create_profile(request.user)
+    if profile.is_subuser:
+        messages.warning(request, "Only account owners can access the Team Management hub.")
+        return redirect('dashboard')
+
+    subusers = SubUserService.get_subusers_data(request.user)
+    projects = CategoryService.get_categories(request.user)
+    subuser_count = len(subusers)
+
+    context = {
+        'active_page': 'manage_subusers',
+        'subusers': subusers,
+        'projects': projects,
+        'subuser_count': subuser_count,
+        'max_subusers': SubUserService.MAX_SUBUSERS,
+        'remaining_subusers': max(0, SubUserService.MAX_SUBUSERS - subuser_count),
+    }
+    return render(request, 'todo/manage_team.html', context)
+
+
+@login_required
+def api_subusers_list(request):
+    """Returns subusers list and quota as JSON."""
+    profile = get_or_create_profile(request.user)
+    if profile.is_subuser:
+        return JsonResponse({'success': False, 'message': 'Only account owners can view subusers.'}, status=403)
+
+    data = SubUserService.get_subusers_data(request.user)
+    return JsonResponse({
+        'success': True,
+        'subusers': data,
+        'count': len(data),
+        'max_subusers': SubUserService.MAX_SUBUSERS,
+    })
+
+
+@login_required
+@require_POST
+def api_subuser_create(request):
+    """Creates a new subuser (max 99 limit, editable username & password, no unique email needed)."""
+    profile = get_or_create_profile(request.user)
+    if profile.is_subuser:
+        return JsonResponse({'success': False, 'error': 'Sub-users cannot create other sub-users.'}, status=403)
+
+    try:
+        data = json.loads(request.body) if request.content_type and 'application/json' in request.content_type else request.POST
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        display_name = data.get('display_name', '').strip() or data.get('first_name', '').strip() or data.get('name', '').strip()
+        role = data.get('role', 'member')
+        assigned_project_ids = data.get('assigned_projects') or data.get('assigned_project_ids') or []
+        if isinstance(assigned_project_ids, str):
+            assigned_project_ids = [int(pid) for pid in assigned_project_ids.split(',') if pid.strip().isdigit()]
+
+        subuser = SubUserService.create_subuser(
+            owner=request.user,
+            username=username,
+            password=password,
+            display_name=display_name,
+            role=role,
+            assigned_project_ids=assigned_project_ids,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Sub-user "{subuser.username}" created successfully!',
+            'subuser': {
+                'id': subuser.id,
+                'username': subuser.username,
+                'name': subuser.get_full_name() or subuser.username,
+                'role': subuser.profile.role,
+                'role_display': subuser.profile.get_role_display(),
+            }
+        })
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except Exception as e:
+        logger.error('Subuser create failed: %s', e)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def api_subuser_update(request, pk):
+    """Updates an existing sub-user's username, password, display name, role, or project assignments."""
+    profile = get_or_create_profile(request.user)
+    if profile.is_subuser:
+        return JsonResponse({'success': False, 'error': 'Sub-users cannot edit other sub-users.'}, status=403)
+
+    try:
+        data = json.loads(request.body) if request.content_type and 'application/json' in request.content_type else request.POST
+        username = data.get('username')
+        password = data.get('password')
+        display_name = data.get('display_name') or data.get('first_name') or data.get('name')
+        role = data.get('role')
+        is_active = data.get('is_active')
+        assigned_project_ids = data.get('assigned_projects') or data.get('assigned_project_ids')
+        if isinstance(assigned_project_ids, str):
+            assigned_project_ids = [int(pid) for pid in assigned_project_ids.split(',') if pid.strip().isdigit()]
+
+        subuser = SubUserService.update_subuser(
+            owner=request.user,
+            subuser_id=pk,
+            username=username,
+            password=password if password else None,
+            display_name=display_name,
+            role=role,
+            is_active=is_active,
+            assigned_project_ids=assigned_project_ids,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Sub-user "{subuser.username}" updated successfully!',
+            'subuser': {
+                'id': subuser.id,
+                'username': subuser.username,
+                'name': subuser.get_full_name() or subuser.username,
+                'role': subuser.profile.role,
+                'role_display': subuser.profile.get_role_display(),
+                'is_active': subuser.is_active,
+            }
+        })
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except Exception as e:
+        logger.error('Subuser update failed: %s', e)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def api_subuser_delete(request, pk):
+    """Deletes a sub-user account under current owner."""
+    profile = get_or_create_profile(request.user)
+    if profile.is_subuser:
+        return JsonResponse({'success': False, 'error': 'Sub-users cannot delete other sub-users.'}, status=403)
+
+    try:
+        SubUserService.delete_subuser(owner=request.user, subuser_id=pk)
+        return JsonResponse({'success': True, 'message': 'Sub-user deleted successfully.'})
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except Exception as e:
+        logger.error('Subuser delete failed: %s', e)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

@@ -5,47 +5,67 @@
 
 {% block styles %}
 <style>
-.task-list-container {
-    max-height: 520px;
-    overflow-y: auto;
-    padding-right: 4px;
-    scrollbar-width: thin;
-    scrollbar-color: #27272a #09090b;
+.projects-grid-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
 }
-
-.task-list-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.task-list-container::-webkit-scrollbar-track {
+.dash-project-card {
     background: #09090b;
-    border-radius: 4px;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
 }
-
-.task-list-container::-webkit-scrollbar-thumb {
-    background: #27272a;
-    border-radius: 4px;
-}
-
-.task-list-container::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
-}
-
-.task-card {
-    cursor: pointer;
-    transition: transform 0.15s ease, border-color 0.15s ease;
-}
-
-.task-card:hover {
+.dash-project-card:hover {
     transform: translateY(-2px);
-    border-color: #3b82f6 !important;
+    border-color: #3b82f6;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+.dash-project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--project-accent, #3b82f6);
+}
+.team-widget-card {
+    background: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+.team-member-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: #000000;
+    border: 1px solid #1f2328;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    transition: border-color 0.15s ease;
+}
+.team-member-pill:hover {
+    border-color: #3b82f6;
 }
 </style>
 {% endblock styles %}
 
 {% block content %}
 <div class="dash-grid">
-    <!-- Left: Stats Row + Recent Tasks -->
+    <!-- Left: Stats Row + Recent Projects -->
     <section class="dash-left">
         <!-- Stats Row -->
         <div class="stats-row">
@@ -79,73 +99,161 @@
             </div>
         </div>
 
-        <!-- Recent Tasks Section -->
-        <section class="to-do-section" aria-labelledby="todo-heading">
+        <!-- Recent Projects Section (Replaces Recent Tasks) -->
+        <section class="to-do-section" aria-labelledby="projects-main-heading">
             <div class="todo-header">
-                <h2 id="todo-heading" style="font-size: 1.1rem; margin: 0; font-weight: 700; color: #ffffff;">
-                    <i class="fas fa-clock" style="color: var(--accent-color);"></i> Recent Tasks
-                </h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; color: #60a5fa; font-size: 0.9rem;">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <h2 id="projects-main-heading" style="font-size: 1.1rem; margin: 0; font-weight: 700; color: #ffffff;">
+                        Recent Projects
+                    </h2>
+                </div>
                 <div class="filter-options">
                     <a href="{% url 'manage_kanban' %}" class="view-all-link">Kanban Board <i class="fas fa-arrow-right"></i></a>
-                    <button class="invite-btn" type="button" onclick="openAddTaskModal()">
-                        <i class="fas fa-plus" aria-hidden="true"></i> Add Task
+                    <button class="invite-btn" type="button" onclick="openAddProjectModal()">
+                        <i class="fas fa-plus" aria-hidden="true"></i> New Project
                     </button>
                 </div>
             </div>
             
-            <div class="task-list-container">
-                <div id="tasks-container" role="list" aria-label="Task list">
-                    {% for task in recent_tasks %}
-                    <article class="task-card" role="listitem" onclick="openTrelloModal({{ task.id }})">
-                        <div class="task-header">
-                            <div class="d-inline" onclick="event.stopPropagation();">
-                                {% csrf_token %}
-                                <input type="checkbox" name="task{{ task.id }}" id="task{{ task.id }}" 
-                                       {% if task.status == 'completed' %}checked{% endif %}
-                                       onchange="toggleTaskComplete({{ task.id }}, this)">
+            <div class="projects-grid-dashboard">
+                {% for project in recent_projects %}
+                <div class="dash-project-card" style="--project-accent: {{ project.color }};">
+                    <div>
+                        <!-- Project Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 10px; height: 10px; border-radius: 50%; background: {{ project.color }}; flex-shrink: 0;"></span>
+                                <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #ffffff;">{{ project.name }}</h3>
                             </div>
-                            <label for="task{{ task.id }}" onclick="event.stopPropagation(); openTrelloModal({{ task.id }});" style="cursor: pointer; flex: 1;">
-                                {{ task.title }}
-                            </label>
-                            <button type="button" class="task-menu-btn" aria-label="Task options" onclick="event.stopPropagation(); openTrelloModal({{ task.id }});">
-                                <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
-                            </button>
+                            <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background: #18181b; border: 1px solid #27272a; color: #a1a1aa; text-transform: capitalize;">
+                                {{ project.board_template }}
+                            </span>
                         </div>
-                        {% if task.description %}
-                        <p id="task{{ task.id }}-desc" style="margin: 4px 0 8px 28px; font-size: 0.82rem; color: var(--text-muted);">
-                            {{ task.description|striptags|truncatewords:15 }}
+
+                        <!-- Description -->
+                        {% if project.description %}
+                        <p style="margin: 0 0 12px 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ project.description }}
                         </p>
                         {% endif %}
-                        <div class="task-footer">
-                            {% if task.category %}
-                            <span class="project-badge" style="background-color: {{ task.category.color }}25; color: {{ task.category.color }}; border: 1px solid {{ task.category.color }}50;">
-                                <i class="fas fa-folder"></i> {{ task.category.name }}
+
+                        <!-- Progress Bar -->
+                        <div style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px;">
+                                <span>Progress</span>
+                                <strong style="color: {{ project.color }};">{{ project.progress }}%</strong>
+                            </div>
+                            <div style="height: 6px; background: #18181b; border-radius: 3px; overflow: hidden; border: 1px solid #27272a;">
+                                <div style="height: 100%; width: {{ project.progress }}%; background: {{ project.color }}; border-radius: 3px; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Task Breakdown Badges -->
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.72rem;">
+                            <span style="background: rgba(139, 92, 246, 0.15); color: #c4b5fd; padding: 2px 6px; border-radius: 4px;">
+                                Backlog: {{ project.backlog_count }}
                             </span>
-                            {% else %}
-                            <span class="project-badge" style="background-color: #27272a; color: #a1a1aa; border: 1px solid #3f3f46;">
-                                <i class="fas fa-inbox"></i> General
+                            <span style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; padding: 2px 6px; border-radius: 4px;">
+                                In Progress: {{ project.in_progress_count }}
                             </span>
-                            {% endif %}
-                            <span class="priority {{ task.priority }}">{{ task.get_priority_display }}</span>
-                            <span class="status {{ task.status }}">{{ task.get_status_display }}</span>
-                            {% if task.due_date %}
-                            <span class="created-on"><i class="fas fa-calendar"></i> {{ task.due_date|date:"d M" }}</span>
+                            <span style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 2px 6px; border-radius: 4px;">
+                                Done: {{ project.completed_count }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Card Actions & Member Avatars -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #1f2328; margin-top: 8px;">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            {% for m in project.member_list|slice:":3" %}
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #27272a; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: #ffffff;" title="{{ m.name }}">
+                                {{ m.initials }}
+                            </div>
+                            {% empty %}
+                            <span style="font-size: 0.72rem; color: #52525b;">Owner only</span>
+                            {% endfor %}
+                            {% if project.member_list|length > 3 %}
+                            <span style="font-size: 0.7rem; color: #71717a;">+{{ project.member_list|length|add:"-3" }}</span>
                             {% endif %}
                         </div>
-                    </article>
-                    {% empty %}
-                    <div class="empty-state">
-                        <i class="far fa-check-circle empty-icon"></i>
-                        <p>No pending tasks! <a href="#" onclick="openAddTaskModal(); return false;">Add one?</a></p>
+
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" onclick="openShareProjectModal({{ project.id }})" class="icon-btn" title="Invite / Share Project" style="padding: 5px 9px; font-size: 0.75rem; background: #18181b; border: 1px solid #27272a; color: #a1a1aa; border-radius: 6px; cursor: pointer;">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                            <a href="{% url 'manage_kanban' %}?project={{ project.id }}" style="padding: 5px 12px; font-size: 0.78rem; background: #2563eb; color: #ffffff; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <span>Kanban</span> <i class="fas fa-arrow-right" style="font-size: 0.7rem;"></i>
+                            </a>
+                        </div>
                     </div>
-                    {% endfor %}
                 </div>
+                {% empty %}
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: #09090b; border: 1px dashed #27272a; border-radius: 12px;">
+                    <i class="fas fa-folder-open" style="font-size: 2rem; color: #52525b; margin-bottom: 10px; display: block;"></i>
+                    <p style="margin: 0 0 12px 0; color: #a1a1aa; font-size: 0.9rem;">No projects found. Create your first project workspace to get started!</p>
+                    <button type="button" onclick="openAddProjectModal()" class="btn-primary" style="padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">
+                        <i class="fas fa-plus"></i> Create Project
+                    </button>
+                </div>
+                {% endfor %}
             </div>
         </section>
     </section>
 
     <!-- Right Sidebar Content -->
     <div class="dash-right">
+        <!-- Team & Sub-Users Management Widget (For Account Owner) -->
+        {% if is_owner %}
+        <div class="team-widget-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-users-cog" style="color: #60a5fa;"></i>
+                    <h2 style="font-size: 0.95rem; margin: 0; font-weight: 700; color: #ffffff;">Team & Sub-Users</h2>
+                </div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #60a5fa; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 7px; border-radius: 6px;">
+                    {{ subuser_count }} / {{ max_subusers }}
+                </span>
+            </div>
+
+            <!-- Sub-users list preview -->
+            <div style="max-height: 180px; overflow-y: auto; margin-bottom: 12px;">
+                {% for u in subusers|slice:":4" %}
+                <div class="team-member-pill">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 26px; height: 26px; border-radius: 6px; background: #18181b; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #ffffff;">
+                            {{ u.username|slice:":2"|upper }}
+                        </div>
+                        <div>
+                            <div style="font-size: 0.82rem; font-weight: 600; color: #ffffff;">{{ u.name }}</div>
+                            <div style="font-size: 0.7rem; color: #71717a; font-family: monospace;">@{{ u.username }}</div>
+                        </div>
+                    </div>
+                    <span style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+                        {{ u.role }}
+                    </span>
+                </div>
+                {% empty %}
+                <p style="text-align: center; color: #71717a; font-size: 0.8rem; padding: 10px 0; margin: 0;">
+                    No sub-users yet. Add up to 99 team accounts!
+                </p>
+                {% endfor %}
+            </div>
+
+            <!-- Team Action Buttons -->
+            <div style="display: flex; gap: 8px;">
+                <button type="button" onclick="openSubUserModal()" class="btn-primary" style="flex: 1; padding: 7px 12px; border-radius: 7px; font-size: 0.8rem; background: #2563eb; border: 1px solid #3b82f6; color: #ffffff; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <i class="fas fa-user-plus"></i> Add Sub-User
+                </button>
+                <a href="{% url 'manage_team' %}" style="padding: 7px 12px; border-radius: 7px; font-size: 0.8rem; background: #18181b; border: 1px solid #27272a; color: #d4d4d8; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: center;">
+                    Manage Team
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Completion Rate Card with project-wise toggle -->
         <div class="completion-card">
             <div class="completion-header">
@@ -159,7 +267,7 @@
                 </div>
             </div>
 
-            <!-- Overall Progress Bar (default visible) -->
+            <!-- Overall Progress Bar -->
             <div id="overall-progress-view">
                 <div class="progress-bar-container">
                     <div class="progress-bar" style="width: {{ completion_rate }}%;"></div>
@@ -170,7 +278,7 @@
                 </div>
             </div>
 
-            <!-- Project-wise Progress (hidden by default) -->
+            <!-- Project-wise Progress -->
             <div id="project-progress-view" style="display:none;">
                 {% if all_projects_progress %}
                 <div class="project-progress-list">
@@ -225,82 +333,17 @@
                 </a>
             </div>
         </section>
-
-        <!-- Recently Completed -->
-        <section class="completed-tasks-section" aria-labelledby="completed-heading">
-            <h2 id="completed-heading" style="font-size: 1rem; margin: 0 0 12px 0; font-weight: 600; color: #ffffff;">
-                <i class="fas fa-check" style="color: #34d399;"></i> Recently Completed
-            </h2>
-            <div id="completed-tasks-container" role="list" aria-label="Completed tasks list">
-                {% for task in recently_completed_tasks %}
-                <article class="completed-task-card" role="listitem" onclick="openTrelloModal({{ task.id }})" style="cursor: pointer;">
-                    <div class="task-header">
-                        <input type="checkbox" id="completed-task{{ task.id }}" checked disabled>
-                        <label for="completed-task{{ task.id }}" style="text-decoration: line-through; color: var(--text-muted); cursor: pointer;">{{ task.title }}</label>
-                    </div>
-                    <div class="task-footer">
-                        <span class="status completed">Done</span>
-                        {% if task.completed_at %}
-                        <span class="created-on">{{ task.completed_at|timesince }} ago</span>
-                        {% endif %}
-                    </div>
-                </article>
-                {% empty %}
-                <p style="text-align: center; color: #666; font-size: 0.85rem; padding: 16px 0;">No tasks completed recently.</p>
-                {% endfor %}
-            </div>
-        </section>
-
-        <!-- Projects Quick Access -->
-        {% if projects %}
-        <section class="projects-quick" aria-labelledby="projects-heading">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h2 id="projects-heading" style="margin: 0; font-size: 1rem; font-weight: 600; color: #ffffff;">Projects</h2>
-                <a href="{% url 'task_categories' %}" style="font-size: 0.8rem; color: var(--accent-color);">View All</a>
-            </div>
-            {% for project in projects %}
-            <a href="{% url 'manage_kanban' %}?project={{ project.id }}" class="project-quick-card" style="--project-color: {{ project.color }}">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ project.color }}; flex-shrink: 0;"></span>
-                    <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color);">{{ project.name }}</span>
-                </div>
-                <span style="font-size: 0.775rem; color: var(--text-muted);">{{ project.task_count }} task{{ project.task_count|pluralize }}</span>
-            </a>
-            {% endfor %}
-        </section>
-        {% endif %}
     </div>
 </div>
+
+<!-- Include Sub-User Modal -->
+{% if is_owner %}
+{% include 'todo/components/modals/manage_subuser_modal.html' %}
+{% endif %}
 {% endblock content %}
 
 {% block scripts %}
 <script>
-    function toggleTaskComplete(taskId, checkboxElem) {
-        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-        const csrfToken = csrfInput ? csrfInput.value : '';
-        const formData = new FormData();
-        formData.append('status', checkboxElem.checked ? 'completed' : 'not-started');
-
-        fetch(`/task/${taskId}/update/`, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const card = checkboxElem.closest('.task-card');
-                if (card && checkboxElem.checked) {
-                    card.style.opacity = '0.4';
-                    card.style.transition = 'all 0.3s ease';
-                    setTimeout(() => card.remove(), 300);
-                }
-                if (window.showToast) window.showToast('Task updated!', 'success');
-            }
-        })
-        .catch(err => console.error('Error toggling task:', err));
-    }
-
     function switchProgress(view) {
         const overall = document.getElementById('overall-progress-view');
         const project = document.getElementById('project-progress-view');

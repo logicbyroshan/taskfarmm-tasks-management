@@ -15,7 +15,8 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.timesince import timesince
 
-from .models import Task, Category, TaskComment, PreDefinedTask, Notification
+from django.contrib.auth.models import User
+from .models import Task, Category, TaskComment, PreDefinedTask, Notification, UserProfile
 from .notifications import NotificationService
 
 logger = logging.getLogger('todo')
@@ -544,6 +545,214 @@ class CategoryService:
         return category
 
 
+    @staticmethod
+    def get_recent_projects_for_dashboard(user, limit=8):
+        """
+        Returns recent projects with enriched statistics (total tasks, backlog, in-progress, completed,
+        members count, assigned member list, progress percentage) for the main dashboard display.
+        """
+        categories = list(
+            Category.objects
+            .filter(Q(user=user) | Q(members=user))
+            .distinct()
+            .annotate(
+                task_count=Count('tasks', distinct=True),
+                completed_count=Count('tasks', filter=Q(tasks__status='completed'), distinct=True),
+                in_progress_count=Count('tasks', filter=Q(tasks__status='in-progress'), distinct=True),
+                todo_count=Count('tasks', filter=Q(tasks__status='not-started'), distinct=True),
+                backlog_count=Count('tasks', filter=Q(tasks__status='backlog'), distinct=True),
+            )
+            .prefetch_related('members', 'user')
+            .order_by('-created_at')[:limit]
+        )
+        for cat in categories:
+            cat.progress = (
+                int((cat.completed_count / cat.task_count) * 100)
+                if cat.task_count > 0 else 0
+            )
+            cat.is_owner = (cat.user_id == user.id)
+            cat.ensure_share_token()
+            cat.member_list = [
+                {
+                    'id': m.id,
+                    'username': m.username,
+                    'name': m.get_full_name() or m.username,
+                    'initials': m.username[:2].upper()
+                }
+                for m in cat.members.all()
+            ]
+        return categories
+
+
+# ============================================================
+#  SUB-USER / TEAM MANAGEMENT SERVICE (Max 99 per account)
+# ============================================================
+
+class SubUserService:
+    """Encapsulates all Sub-User and Team Member business logic."""
+
+    MAX_SUBUSERS = 99
+
+    @classmethod
+    def get_subusers(cls, owner):
+        """Returns all sub-users belonging to the owner account."""
+        if hasattr(owner, 'profile') and owner.profile.is_subuser:
+            return User.objects.none()
+
+        return (
+            User.objects
+            .filter(profile__parent_user=owner, profile__is_subuser=True)
+            .select_related('profile')
+            .prefetch_related('shared_categories', 'assigned_tasks')
+            .order_by('-date_joined')
+        )
+
+    @classmethod
+    def get_subusers_data(cls, owner):
+        """Returns detailed serializable data list of all sub-users."""
+        subusers = cls.get_subusers(owner)
+        data = []
+        for u in subusers:
+            prof = getattr(u, 'profile', None)
+            assigned_projects = [
+                {'id': c.id, 'name': c.name, 'color': c.color}
+                for c in u.shared_categories.all()
+            ]
+            data.append({
+                'id': u.id,
+                'username': u.username,
+                'name': u.get_full_name() or u.username,
+                'first_name': u.first_name,
+                'email': u.email,
+                'role': prof.role if prof else 'member',
+                'role_display': prof.get_role_display() if prof else 'Member',
+                'is_active': u.is_active,
+                'assigned_projects': assigned_projects,
+                'assigned_project_ids': [p['id'] for p in assigned_projects],
+                'assigned_tasks_count': u.assigned_tasks.count(),
+                'date_joined': u.date_joined.strftime('%d %b %Y, %H:%M'),
+                'last_login': u.last_login.strftime('%d %b %Y, %H:%M') if u.last_login else 'Never',
+            })
+        return data
+
+    @classmethod
+    def create_subuser(cls, owner, username, password, display_name='', role='member', assigned_project_ids=None):
+        """
+        Creates a sub-user under the owner account.
+        Enforces maximum 99 sub-users limit.
+        Does not require unique email.
+        """
+        owner_profile = getattr(owner, 'profile', None)
+        if owner_profile is None or not hasattr(owner_profile, 'is_subuser'):
+            owner_profile = UserProfile.objects.filter(user=owner).first()
+
+        if owner_profile and owner_profile.is_subuser:
+            raise ValueError("Sub-users cannot create other sub-users.")
+
+        current_count = cls.get_subusers(owner).count()
+        if current_count >= cls.MAX_SUBUSERS:
+            raise ValueError(f"Account limit reached. Maximum {cls.MAX_SUBUSERS} sub-users allowed.")
+
+        username = (username or '').strip().lower()
+        if not username:
+            raise ValueError("Username is required.")
+        if len(username) < 3:
+            raise ValueError("Username must be at least 3 characters long.")
+        if not password or len(password) < 4:
+            raise ValueError("Password must be at least 4 characters long.")
+
+        if User.objects.filter(username__iexact=username).exists():
+            raise ValueError(f'Username "{username}" is already taken. Please choose another username.')
+
+        # Dummy email scoped to parent account so uniqueness isn't required
+        dummy_email = f"{username}@{owner.username}.taskflixx.local"
+
+        subuser = User.objects.create_user(
+            username=username,
+            password=password,
+            email=dummy_email,
+            first_name=display_name.strip() if display_name else username
+        )
+
+        profile, _ = UserProfile.objects.get_or_create(user=subuser)
+        profile.is_subuser = True
+        profile.parent_user = owner
+        profile.role = role if role in UserProfile.Role.values else UserProfile.Role.MEMBER
+        profile.can_manage_tasks = True
+        profile.save()
+        subuser.profile = profile
+
+        # Assign projects if provided
+        if assigned_project_ids:
+            projects = Category.objects.filter(id__in=assigned_project_ids, user=owner)
+            for p in projects:
+                p.members.add(subuser)
+
+        logger.info("Sub-user created: %s (under owner %s, role=%s)", subuser.username, owner.username, profile.role)
+        return subuser
+
+    @classmethod
+    def update_subuser(cls, owner, subuser_id, username=None, password=None, display_name=None, role=None, is_active=None, assigned_project_ids=None):
+        """Updates an existing sub-user."""
+        subuser = User.objects.filter(id=subuser_id, profile__parent_user=owner, profile__is_subuser=True).first()
+        if not subuser:
+            raise ValueError("Sub-user not found or access denied.")
+
+        if username:
+            username = username.strip().lower()
+            if username != subuser.username:
+                if User.objects.filter(username__iexact=username).exclude(id=subuser.id).exists():
+                    raise ValueError(f'Username "{username}" is already taken.')
+                subuser.username = username
+
+        if display_name is not None:
+            subuser.first_name = display_name.strip()
+
+        if password:
+            if len(password) < 4:
+                raise ValueError("Password must be at least 4 characters long.")
+            subuser.set_password(password)
+
+        if is_active is not None:
+            subuser.is_active = bool(is_active)
+
+        subuser.save()
+
+        profile = getattr(subuser, 'profile', None)
+        if profile and role and role in UserProfile.Role.values:
+            profile.role = role
+            profile.save(update_fields=['role'])
+
+        if assigned_project_ids is not None:
+            # Update member projects for this subuser
+            owner_projects = Category.objects.filter(user=owner)
+            for p in owner_projects:
+                if p.id in assigned_project_ids or str(p.id) in assigned_project_ids:
+                    p.members.add(subuser)
+                else:
+                    p.members.remove(subuser)
+
+        logger.info("Sub-user updated: id=%s username=%s by owner %s", subuser.id, subuser.username, owner.username)
+        return subuser
+
+    @classmethod
+    def delete_subuser(cls, owner, subuser_id):
+        """Deletes a sub-user account."""
+        subuser = User.objects.filter(id=subuser_id, profile__parent_user=owner, profile__is_subuser=True).first()
+        if not subuser:
+            raise ValueError("Sub-user not found or access denied.")
+
+        username = subuser.username
+        # Remove from projects
+        for p in subuser.shared_categories.all():
+            p.members.remove(subuser)
+        # Unassign tasks
+        subuser.assigned_tasks.clear()
+        subuser.delete()
+        logger.info("Sub-user deleted: username=%s by owner %s", username, owner.username)
+        return True
+
+
 # ============================================================
 #  EXPORT SERVICE
 # ============================================================
@@ -657,3 +866,4 @@ class StatsService:
         done = stats['done_count']
         stats['completion_rate'] = int((done / total) * 100) if total > 0 else 0
         return stats
+

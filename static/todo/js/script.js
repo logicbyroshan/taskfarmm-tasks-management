@@ -2738,3 +2738,183 @@ document.addEventListener('click', function(e) {
 });
 
 
+// ==============================================================================
+//  SUB-USER / TEAM MANAGEMENT HANDLERS (Max 99 per account)
+// ==============================================================================
+
+window.openSubUserModal = function() {
+    const modal = document.getElementById('manage-subuser-modal');
+    if (!modal) return;
+    const form = document.getElementById('manage-subuser-form');
+    if (form) form.reset();
+    
+    document.getElementById('subuser-id').value = '';
+    document.getElementById('subuser-modal-title').textContent = 'Add New Sub-User';
+    document.getElementById('subuser-modal-icon').className = 'fas fa-user-plus';
+    document.getElementById('subuser-btn-text').textContent = 'Create Sub-User';
+    document.getElementById('subuser-username').readOnly = false;
+    document.getElementById('subuser-password').required = true;
+    document.getElementById('subuser-pwd-required').style.display = 'inline';
+    document.getElementById('subuser-pwd-hint').style.display = 'none';
+
+    // Uncheck all project checkboxes
+    document.querySelectorAll('.subuser-project-cb').forEach(cb => cb.checked = false);
+
+    modal.style.display = 'flex';
+};
+
+window.openEditSubUserModal = function(subuser) {
+    const modal = document.getElementById('manage-subuser-modal');
+    if (!modal) return;
+
+    if (typeof subuser === 'string') {
+        try { subuser = JSON.parse(subuser); } catch(e){}
+    }
+
+    document.getElementById('subuser-id').value = subuser.id;
+    document.getElementById('subuser-modal-title').textContent = `Edit Sub-User (@${subuser.username})`;
+    document.getElementById('subuser-modal-icon').className = 'fas fa-user-edit';
+    document.getElementById('subuser-btn-text').textContent = 'Save Changes';
+    
+    document.getElementById('subuser-username').value = subuser.username || '';
+    document.getElementById('subuser-display-name').value = subuser.first_name || subuser.name || '';
+    document.getElementById('subuser-role').value = subuser.role || 'member';
+    
+    // Password is optional when editing
+    const pwdInput = document.getElementById('subuser-password');
+    pwdInput.value = '';
+    pwdInput.required = false;
+    document.getElementById('subuser-pwd-required').style.display = 'none';
+    document.getElementById('subuser-pwd-hint').style.display = 'inline';
+
+    // Set assigned project checkboxes
+    const assignedIds = subuser.assigned_project_ids || [];
+    document.querySelectorAll('.subuser-project-cb').forEach(cb => {
+        cb.checked = assignedIds.includes(parseInt(cb.value)) || assignedIds.includes(cb.value);
+    });
+
+    modal.style.display = 'flex';
+};
+
+window.closeSubUserModal = function() {
+    const modal = document.getElementById('manage-subuser-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.toggleSubUserPwdVisibility = function() {
+    const pwdInput = document.getElementById('subuser-password');
+    const eyeIcon = document.getElementById('subuser-pwd-eye');
+    if (!pwdInput || !eyeIcon) return;
+    if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        eyeIcon.className = 'fas fa-eye-slash';
+    } else {
+        pwdInput.type = 'password';
+        eyeIcon.className = 'fas fa-eye';
+    }
+};
+
+window.handleSubUserFormSubmit = function(e) {
+    e.preventDefault();
+    const subuserId = document.getElementById('subuser-id').value;
+    const isEdit = Boolean(subuserId);
+    const username = document.getElementById('subuser-username').value.trim();
+    const displayName = document.getElementById('subuser-display-name').value.trim();
+    const password = document.getElementById('subuser-password').value;
+    const role = document.getElementById('subuser-role').value;
+
+    const assignedProjects = [];
+    document.querySelectorAll('.subuser-project-cb:checked').forEach(cb => {
+        assignedProjects.push(parseInt(cb.value));
+    });
+
+    const submitBtn = document.getElementById('subuser-submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+    }
+
+    const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const url = isEdit ? `/api/subusers/${subuserId}/update/` : '/api/subusers/create/';
+
+    const payload = {
+        username: username,
+        display_name: displayName,
+        role: role,
+        assigned_projects: assignedProjects
+    };
+    if (password) payload.password = password;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+        }
+        if (data.success) {
+            if (window.showToast) window.showToast(data.message || 'Saved successfully!', 'success');
+            window.closeSubUserModal();
+            setTimeout(() => window.location.reload(), 500);
+        } else {
+            if (window.showToast) window.showToast(data.error || 'Failed to save sub-user', 'error');
+            else alert(data.error || 'Failed to save sub-user');
+        }
+    })
+    .catch(err => {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+        }
+        console.error('Sub-user save error:', err);
+        if (window.showToast) window.showToast('Network error while saving sub-user', 'error');
+    });
+};
+
+window.deleteSubUser = function(subuserId, username) {
+    if (!confirm(`Are you sure you want to delete sub-user "@${username}"? They will lose access to all assigned projects and tasks.`)) {
+        return;
+    }
+
+    const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch(`/api/subusers/${subuserId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (window.showToast) window.showToast('Sub-user deleted successfully.', 'success');
+            const card = document.getElementById(`subuser-card-${subuserId}`);
+            if (card) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                setTimeout(() => card.remove(), 250);
+            } else {
+                setTimeout(() => window.location.reload(), 400);
+            }
+        } else {
+            if (window.showToast) window.showToast(data.error || 'Failed to delete sub-user', 'error');
+            else alert(data.error || 'Failed to delete sub-user');
+        }
+    })
+    .catch(err => {
+        console.error('Delete subuser error:', err);
+        if (window.showToast) window.showToast('Error deleting sub-user', 'error');
+    });
+};
+
+
+

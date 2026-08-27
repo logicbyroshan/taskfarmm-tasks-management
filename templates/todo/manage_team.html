@@ -1,0 +1,149 @@
+{% extends 'todo/base.html' %}
+{% load static %}
+
+{% block title %}Manage Team & Sub-Users - TaskFlixx{% endblock title %}
+
+{% block styles %}
+<style>
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+}
+.subuser-card {
+    background: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    position: relative;
+}
+.subuser-card:hover {
+    transform: translateY(-2px);
+    border-color: #3b82f6;
+}
+.subuser-role-badge {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.role-admin { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.role-member { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.role-viewer { background: rgba(161, 161, 170, 0.15); color: #a1a1aa; border: 1px solid rgba(161, 161, 170, 0.3); }
+</style>
+{% endblock styles %}
+
+{% block content %}
+<div class="team-page-container" style="max-width: 1200px; margin: 0 auto; width: 100%;">
+    <!-- Top Header Banner -->
+    <div style="background: linear-gradient(135deg, #101214 0%, #181b20 100%); border: 1px solid #27272a; border-radius: 14px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); display: flex; align-items: center; justify-content: center; color: #60a5fa; font-size: 1.1rem;">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h1 style="margin: 0; font-size: 1.4rem; font-weight: 800; color: #ffffff;">Team & Sub-Users</h1>
+            </div>
+            <p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;">
+                Manage sub-users under your account. Sub-users log in with their assigned username & password.
+            </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <!-- Quota Counter -->
+            <div style="background: #000000; border: 1px solid #27272a; border-radius: 10px; padding: 10px 18px; text-align: right;">
+                <div style="font-size: 0.72rem; color: #a1a1aa; font-weight: 600; text-transform: uppercase;">Team Capacity</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #ffffff;">
+                    <span style="color: #60a5fa;">{{ subuser_count }}</span> <span style="font-size: 0.85rem; color: #71717a;">/ {{ max_subusers }}</span>
+                </div>
+            </div>
+
+            <!-- Add Sub-User Button -->
+            <button type="button" onclick="openSubUserModal()" class="btn-primary" style="padding: 11px 22px; border-radius: 10px; background: #2563eb; border: 1px solid #3b82f6; color: #ffffff; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                <i class="fas fa-user-plus"></i> Add Sub-User
+            </button>
+        </div>
+    </div>
+
+    <!-- Team Cards Grid -->
+    <div class="team-grid" id="team-cards-grid">
+        {% for u in subusers %}
+        <div class="subuser-card" id="subuser-card-{{ u.id }}">
+            <div>
+                <!-- Card Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 10px; background: #18181b; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #ffffff; font-size: 1rem;">
+                            {{ u.username|slice:":2"|upper }}
+                        </div>
+                        <div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px;">
+                                <span>{{ u.name }}</span>
+                                {% if not u.is_active %}
+                                <span style="font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #7f1d1d; color: #fca5a5;">Disabled</span>
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.78rem; color: #60a5fa; font-family: monospace;">@{{ u.username }}</div>
+                        </div>
+                    </div>
+                    <span class="subuser-role-badge role-{{ u.role }}">{{ u.role_display }}</span>
+                </div>
+
+                <!-- Assigned Projects -->
+                <div style="margin-bottom: 14px;">
+                    <div style="font-size: 0.72rem; font-weight: 600; color: #71717a; margin-bottom: 6px; text-transform: uppercase;">Assigned Projects</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        {% for p in u.assigned_projects %}
+                        <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; background: {{ p.color }}18; color: {{ p.color }}; border: 1px solid {{ p.color }}40;">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ p.color }};"></span>
+                            {{ p.name }}
+                        </span>
+                        {% empty %}
+                        <span style="font-size: 0.75rem; color: #52525b; font-style: italic;">No projects assigned yet</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #1f2328; margin-top: 8px;">
+                <div style="font-size: 0.72rem; color: #71717a;">
+                    <i class="fas fa-clock" style="margin-right: 3px;"></i> Active {{ u.last_login }}
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick='openEditSubUserModal({{ u|safe }})' class="icon-btn" title="Edit sub-user & reset password" style="background: #18181b; border: 1px solid #27272a; color: #d4d4d8; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button type="button" onclick="deleteSubUser({{ u.id }}, '{{ u.username }}')" class="icon-btn" title="Delete sub-user" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #09090b; border: 1px dashed #27272a; border-radius: 14px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #60a5fa; font-size: 1.5rem;">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h3 style="margin: 0 0 6px 0; font-size: 1.1rem; color: #ffffff;">No Sub-Users Created Yet</h3>
+            <p style="margin: 0 auto 20px; font-size: 0.85rem; color: #a1a1aa; max-width: 420px;">
+                You can create up to 99 team sub-user accounts. Sub-users get their own username & password and can access the projects you assign to them.
+            </p>
+            <button type="button" onclick="openSubUserModal()" class="btn-primary" style="padding: 10px 22px; border-radius: 8px; background: #2563eb; border: 1px solid #3b82f6; color: #ffffff; font-weight: 700; font-size: 0.88rem; cursor: pointer;">
+                <i class="fas fa-plus"></i> Create First Sub-User
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Include Subuser Modal -->
+{% include 'todo/components/modals/manage_subuser_modal.html' %}
+{% endblock content %}

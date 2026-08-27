@@ -7,7 +7,7 @@ Handles token/session-based authentication and bridges JWT auth with Django sess
 import json
 import logging
 from django.conf import settings
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import get_user_model, login, authenticate
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.tokens import AccessToken

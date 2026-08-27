@@ -28,6 +28,14 @@
                     <span class="sidebar-link-text">Kanban Board</span>
                 </a>
             </li>
+            {% if not user.profile.is_subuser %}
+            <li class="{% if active_page == 'manage_subusers' %}active{% endif %}">
+                <a href="{% url 'manage_team' %}" title="Team & Sub-Users">
+                    <i class="fas fa-users-cog" aria-hidden="true"></i>
+                    <span class="sidebar-link-text">Team Members</span>
+                </a>
+            </li>
+            {% endif %}
             <li class="{% if active_page == 'ai_assistant' %}active{% endif %}">
                 <a href="{% url 'ai_assistant' %}" title="AI Assistant">
                     <i class="fas fa-robot" aria-hidden="true"></i>

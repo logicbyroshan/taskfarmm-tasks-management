@@ -14,6 +14,8 @@ urlpatterns = [
     path('projects/', views.task_categories, name='manage_projects'),
     path('categories/', views.task_categories, name='task_categories'),
     path('kanban/', views.manage_kanban, name='manage_kanban'),
+    path('team/', views.manage_subusers, name='manage_team'),
+    path('subusers/', views.manage_subusers, name='manage_subusers'),
     path('ai-assistant/', views.ai_assistant_page, name='ai_assistant'),
     path('settings/', views.settings_page, name='settings'),
     # Authentication
@@ -72,6 +74,12 @@ urlpatterns = [
     path('api/ai/create-task/', views.ai_create_task, name='ai_create_task'),
     path('api/ai/create-project/', views.ai_create_project, name='ai_create_project'),
     path('api/autocorrect/', views.api_autocorrect, name='api_autocorrect'),
+
+    # Sub-User Team Management APIs (Max 99 subusers per account)
+    path('api/subusers/', views.api_subusers_list, name='api_subusers_list'),
+    path('api/subusers/create/', views.api_subuser_create, name='api_subuser_create'),
+    path('api/subusers/<int:pk>/update/', views.api_subuser_update, name='api_subuser_update'),
+    path('api/subusers/<int:pk>/delete/', views.api_subuser_delete, name='api_subuser_delete'),
 
     # In-App Notifications API
     path('api/notifications/', views.api_notifications_list, name='api_notifications_list'),

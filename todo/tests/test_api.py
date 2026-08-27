@@ -201,3 +201,43 @@ class RestApiV1Tests(APITestCase):
         )
         self.assertEqual(verify_res.status_code, 401)
         self.assertIn('disabled', verify_res.json()['error'].lower())
+
+    def test_api_auth_login_with_username_and_email(self):
+        # Test login via username
+        res_username = self.client.post(
+            reverse('api_auth_login'),
+            data=json.dumps({'username': 'apiuser1', 'password': 'Password123!'}),
+            content_type='application/json'
+        )
+        self.assertEqual(res_username.status_code, 200)
+        self.assertTrue(res_username.json()['success'])
+        self.assertEqual(res_username.json()['user']['username'], 'apiuser1')
+
+        # Test login via email
+        res_email = self.client.post(
+            reverse('api_auth_login'),
+            data=json.dumps({'username': 'apiuser1@example.com', 'password': 'Password123!'}),
+            content_type='application/json'
+        )
+        self.assertEqual(res_email.status_code, 200)
+        self.assertTrue(res_email.json()['success'])
+
+        # Test invalid password
+        res_invalid = self.client.post(
+            reverse('api_auth_login'),
+            data=json.dumps({'username': 'apiuser1', 'password': 'WrongPassword'}),
+            content_type='application/json'
+        )
+        self.assertEqual(res_invalid.status_code, 401)
+        self.assertFalse(res_invalid.json()['success'])
+
+    def test_api_csrf_and_health(self):
+        csrf_res = self.client.get(reverse('api_auth_csrf'))
+        self.assertEqual(csrf_res.status_code, 200)
+        self.assertTrue(csrf_res.json()['success'])
+        self.assertIn('csrfToken', csrf_res.json())
+
+        health_res = self.client.get(reverse('api_health'))
+        self.assertEqual(health_res.status_code, 200)
+        self.assertEqual(health_res.json()['status'], 'healthy')
+

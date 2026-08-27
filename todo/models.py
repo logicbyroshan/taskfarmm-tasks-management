@@ -244,6 +244,11 @@ class UserProfile(models.Model):
         LIGHT = 'light', 'Light'
         SYSTEM = 'system', 'System'
 
+    class Role(models.TextChoices):
+        ADMIN = 'admin', 'Admin (Full Task & Project Access)'
+        MEMBER = 'member', 'Member (Assigned Projects & Tasks)'
+        VIEWER = 'viewer', 'Viewer (Read Only)'
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     theme = models.CharField(max_length=10, choices=Theme.choices, default=Theme.DARK)
     notify_task_reminders = models.BooleanField(default=True)
@@ -259,11 +264,38 @@ class UserProfile(models.Model):
         choices=Task.Status.choices,
         default=Task.Status.TO_DO
     )
+
+    # Sub-user / Team Member Hierarchy (Max 99 per parent account)
+    is_subuser = models.BooleanField(default=False, db_index=True)
+    parent_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='subusers', db_index=True
+    )
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.MEMBER)
+    can_manage_tasks = models.BooleanField(default=True)
+    can_create_projects = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def is_owner(self):
+        return not self.is_subuser
+
+    @property
+    def effective_owner(self):
+        return self.parent_user if (self.is_subuser and self.parent_user) else self.user
+
+    def get_subuser_count(self):
+        if self.is_subuser:
+            return 0
+        return self.user.subusers.count()
+
     def __str__(self):
+        if self.is_subuser and self.parent_user:
+            return f"{self.user.username} (Sub-user of {self.parent_user.username})"
         return f"{self.user.username}'s Profile"
+
 
 
 class Notification(models.Model):
