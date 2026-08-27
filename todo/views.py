@@ -912,6 +912,21 @@ def project_share(request, pk):
             if user_to_add.id == category.user_id:
                 return JsonResponse({'success': False, 'message': 'User is already the project owner.'}, status=400)
             category.members.add(user_to_add)
+            try:
+                NotificationService.queue_notification(
+                    user=user_to_add,
+                    event_type=Notification.EventType.PROJECT_SHARED,
+                    title=f"Added to project: {category.name}",
+                    message=f"{request.user.get_full_name() or request.user.username} added you to project '{category.name}'",
+                    action_url=f"/kanban/?project={category.id}",
+                    context={
+                        'project_name': category.name,
+                        'inviter_name': request.user.get_full_name() or request.user.username,
+                    }
+                )
+            except Exception as e:
+                logger.warning('Failed to queue project shared notification: %s', e)
+
             return JsonResponse({
                 'success': True,
                 'message': f'{user_to_add.username} added to project!',
@@ -1283,8 +1298,90 @@ def api_notification_mark_all_read(request):
 
 
 # ============================================================
-#  SUB-USER / TEAM MANAGEMENT VIEWS & APIS
+#  GLOBAL SEARCH API
 # ============================================================
+
+@login_required
+def api_global_search(request):
+    """
+    Global search API: searches tasks and projects across all user and team data.
+    Returns structured results grouped by type with location metadata and direct open URLs.
+    """
+    q = request.GET.get('q', '').strip()
+    if not q or len(q) < 2:
+        return JsonResponse({'results': [], 'query': q})
+
+    from django.db.models import Q
+    from django.contrib.auth.models import User as AuthUser
+
+    profile = getattr(request.user, 'profile', None)
+    if profile and not profile.is_subuser:
+        sub_ids = list(AuthUser.objects.filter(profile__parent_user=request.user).values_list('id', flat=True))
+        all_user_ids = [request.user.id] + sub_ids
+        task_scope = (
+            Q(user_id__in=all_user_ids) |
+            Q(category__user=request.user) |
+            Q(category__members__in=all_user_ids) |
+            Q(assignees__in=all_user_ids)
+        )
+        proj_scope = (
+            Q(user=request.user) |
+            Q(members__in=all_user_ids)
+        )
+    else:
+        task_scope = (
+            Q(user=request.user) |
+            Q(category__members=request.user) |
+            Q(assignees=request.user)
+        )
+        proj_scope = (
+            Q(user=request.user) |
+            Q(members=request.user)
+        )
+
+    results = []
+
+    # Search tasks (title, description)
+    task_qs = Task.objects.filter(task_scope).filter(
+        Q(title__icontains=q) | Q(description__icontains=q)
+    ).select_related('category').distinct()[:15]
+
+    for task in task_qs:
+        results.append({
+            'type': 'task',
+            'id': task.id,
+            'title': task.title,
+            'subtitle': task.category.name if task.category else 'General Tasks',
+            'status': task.status,
+            'status_display': task.get_status_display(),
+            'priority': task.priority,
+            'priority_display': task.get_priority_display(),
+            'url': f'/kanban/?project={task.category_id}&task={task.id}' if task.category_id else f'/kanban/?task={task.id}',
+            'icon': 'fa-tasks',
+            'color': task.category.color if task.category else '#3b82f6',
+        })
+
+    # Search projects
+    proj_qs = Category.objects.filter(proj_scope).filter(
+        Q(name__icontains=q) | Q(description__icontains=q)
+    ).distinct()[:8]
+
+    for proj in proj_qs:
+        t_count = proj.tasks.count()
+        results.append({
+            'type': 'project',
+            'id': proj.id,
+            'title': proj.name,
+            'subtitle': f'{t_count} task{"s" if t_count != 1 else ""}',
+            'status': '',
+            'url': f'/kanban/?project={proj.id}',
+            'icon': 'fa-folder',
+            'color': proj.color or '#3b82f6',
+        })
+
+    return JsonResponse({'results': results, 'query': q, 'total': len(results)})
+
+
 
 @login_required
 def manage_subusers(request):

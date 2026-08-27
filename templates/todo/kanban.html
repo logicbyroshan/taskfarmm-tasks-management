@@ -303,7 +303,7 @@
                        onmouseenter="this.style.background='#16181d';"
                        onmouseleave="this.style.background='{% if selected_project_id == project.id %}rgba(59, 130, 246, 0.15){% else %}transparent{% endif %}';">
                         <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                            <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ project.color|default:'#3b82f6' }}; flex-shrink: 0;"></span>
+                            <span style="width: 8px; height: 8px; border-radius: 2px; background: {{ project.color|default:'#3b82f6' }}; flex-shrink: 0;"></span>
                             <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{{ project.name }}</span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">

@@ -494,44 +494,153 @@ window.showToast = function(message, type = 'success', duration = 3500) {
 };
 
 /**
- * Global Search Bar Handler (Navbar)
+ * Global Search Bar Handler (Navbar) - Live dropdown with tasks & projects
  */
 function setupGlobalSearch() {
     const searchInput = document.getElementById('search-input');
     if (!searchInput) return;
 
-    // If currently on manage-tasks page, populate current search query
-    const urlParams = new URLSearchParams(window.location.search);
-    const existingSearch = urlParams.get('search');
-    if (existingSearch) {
-        searchInput.value = existingSearch;
+    const dropdown = document.getElementById('global-search-dropdown');
+    const resultsList = document.getElementById('search-results-list');
+    const emptyEl = document.getElementById('search-empty');
+    const loadingEl = document.getElementById('search-loading');
+    let debounceTimer = null;
+    let lastQuery = '';
+
+    function showDropdown() {
+        if (dropdown) dropdown.style.display = 'block';
+    }
+    function hideDropdown() {
+        if (dropdown) dropdown.style.display = 'none';
+    }
+    function setLoading(on) {
+        if (loadingEl) loadingEl.style.display = on ? 'block' : 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (resultsList) resultsList.innerHTML = on ? '' : resultsList.innerHTML;
+    }
+    function showEmpty() {
+        if (emptyEl) emptyEl.style.display = 'block';
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (resultsList) resultsList.innerHTML = '';
     }
 
+    const statusColors = {
+        'completed': '#10b981', 'in-progress': '#3b82f6', 'not-started': '#ef4444',
+        'on-hold': '#f59e0b', 'backlog': '#6366f1', 'canceled': '#71717a'
+    };
+    const statusLabels = {
+        'completed': 'Done', 'in-progress': 'In Progress', 'not-started': 'To Do',
+        'on-hold': 'On Hold', 'backlog': 'Backlog', 'canceled': 'Canceled'
+    };
+
+    function renderResults(results, query) {
+        if (!resultsList) return;
+        if (!results || results.length === 0) { showEmpty(); return; }
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+
+        const tasks = results.filter(r => r.type === 'task');
+        const projects = results.filter(r => r.type === 'project');
+        let html = '';
+
+        function highlightText(text, q) {
+            if (!q) return text;
+            const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp('(' + escaped + ')', 'gi'), '<mark style="background:rgba(59,130,246,.3); color:#93c5fd; border-radius:2px; padding:0 1px;">$1</mark>');
+        }
+
+        if (projects.length > 0) {
+            html += `<div style="padding:6px 12px; font-size:0.68rem; font-weight:700; color:#52525b; text-transform:uppercase; letter-spacing:.7px; border-bottom:1px solid #1f2328;">Projects</div>`;
+            projects.forEach(r => {
+                html += `<a href="${r.url}" class="search-result-item" style="display:flex; align-items:center; gap:10px; padding:10px 14px; text-decoration:none; border-bottom:1px solid #121316; transition:background .1s;" onmouseover="this.style.background='#121316'" onmouseout="this.style.background='transparent'">
+                    <span style="width:8px; height:8px; border-radius:2px; background:${r.color}; flex-shrink:0;"></span>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:0.85rem; font-weight:600; color:#e4e4e7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${highlightText(r.title, query)}</div>
+                        <div style="font-size:0.72rem; color:#71717a;">Project Board</div>
+                    </div>
+                    <i class="fas fa-arrow-right" style="color:#52525b; font-size:0.7rem; flex-shrink:0;"></i>
+                </a>`;
+            });
+        }
+
+        if (tasks.length > 0) {
+            html += `<div style="padding:6px 12px; font-size:0.68rem; font-weight:700; color:#52525b; text-transform:uppercase; letter-spacing:.7px; border-bottom:1px solid #1f2328; ${projects.length > 0 ? 'border-top:1px solid #1f2328;' : ''}">Tasks</div>`;
+            tasks.forEach(r => {
+                const sc = statusColors[r.status] || '#71717a';
+                const sl = statusLabels[r.status] || r.status;
+                html += `<a href="${r.url}" class="search-result-item" style="display:flex; align-items:center; gap:10px; padding:10px 14px; text-decoration:none; border-bottom:1px solid #121316; transition:background .1s;" onmouseover="this.style.background='#121316'" onmouseout="this.style.background='transparent'">
+                    <span style="width:8px; height:8px; border-radius:2px; background:${r.color}; flex-shrink:0;"></span>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:0.85rem; font-weight:600; color:#e4e4e7; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${highlightText(r.title, query)}</div>
+                        <div style="font-size:0.72rem; color:#71717a; display:flex; align-items:center; gap:6px;">
+                            <span style="color:#52525b;">in</span> <span style="color:#a1a1aa;">${r.subtitle}</span>
+                            <span style="width:4px; height:4px; border-radius:50%; background:#3f3f46;"></span>
+                            <span style="color:${sc}; font-weight:600; font-size:0.68rem;">${sl}</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right" style="color:#52525b; font-size:0.7rem; flex-shrink:0;"></i>
+                </a>`;
+            });
+        }
+
+        resultsList.innerHTML = html;
+    }
+
+    function doSearch(query) {
+        if (query === lastQuery) return;
+        lastQuery = query;
+        if (query.length < 2) { hideDropdown(); return; }
+
+        showDropdown();
+        setLoading(true);
+
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                     document.querySelector('meta[name="csrf-token"]')?.content;
+
+        fetch(`/api/search/?q=${encodeURIComponent(query)}`, {
+            headers: { 'X-CSRFToken': csrf || '', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            setLoading(false);
+            renderResults(data.results || [], query);
+        })
+        .catch(() => {
+            setLoading(false);
+            showEmpty();
+        });
+    }
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const q = e.target.value.trim();
+        if (q.length < 2) { hideDropdown(); lastQuery = ''; return; }
+        debounceTimer = setTimeout(() => doSearch(q), 280);
+    });
+
     searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { hideDropdown(); searchInput.blur(); }
         if (e.key === 'Enter') {
             e.preventDefault();
-            const query = searchInput.value.trim();
-            if (query) {
-                window.location.href = `/manage-tasks/?search=${encodeURIComponent(query)}`;
-            } else {
-                if (window.location.pathname.includes('manage-tasks') || window.location.pathname.includes('my-tasks')) {
-                    window.location.href = '/manage-tasks/';
-                }
+            const q = searchInput.value.trim();
+            if (q) {
+                // Navigate to kanban with search - highlight first result or open all
+                const firstLink = resultsList?.querySelector('.search-result-item');
+                if (firstLink) firstLink.click();
             }
         }
     });
 
-    const searchIcon = searchInput.parentElement?.querySelector('.fa-search');
-    if (searchIcon) {
-        searchIcon.style.cursor = 'pointer';
-        searchIcon.addEventListener('click', () => {
-            const query = searchInput.value.trim();
-            if (query) {
-                window.location.href = `/manage-tasks/?search=${encodeURIComponent(query)}`;
-            }
-        });
-    }
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim().length >= 2 && dropdown) dropdown.style.display = 'block';
+    });
+
+    // Click outside to close
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-bar')) hideDropdown();
+    });
 }
+
 
 function setupAlertAutoDismiss() {
     document.querySelectorAll('.auto-dismiss').forEach(alert => {
@@ -1378,76 +1487,90 @@ window.triggerTrelloAttachment = function() {
     if (input) input.click();
 };
 
-window.uploadTrelloFiles = function(files) {
-    if (!files || files.length === 0 || !currentTrelloTask) return;
-    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]);
+window.lastHoveredTaskCardId = null;
+
+// Track hovered cards across kanban and dashboard
+document.addEventListener('mouseover', function(e) {
+    const card = e.target.closest('.kanban-card, .task-card, [data-task-id]');
+    if (card && card.dataset.taskId) {
+        window.lastHoveredTaskCardId = card.dataset.taskId;
+    }
+});
+
+/**
+ * Universal attachment uploader for any task card (modal or board card).
+ */
+window.uploadTaskCardAttachment = function(taskId, fileOrData, isBase64 = false, filename = 'attachment') {
+    if (!taskId) return Promise.reject(new Error('No task ID'));
+    const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value || document.querySelector('meta[name="csrf-token"]')?.content;
+
+    if (window.showToast) window.showToast('Uploading attachment to task…', 'info', 1200);
+
+    let fetchOpts = {};
+    if (isBase64) {
+        fetchOpts = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ image_data: fileOrData, filename: filename })
+        };
+    } else {
+        const formData = new FormData();
+        if (fileOrData instanceof File || fileOrData instanceof Blob) {
+            formData.append('files', fileOrData, filename || fileOrData.name);
+        } else if (fileOrData && fileOrData.length) {
+            for (let i = 0; i < fileOrData.length; i++) {
+                formData.append('files', fileOrData[i]);
+            }
+        }
+        fetchOpts = {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        };
     }
 
-    if (window.showToast) window.showToast('Uploading attachment...', 'info', 1000);
+    return fetch(`/task/${taskId}/attachment/`, fetchOpts)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (currentTrelloTask && currentTrelloTask.id == taskId) {
+                    currentTrelloTask.attachments = data.attachments;
+                    renderTrelloAttachments(data.attachments);
+                }
+                if (window.showToast) window.showToast(data.message || 'Attachment uploaded to task!', 'success', 1500);
+                const fileInput = document.getElementById('trello-file-input');
+                if (fileInput) fileInput.value = '';
+                return data;
+            } else {
+                if (window.showToast) window.showToast(data.error || 'Upload failed', 'error');
+            }
+        })
+        .catch(err => {
+            console.error('Error uploading attachment:', err);
+            if (window.showToast) window.showToast('Upload failed', 'error');
+        });
+};
 
-    fetch(`/task/${currentTrelloTask.id}/attachment/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            currentTrelloTask.attachments = data.attachments;
-            renderTrelloAttachments(data.attachments);
-            if (window.showToast) window.showToast(data.message || 'Uploaded!', 'success', 1500);
-            const fileInput = document.getElementById('trello-file-input');
-            if (fileInput) fileInput.value = '';
-        } else {
-            if (window.showToast) window.showToast(data.error || 'Upload failed', 'error');
-        }
-    })
-    .catch(err => {
-        console.error('Error uploading attachment:', err);
-        if (window.showToast) window.showToast('Upload failed', 'error');
-    });
+window.uploadTrelloFiles = function(files) {
+    if (!files || files.length === 0 || !currentTrelloTask) return;
+    return window.uploadTaskCardAttachment(currentTrelloTask.id, files);
 };
 
 window.uploadTrelloPastedImage = function(imageData, filename = 'pasted_image.png') {
     if (!imageData || !currentTrelloTask) return;
-    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-
-    if (window.showToast) window.showToast('Uploading pasted image...', 'info', 1000);
-
-    fetch(`/task/${currentTrelloTask.id}/attachment/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ image_data: imageData, filename: filename })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            currentTrelloTask.attachments = data.attachments;
-            renderTrelloAttachments(data.attachments);
-            if (window.showToast) window.showToast('Image uploaded to attachments!', 'success', 1500);
-        } else {
-            if (window.showToast) window.showToast(data.error || 'Upload failed', 'error');
-        }
-    })
-    .catch(err => {
-        console.error('Error uploading pasted image:', err);
-        if (window.showToast) window.showToast('Upload failed', 'error');
-    });
+    return window.uploadTaskCardAttachment(currentTrelloTask.id, imageData, true, filename);
 };
 
 window.deleteTrelloAttachment = function(attachmentId) {
     if (!attachmentId || !currentTrelloTask) return;
-    const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value || document.querySelector('meta[name="csrf-token"]')?.content;
 
     fetch(`/task/attachment/${attachmentId}/delete/`, {
         method: 'POST',
@@ -1525,24 +1648,28 @@ window.renderTrelloAttachments = function(attachments = []) {
 };
 
 function handlePasteAttachment(e) {
-    if (!e.clipboardData || !currentTrelloTask) return;
+    if (!e.clipboardData) return;
     const items = e.clipboardData.items;
     if (!items) return;
+
+    const modal = document.getElementById('trello-task-modal') || document.getElementById('trello-modal');
+    const isModalOpen = modal && modal.style.display !== 'none' && currentTrelloTask;
+    const targetTaskId = isModalOpen ? currentTrelloTask.id : window.lastHoveredTaskCardId;
 
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.kind === 'file') {
             const file = item.getAsFile();
-            if (file) {
+            if (file && targetTaskId) {
                 e.preventDefault();
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
                     reader.onload = function(evt) {
-                        window.uploadTrelloPastedImage(evt.target.result, file.name || `pasted_image_${Date.now()}.png`);
+                        window.uploadTaskCardAttachment(targetTaskId, evt.target.result, true, file.name || `pasted_image_${Date.now()}.png`);
                     };
                     reader.readAsDataURL(file);
                 } else {
-                    window.uploadTrelloFiles([file]);
+                    window.uploadTaskCardAttachment(targetTaskId, [file], false, file.name);
                 }
                 return;
             }
@@ -1550,11 +1677,131 @@ function handlePasteAttachment(e) {
     }
 }
 
+/**
+ * Global paste handler for Kanban and Task Cards.
+ * Intercepts paste events:
+ * - Files/images → uploaded as attachment to currently opened task or hovered card
+ * - Plain text when task modal is open and no input is focused → inserted into description field
+ */
+function setupGlobalPasteHandler() {
+    document.addEventListener('paste', function(e) {
+        const modal = document.getElementById('trello-task-modal') || document.getElementById('trello-modal');
+        const isModalOpen = modal && modal.style.display !== 'none' && currentTrelloTask;
+        const targetTaskId = isModalOpen ? currentTrelloTask.id : window.lastHoveredTaskCardId;
+
+        const items = e.clipboardData?.items;
+        if (!items || items.length === 0) return;
+
+        // Check if we have a file/image in clipboard
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].kind === 'file') {
+                const file = items[i].getAsFile();
+                if (!file) continue;
+                e.preventDefault();
+
+                if (!targetTaskId) {
+                    if (window.showToast) window.showToast('Please open or click a task card first to paste attachments into it', 'info', 2500);
+                    return;
+                }
+
+                if (file.type.startsWith('image/')) {
+                    if (window.showToast) window.showToast('📋 Pasting image as attachment…', 'info', 1200);
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        window.uploadTaskCardAttachment(targetTaskId, evt.target.result, true, file.name || `pasted_${Date.now()}.png`);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    if (window.showToast) window.showToast('📎 Pasting file as attachment…', 'info', 1200);
+                    window.uploadTaskCardAttachment(targetTaskId, [file], false, file.name);
+                }
+                return;
+            }
+        }
+
+        // If text and modal is open, paste into description if no input is focused
+        if (isModalOpen) {
+            const activeEl = document.activeElement;
+            const isInInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+            if (!isInInput) {
+                const text = e.clipboardData.getData('text/plain');
+                if (text && text.trim()) {
+                    const descInput = document.getElementById('trello-description-input');
+                    if (descInput) {
+                        e.preventDefault();
+                        const start = descInput.selectionStart || 0;
+                        const end = descInput.selectionEnd || 0;
+                        const val = descInput.value;
+                        descInput.value = val.slice(0, start) + text + val.slice(end);
+                        descInput.selectionStart = descInput.selectionEnd = start + text.length;
+                        descInput.focus();
+                        if (window.showToast) window.showToast('Text pasted into description', 'info', 1000);
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Sets up drag-and-drop file upload zones directly on all Kanban cards.
+ */
+function setupKanbanCardDropZones() {
+    document.addEventListener('dragover', function(e) {
+        const card = e.target.closest('.kanban-card, [data-task-id]');
+        if (card && e.dataTransfer && e.dataTransfer.types && (e.dataTransfer.types.includes('Files') || e.dataTransfer.types.includes('application/x-moz-file'))) {
+            e.preventDefault();
+            card.style.outline = '2px dashed #3b82f6';
+            card.style.outlineOffset = '2px';
+        }
+    });
+
+    document.addEventListener('dragleave', function(e) {
+        const card = e.target.closest('.kanban-card, [data-task-id]');
+        if (card) {
+            card.style.outline = '';
+            card.style.outlineOffset = '';
+        }
+    });
+
+    document.addEventListener('drop', function(e) {
+        const card = e.target.closest('.kanban-card, [data-task-id]');
+        if (card && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            card.style.outline = '';
+            card.style.outlineOffset = '';
+            const taskId = card.dataset.taskId;
+            if (taskId) {
+                window.uploadTaskCardAttachment(taskId, e.dataTransfer.files);
+            }
+        }
+    });
+}
+
+/**
+ * Auto-opens task detail modal if `task` query param is present in URL (e.g. from Global Search)
+ */
+function checkAutoOpenTaskFromUrl() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoTaskId = urlParams.get('task');
+        if (autoTaskId && window.openTrelloModal) {
+            setTimeout(() => {
+                window.openTrelloModal(parseInt(autoTaskId));
+            }, 300);
+        }
+    } catch (e) {}
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const descInput = document.getElementById('trello-description-input');
     const commentInput = document.getElementById('trello-comment-input');
     if (descInput) descInput.addEventListener('paste', handlePasteAttachment);
     if (commentInput) commentInput.addEventListener('paste', handlePasteAttachment);
+    setupGlobalPasteHandler();
+    setupKanbanCardDropZones();
+    checkAutoOpenTaskFromUrl();
 });
 
 window.toggleTrelloExpand = function() {
@@ -2671,7 +2918,65 @@ window.toggleNotificationDropdown = function(e) {
     if (!dropdown) return;
     const isShowing = dropdown.style.display === 'flex' || dropdown.style.display === 'block';
     dropdown.style.display = isShowing ? 'none' : 'flex';
+
+    if (!isShowing) {
+        fetch('/api/notifications/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.notifications) {
+                renderNotificationsList(data.notifications, data.unread_count);
+            }
+        })
+        .catch(() => {});
+    }
 };
+
+function renderNotificationsList(notifications, unreadCount) {
+    const badge = document.getElementById('notification-badge');
+    if (badge) {
+        badge.textContent = unreadCount || '0';
+        badge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+    }
+    const list = document.getElementById('notification-list');
+    if (!list) return;
+
+    if (!notifications || notifications.length === 0) {
+        list.innerHTML = `
+            <div class="notification-empty" style="padding: 24px 16px; text-align: center; color: #71717a; font-size: 0.85rem;">
+                <i class="fas fa-bell-slash" style="font-size: 1.5rem; color: #52525b; margin-bottom: 8px; display: block;"></i>
+                No notifications yet
+            </div>
+        `;
+        return;
+    }
+
+    const iconMap = {
+        'task_assigned': 'user-check',
+        'task_comment': 'comment',
+        'task_due_soon': 'clock',
+        'task_completed': 'check-circle',
+        'project_shared': 'users',
+        'welcome': 'bell'
+    };
+
+    list.innerHTML = notifications.map(n => {
+        const icon = iconMap[n.event_type] || 'bell';
+        return `
+            <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="handleNotificationClick(${n.id}, '${escapeHtml(n.action_url || '')}')">
+                <div class="notification-item-icon">
+                    <i class="fas fa-${icon}"></i>
+                </div>
+                <div class="notification-item-body">
+                    <div class="notification-item-title">${escapeHtml(n.title)}</div>
+                    <div class="notification-item-msg">${escapeHtml(n.message)}</div>
+                    <div class="notification-item-time">${escapeHtml(n.time_ago || n.created_at)}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
 
 window.markAllNotificationsRead = function(e) {
     if (e) e.stopPropagation();

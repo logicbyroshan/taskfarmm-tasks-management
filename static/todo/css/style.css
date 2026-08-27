@@ -55,11 +55,11 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
     position: relative;
     display: flex;
     align-items: center;
-    background: #000000;
+    background: #09090b !important;
     border-radius: var(--radius-md);
     padding: 0 12px;
     border: 1px solid var(--border-color);
-    width: 300px;
+    width: 320px;
     height: 38px;
     box-sizing: border-box;
     transition: var(--transition);
@@ -68,21 +68,38 @@ TASKFLIXX MAIN COMPONENT & LAYOUT STYLES
 .navbar-right .search-bar:focus-within {
     border-color: var(--accent-color);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    background: #000000 !important;
 }
 
-.navbar-right .search-bar input {
-    background: none;
-    border: none;
-    color: var(--text-color);
+.navbar-right .search-bar input,
+#search-input {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    color: #ffffff !important;
     padding: 0 8px 0 0;
     width: 100%;
-    outline: none;
+    outline: none !important;
     font-size: 0.85rem;
     font-family: inherit;
     height: 100%;
+    box-shadow: none !important;
 }
 
-.navbar-right .search-bar input::placeholder {
+.navbar-right .search-bar input:-webkit-autofill,
+.navbar-right .search-bar input:-webkit-autofill:hover, 
+.navbar-right .search-bar input:-webkit-autofill:focus,
+#search-input:-webkit-autofill,
+#search-input:-webkit-autofill:hover,
+#search-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-box-shadow: 0 0 0px 1000px #09090b inset !important;
+    box-shadow: 0 0 0px 1000px #09090b inset !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+.navbar-right .search-bar input::placeholder,
+#search-input::placeholder {
     color: var(--text-muted);
 }
 
@@ -387,7 +404,7 @@ html.sidebar-collapsed-mode .sidebar .sidebar-divider {
     border: none;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
@@ -3205,3 +3222,56 @@ select.form-control {
     color: #71717a;
     font-size: 0.8rem;
 }
+
+/* ── Project Creation & Edit Modal Enlargement ───────────────────────────── */
+#category-modal .modal-content,
+#edit-category-modal .modal-content {
+    max-width: 780px !important;
+    width: 94% !important;
+    border-radius: 16px !important;
+    background: #09090b !important;
+    border: 1px solid #27272a !important;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.95) !important;
+}
+
+#add-color-swatches,
+#edit-color-swatches {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+/* ── Color Swatch Square Buttons (100% Perfect Squares) ──────────────────── */
+#add-color-swatches .color-swatch-btn,
+#edit-color-swatches .color-swatch-btn,
+.color-swatch-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 36px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 6px !important;
+    border: 2px solid transparent !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    transition: transform 0.12s ease, border-color 0.12s ease !important;
+}
+
+#add-color-swatches .color-swatch-btn:hover,
+#edit-color-swatches .color-swatch-btn:hover,
+.color-swatch-btn:hover {
+    transform: scale(1.08) !important;
+}
+
+#add-color-swatches .color-swatch-btn.active,
+#edit-color-swatches .color-swatch-btn.active,
+.color-swatch-btn.active {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.8) !important;
+    transform: scale(1.06) !important;
+}
+

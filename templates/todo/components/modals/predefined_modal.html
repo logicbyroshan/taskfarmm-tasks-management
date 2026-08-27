@@ -31,7 +31,7 @@
                 </label>
                 <select id="predefined-project-select" class="form-control" style="background: #000000; border: 1px solid #27272a;">
                     <option value="">No Project (General)</option>
-                    {% for p in projects %}
+                    {% for p in categories %}
                     <option value="{{ p.id }}">{{ p.name }}</option>
                     {% endfor %}
                 </select>

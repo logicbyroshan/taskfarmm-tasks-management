@@ -7,15 +7,19 @@
 <style>
 .projects-grid-dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
     margin-top: 12px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 .dash-project-card {
     background: #09090b;
     border: 1px solid #27272a;
     border-radius: 12px;
-    padding: 16px;
+    padding: 16px 16px 16px 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -24,11 +28,12 @@
     color: inherit;
     position: relative;
     overflow: hidden;
+    min-height: 160px;
 }
 .dash-project-card:hover {
     transform: translateY(-2px);
-    border-color: #3b82f6;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    border-color: var(--project-accent, #3b82f6);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--project-accent, rgba(59,130,246,.3));
 }
 .dash-project-card::before {
     content: '';
@@ -120,76 +125,7 @@
             
             <div class="projects-grid-dashboard">
                 {% for project in recent_projects %}
-                <div class="dash-project-card" style="--project-accent: {{ project.color }};">
-                    <div>
-                        <!-- Project Header -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="width: 10px; height: 10px; border-radius: 50%; background: {{ project.color }}; flex-shrink: 0;"></span>
-                                <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #ffffff;">{{ project.name }}</h3>
-                            </div>
-                            <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background: #18181b; border: 1px solid #27272a; color: #a1a1aa; text-transform: capitalize;">
-                                {{ project.board_template }}
-                            </span>
-                        </div>
-
-                        <!-- Description -->
-                        {% if project.description %}
-                        <p style="margin: 0 0 12px 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            {{ project.description }}
-                        </p>
-                        {% endif %}
-
-                        <!-- Progress Bar -->
-                        <div style="margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px;">
-                                <span>Progress</span>
-                                <strong style="color: {{ project.color }};">{{ project.progress }}%</strong>
-                            </div>
-                            <div style="height: 6px; background: #18181b; border-radius: 3px; overflow: hidden; border: 1px solid #27272a;">
-                                <div style="height: 100%; width: {{ project.progress }}%; background: {{ project.color }}; border-radius: 3px; transition: width 0.3s ease;"></div>
-                            </div>
-                        </div>
-
-                        <!-- Task Breakdown Badges -->
-                        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.72rem;">
-                            <span style="background: rgba(139, 92, 246, 0.15); color: #c4b5fd; padding: 2px 6px; border-radius: 4px;">
-                                Backlog: {{ project.backlog_count }}
-                            </span>
-                            <span style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; padding: 2px 6px; border-radius: 4px;">
-                                In Progress: {{ project.in_progress_count }}
-                            </span>
-                            <span style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 2px 6px; border-radius: 4px;">
-                                Done: {{ project.completed_count }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Card Actions & Member Avatars -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #1f2328; margin-top: 8px;">
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            {% for m in project.member_list|slice:":3" %}
-                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #27272a; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; color: #ffffff;" title="{{ m.name }}">
-                                {{ m.initials }}
-                            </div>
-                            {% empty %}
-                            <span style="font-size: 0.72rem; color: #52525b;">Owner only</span>
-                            {% endfor %}
-                            {% if project.member_list|length > 3 %}
-                            <span style="font-size: 0.7rem; color: #71717a;">+{{ project.member_list|length|add:"-3" }}</span>
-                            {% endif %}
-                        </div>
-
-                        <div style="display: flex; gap: 6px;">
-                            <button type="button" onclick="openShareProjectModal({{ project.id }})" class="icon-btn" title="Invite / Share Project" style="padding: 5px 9px; font-size: 0.75rem; background: #18181b; border: 1px solid #27272a; color: #a1a1aa; border-radius: 6px; cursor: pointer;">
-                                <i class="fas fa-user-plus"></i>
-                            </button>
-                            <a href="{% url 'manage_kanban' %}?project={{ project.id }}" style="padding: 5px 12px; font-size: 0.78rem; background: #2563eb; color: #ffffff; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                                <span>Kanban</span> <i class="fas fa-arrow-right" style="font-size: 0.7rem;"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                {% include 'todo/components/project_card.html' with category=project %}
                 {% empty %}
                 <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: #09090b; border: 1px dashed #27272a; border-radius: 12px;">
                     <i class="fas fa-folder-open" style="font-size: 2rem; color: #52525b; margin-bottom: 10px; display: block;"></i>
@@ -286,7 +222,7 @@
                     <div class="project-progress-row">
                         <div class="project-progress-label">
                             <span style="display:flex;align-items:center;gap:6px;">
-                                <span style="width:8px;height:8px;border-radius:50%;background:{{ p.color }};display:inline-block;flex-shrink:0;"></span>
+                                <span style="width:8px;height:8px;border-radius:2px;background:{{ p.color }};display:inline-block;flex-shrink:0;"></span>
                                 {{ p.name }}
                             </span>
                             <span style="color:var(--text-muted);">{{ p.completed_count }}/{{ p.task_count }} &nbsp;<strong style="color:{{ p.color }};">{{ p.progress }}%</strong></span>

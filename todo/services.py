@@ -377,7 +377,26 @@ class TaskService:
             assignee_ids = data['assignees']
             if isinstance(assignee_ids, list):
                 from django.contrib.auth.models import User as AuthUser
-                task.assignees.set(AuthUser.objects.filter(id__in=assignee_ids))
+                old_assignee_ids = set(task.assignees.values_list('id', flat=True))
+                new_users = list(AuthUser.objects.filter(id__in=assignee_ids))
+                task.assignees.set(new_users)
+                for nu in new_users:
+                    if nu.id not in old_assignee_ids and nu.id != user.id:
+                        try:
+                            NotificationService.queue_notification(
+                                user=nu,
+                                event_type=Notification.EventType.TASK_ASSIGNED,
+                                title=f"Assigned to task: {task.title}",
+                                message=f"{user.get_full_name() or user.username} assigned you to task '{task.title}'",
+                                action_url=f"/kanban/?project={task.category_id}&task={task.id}" if task.category_id else f"/kanban/?task={task.id}",
+                                context={
+                                    'task_title': task.title,
+                                    'assigner_name': user.get_full_name() or user.username,
+                                    'project_name': task.category.name if task.category else 'General Tasks',
+                                }
+                            )
+                        except Exception as e:
+                            logger.warning('Failed to queue assignment notification: %s', e)
 
         task.save()
         logger.info('Task updated: id=%d user=%s fields=%s', task.id, user.username, list(data.keys()))
@@ -473,7 +492,8 @@ class CategoryService:
     @staticmethod
     def get_with_stats(user):
         """
-        Returns all categories owned by or shared with a user annotated with task counts
+        Returns all categories owned by or shared with a user annotated with task counts,
+        status breakdowns (backlog, in-progress, completed, todo), member lists,
         and a computed progress percentage.
         """
         categories = list(
@@ -482,9 +502,12 @@ class CategoryService:
             .distinct()
             .annotate(
                 task_count=Count('tasks', distinct=True),
-                completed_count=Count('tasks', filter=Q(tasks__status='completed'), distinct=True)
+                completed_count=Count('tasks', filter=Q(tasks__status='completed'), distinct=True),
+                in_progress_count=Count('tasks', filter=Q(tasks__status='in-progress'), distinct=True),
+                todo_count=Count('tasks', filter=Q(tasks__status='not-started'), distinct=True),
+                backlog_count=Count('tasks', filter=Q(tasks__status='backlog'), distinct=True),
             )
-            .prefetch_related('members')
+            .prefetch_related('members', 'user')
         )
         for cat in categories:
             cat.progress = (
@@ -493,6 +516,25 @@ class CategoryService:
             )
             cat.is_owner = (cat.user_id == user.id)
             cat.ensure_share_token()
+            members = []
+            if cat.user:
+                members.append({
+                    'id': cat.user.id,
+                    'name': cat.user.get_full_name() or cat.user.username,
+                    'username': cat.user.username,
+                    'initials': cat.user.username[:2].upper(),
+                    'is_owner': True,
+                })
+            for m in cat.members.all():
+                if cat.user_id != m.id:
+                    members.append({
+                        'id': m.id,
+                        'name': m.get_full_name() or m.username,
+                        'username': m.username,
+                        'initials': m.username[:2].upper(),
+                        'is_owner': False,
+                    })
+            cat.member_list = members
         return categories
 
     @staticmethod

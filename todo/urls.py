@@ -74,6 +74,7 @@ urlpatterns = [
     path('api/ai/create-task/', views.ai_create_task, name='ai_create_task'),
     path('api/ai/create-project/', views.ai_create_project, name='ai_create_project'),
     path('api/autocorrect/', views.api_autocorrect, name='api_autocorrect'),
+    path('api/search/', views.api_global_search, name='api_global_search'),
 
     # Sub-User Team Management APIs (Max 99 subusers per account)
     path('api/subusers/', views.api_subusers_list, name='api_subusers_list'),

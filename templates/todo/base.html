@@ -55,8 +55,8 @@
     </noscript>
 
     <!-- CSS Links -->
-    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=110">
-    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=110">
+    <link rel="stylesheet" href="{% static 'todo/css/base.css' %}?v=140">
+    <link rel="stylesheet" href="{% static 'todo/css/style.css' %}?v=140">
     
     <!-- HTMX & Alpine.js (Deferred for zero render-blocking) -->
     <script defer src="https://unpkg.com/htmx.org@1.9.12"></script>
@@ -82,15 +82,17 @@
                 </button>
             </div>
             <div class="navbar-right">
-                <div class="search-bar" role="search">
-                    <label for="search-input" class="sr-only">Search tasks</label>
-                    <input type="text" id="search-input" placeholder="Search tasks or projects..." aria-label="Search tasks">
-                    <i class="fas fa-search" aria-hidden="true"></i>
+                <div class="search-bar" role="search" style="position: relative;">
+                    <label for="search-input" class="sr-only">Search tasks and projects</label>
+                    <input type="search" id="search-input" name="task_search_query" placeholder="Search tasks or projects..." aria-label="Search tasks and projects" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <i class="fas fa-search" aria-hidden="true" id="search-icon"></i>
+                    <!-- Global Search Results Dropdown -->
+                    <div id="global-search-dropdown" style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; background:#09090b; border:1px solid #27272a; border-radius:10px; z-index:999999; box-shadow:0 16px 40px rgba(0,0,0,.9); overflow:hidden; min-width:380px;">
+                        <div id="search-results-list" style="max-height:360px; overflow-y:auto;"></div>
+                        <div id="search-empty" style="display:none; padding:20px; text-align:center; color:#71717a; font-size:0.82rem;"><i class="fas fa-search" style="margin-right:6px;"></i>No results found</div>
+                        <div id="search-loading" style="display:none; padding:14px; text-align:center; color:#71717a; font-size:0.82rem;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>
+                    </div>
                 </div>
-                <a href="{% url 'manage_projects' %}" class="navbar-new-project-btn" onclick="if(document.getElementById('category-modal')){ event.preventDefault(); openAddProjectModal(); }" title="Manage and create projects">
-                    <i class="fas fa-folder-plus" aria-hidden="true"></i>
-                    <span>New Project</span>
-                </a>
 
                 {% if user.is_authenticated %}
                 <!-- Notification Bell Hub -->
@@ -148,17 +150,6 @@
 
             <!-- Main Content Area -->
             <main class="content-area" role="main">
-                {% if messages %}
-                <div class="messages-container">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} auto-dismiss">
-                        <i class="fas fa-{% if 'success' in message.tags %}check-circle{% elif 'error' in message.tags %}exclamation-circle{% else %}info-circle{% endif %}" aria-hidden="true"></i>
-                        {{ message }}
-                        <button class="alert-close" onclick="this.parentElement.remove()" aria-label="Dismiss alert">&times;</button>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
                 {% block content %}
                 {% endblock content %}
             </main>
@@ -174,6 +165,19 @@
     {% include 'todo/components/modals/manage_subuser_modal.html' %}
     {% endif %}
     {% include 'todo/components/toast_container.html' %}
+
+    {# Django framework messages shown as toasts — must be AFTER showToast is defined in script.js #}
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for message in messages %}
+            if (window.showToast) {
+                window.showToast('{{ message|escapejs }}', '{% if "error" in message.tags %}error{% elif "warning" in message.tags %}info{% else %}success{% endif %}', 4500);
+            }
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
 
     <!-- TaskFlixx AI Side Drawer -->
     <div id="ai-drawer-overlay" class="ai-drawer-overlay" onclick="closeAiDrawer()"></div>
@@ -262,7 +266,7 @@
         </div>
     </aside>
 
-    <script defer src="{% static 'todo/js/script.js' %}?v=115"></script>
+    <script defer src="{% static 'todo/js/script.js' %}?v=140"></script>
     {% block scripts %}{% endblock scripts %}
 </body>
 </html>

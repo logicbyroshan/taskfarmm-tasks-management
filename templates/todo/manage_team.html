@@ -5,142 +5,579 @@
 
 {% block styles %}
 <style>
-.team-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px;
-    margin-top: 18px;
+/* ── Team Page Styles ────────────────────────────────────────────── */
+.team-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
 }
-.subuser-card {
+
+/* Standard Quota Badge */
+.quota-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 9px;
+    padding: 8px 14px;
+}
+.quota-bar-track {
+    width: 80px;
+    height: 6px;
+    border-radius: 99px;
+    background: #1e1e24;
+    overflow: hidden;
+    border: 1px solid #27272a;
+}
+.quota-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    transition: width 0.4s ease;
+}
+.quota-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #a1a1aa;
+    white-space: nowrap;
+}
+.quota-count {
+    color: #60a5fa;
+    font-weight: 800;
+}
+
+/* Team Table Container */
+.team-table-card {
     background: #09090b;
     border: 1px solid #27272a;
     border-radius: 12px;
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.15s ease, border-color 0.15s ease;
-    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
 }
-.subuser-card:hover {
-    transform: translateY(-2px);
-    border-color: #3b82f6;
+
+.team-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    text-align: left;
 }
-.subuser-role-badge {
-    padding: 3px 8px;
-    border-radius: 6px;
+
+.team-table thead th {
+    background: #111215;
+    color: #71717a;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #27272a;
+    white-space: nowrap;
+}
+
+.team-table tbody tr {
+    border-bottom: 1px solid #1a1c21;
+    transition: background 0.12s ease;
+}
+
+.team-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.team-table tbody tr:hover {
+    background: #0e1014;
+}
+
+.team-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+/* User Avatar Square Badge */
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
+    border: 1px solid #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: #ffffff;
+    flex-shrink: 0;
     letter-spacing: 0.5px;
 }
-.role-admin { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-.role-member { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-.role-viewer { background: rgba(161, 161, 170, 0.15); color: #a1a1aa; border: 1px solid rgba(161, 161, 170, 0.3); }
+
+/* Role Badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.role-admin { background: rgba(239,68,68,.12); color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+.role-member { background: rgba(59,130,246,.12); color: #60a5fa; border: 1px solid rgba(59,130,246,.25); }
+.role-viewer { background: rgba(161,161,170,.1); color: #a1a1aa; border: 1px solid rgba(161,161,170,.2); }
+
+/* Status Pill */
+.status-active-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #4ade80;
+    background: rgba(74,222,128,.1);
+    border: 1px solid rgba(74,222,128,.25);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.status-inactive-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #f87171;
+    background: rgba(248,113,113,.1);
+    border: 1px solid rgba(248,113,113,.25);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+/* Square Project Tags */
+.proj-tag-square {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Row Action Buttons */
+.row-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    border: 1px solid #27272a;
+    background: #14161a;
+    color: #a1a1aa;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+.row-action-btn:hover { border-color: #3b82f6; color: #60a5fa; background: #1c212a; }
+.row-action-btn.danger:hover { border-color: rgba(239,68,68,.4); color: #f87171; background: rgba(239,68,68,.1); }
+.row-action-btn.success:hover { border-color: rgba(74,222,128,.4); color: #4ade80; background: rgba(74,222,128,.1); }
+
+/* Password Mask Display */
+.pwd-mask-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.pwd-dots {
+    font-family: monospace;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    color: #71717a;
+}
+
+/* Responsive Table */
+@media(max-width: 900px) {
+    .team-table-card { overflow-x: auto; }
+}
 </style>
 {% endblock styles %}
 
 {% block content %}
-<div class="team-page-container" style="max-width: 1200px; margin: 0 auto; width: 100%;">
-    <!-- Top Header Banner -->
-    <div style="background: linear-gradient(135deg, #101214 0%, #181b20 100%); border: 1px solid #27272a; border-radius: 14px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); display: flex; align-items: center; justify-content: center; color: #60a5fa; font-size: 1.1rem;">
-                    <i class="fas fa-users-cog"></i>
-                </div>
-                <h1 style="margin: 0; font-size: 1.4rem; font-weight: 800; color: #ffffff;">Team & Sub-Users</h1>
-            </div>
-            <p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;">
-                Manage sub-users under your account. Sub-users log in with their assigned username & password.
+<div class="team-wrapper">
+
+    <!-- ── Standard Page Header Bar ──────────────────────────────────────── -->
+    <div class="page-header-bar">
+        <div class="page-header-left">
+            <h2>
+                <i class="fas fa-users-cog" style="color: var(--accent-color);"></i> Team &amp; Sub-Users
+            </h2>
+            <p class="page-header-subtitle">
+                Manage editable credentials, project access, and assigned tasks for up to 99 team accounts
             </p>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <!-- Quota Counter -->
-            <div style="background: #000000; border: 1px solid #27272a; border-radius: 10px; padding: 10px 18px; text-align: right;">
-                <div style="font-size: 0.72rem; color: #a1a1aa; font-weight: 600; text-transform: uppercase;">Team Capacity</div>
-                <div style="font-size: 1.15rem; font-weight: 800; color: #ffffff;">
-                    <span style="color: #60a5fa;">{{ subuser_count }}</span> <span style="font-size: 0.85rem; color: #71717a;">/ {{ max_subusers }}</span>
+        <div class="page-header-right">
+            <!-- Quota Indicator -->
+            <div class="quota-pill" title="Sub-user account quota (99 max)">
+                <div class="quota-bar-track">
+                    <div class="quota-bar-fill" id="quota-fill-bar" style="width: {% if max_subusers > 0 %}{% widthratio subuser_count max_subusers 100 %}{% else %}0{% endif %}%;"></div>
                 </div>
+                <span class="quota-text"><span class="quota-count" id="quota-count-text">{{ subuser_count }}</span> / {{ max_subusers }} Sub-Users</span>
             </div>
 
-            <!-- Add Sub-User Button -->
-            <button type="button" onclick="openSubUserModal()" class="btn-primary" style="padding: 11px 22px; border-radius: 10px; background: #2563eb; border: 1px solid #3b82f6; color: #ffffff; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+            <!-- Create Sub-User Action -->
+            <button type="button" class="invite-btn" onclick="openSubUserModal()" style="display: flex; align-items: center; gap: 7px;">
                 <i class="fas fa-user-plus"></i> Add Sub-User
             </button>
+            <a href="{% url 'manage_kanban' %}" class="icon-btn" title="Kanban Board">
+                <i class="fas fa-columns"></i>
+            </a>
         </div>
     </div>
 
-    <!-- Team Cards Grid -->
-    <div class="team-grid" id="team-cards-grid">
-        {% for u in subusers %}
-        <div class="subuser-card" id="subuser-card-{{ u.id }}">
-            <div>
-                <!-- Card Header -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 42px; height: 42px; border-radius: 10px; background: #18181b; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #ffffff; font-size: 1rem;">
+    <!-- ── Sub-Users Management Table ────────────────────────────────────── -->
+    <div class="team-table-card">
+        {% if subusers %}
+        <table class="team-table" id="team-members-table">
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Assigned Projects</th>
+                    <th>Tasks</th>
+                    <th>Last Active</th>
+                    <th>Joined</th>
+                    <th style="text-align:center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for u in subusers %}
+            <tr id="subuser-card-{{ u.id }}">
+                <!-- 1. Member Profile & Display Name -->
+                <td data-label="Member">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="user-avatar">
                             {{ u.username|slice:":2"|upper }}
                         </div>
                         <div>
-                            <div style="font-size: 0.95rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px;">
-                                <span>{{ u.name }}</span>
-                                {% if not u.is_active %}
-                                <span style="font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #7f1d1d; color: #fca5a5;">Disabled</span>
-                                {% endif %}
+                            <div style="font-weight:700; color:#ffffff; font-size:0.88rem; line-height:1.2;">
+                                {{ u.name }}
                             </div>
-                            <div style="font-size: 0.78rem; color: #60a5fa; font-family: monospace;">@{{ u.username }}</div>
+                            <div style="font-size:0.72rem; color:#71717a;">{{ u.email }}</div>
                         </div>
                     </div>
-                    <span class="subuser-role-badge role-{{ u.role }}">{{ u.role_display }}</span>
-                </div>
+                </td>
 
-                <!-- Assigned Projects -->
-                <div style="margin-bottom: 14px;">
-                    <div style="font-size: 0.72rem; font-weight: 600; color: #71717a; margin-bottom: 6px; text-transform: uppercase;">Assigned Projects</div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <!-- 2. Username -->
+                <td data-label="Username">
+                    <code style="font-size:0.82rem; color:#60a5fa; background:#0e131f; padding:3px 8px; border-radius:5px; border:1px solid #1e293b;">@{{ u.username }}</code>
+                </td>
+
+                <!-- 4. Role -->
+                <td data-label="Role">
+                    <span class="role-badge role-{{ u.role }}">
+                        {% if u.role == 'admin' %}<i class="fas fa-shield-alt" style="font-size:0.65rem;"></i>{% elif u.role == 'viewer' %}<i class="fas fa-eye" style="font-size:0.65rem;"></i>{% else %}<i class="fas fa-user" style="font-size:0.65rem;"></i>{% endif %}
+                        {{ u.role }}
+                    </span>
+                </td>
+
+                <!-- 5. Status Toggle -->
+                <td data-label="Status" id="status-cell-{{ u.id }}">
+                    {% if u.is_active %}
+                    <span class="status-active-pill"><i class="fas fa-circle" style="font-size:.45rem;"></i> Active</span>
+                    {% else %}
+                    <span class="status-inactive-pill"><i class="fas fa-circle" style="font-size:.45rem;"></i> Inactive</span>
+                    {% endif %}
+                </td>
+
+                <!-- 6. Assigned Projects (Square color badges) -->
+                <td data-label="Assigned Projects" style="max-width:220px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:5px;">
                         {% for p in u.assigned_projects %}
-                        <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; background: {{ p.color }}18; color: {{ p.color }}; border: 1px solid {{ p.color }}40;">
-                            <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ p.color }};"></span>
-                            {{ p.name }}
+                        <span class="proj-tag-square" style="background:{{ p.color }}18; color:{{ p.color }}; border:1px solid {{ p.color }}40;">
+                            <span style="width:6px; height:6px; border-radius:2px; background:{{ p.color }}; flex-shrink:0;"></span>
+                            {{ p.name|truncatechars:14 }}
                         </span>
                         {% empty %}
-                        <span style="font-size: 0.75rem; color: #52525b; font-style: italic;">No projects assigned yet</span>
+                        <span style="color:#52525b; font-size:0.75rem; font-style:italic;">No projects assigned</span>
                         {% endfor %}
                     </div>
-                </div>
-            </div>
+                </td>
 
-            <!-- Card Footer -->
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #1f2328; margin-top: 8px;">
-                <div style="font-size: 0.72rem; color: #71717a;">
-                    <i class="fas fa-clock" style="margin-right: 3px;"></i> Active {{ u.last_login }}
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" onclick='openEditSubUserModal({{ u|safe }})' class="icon-btn" title="Edit sub-user & reset password" style="background: #18181b; border: 1px solid #27272a; color: #d4d4d8; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button type="button" onclick="deleteSubUser({{ u.id }}, '{{ u.username }}')" class="icon-btn" title="Delete sub-user" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #09090b; border: 1px dashed #27272a; border-radius: 14px;">
-            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #60a5fa; font-size: 1.5rem;">
+                <!-- 7. Tasks Assigned -->
+                <td data-label="Tasks">
+                    <span style="font-weight:700; color:{% if u.assigned_tasks_count > 0 %}#a78bfa{% else %}#71717a{% endif %}; font-size:0.88rem; background:rgba(167,139,250,.1); border:1px solid rgba(167,139,250,.25); padding:2px 8px; border-radius:5px;">
+                        {{ u.assigned_tasks_count }} task{{ u.assigned_tasks_count|pluralize }}
+                    </span>
+                </td>
+
+                <!-- 8. Last Active -->
+                <td data-label="Last Active">
+                    <div style="font-size:0.78rem; color:#a1a1aa;">
+                        {% if u.last_login != 'Never' %}
+                        <i class="fas fa-clock" style="color:#71717a; margin-right:3px; font-size:0.7rem;"></i>{{ u.last_login }}
+                        {% else %}
+                        <span style="color:#52525b; font-style:italic;">Never</span>
+                        {% endif %}
+                    </div>
+                </td>
+
+                <!-- 9. Joined Date -->
+                <td data-label="Joined">
+                    <span style="font-size:0.78rem; color:#71717a;">{{ u.date_joined }}</span>
+                </td>
+
+                <!-- 10. Actions (Edit, Change Pwd, Toggle Active, Delete) -->
+                <td data-label="Actions" style="text-align:center;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <!-- Edit Details -->
+                        <button type="button" 
+                                class="row-action-btn"
+                                data-subuser-id="{{ u.id }}"
+                                data-subuser-username="{{ u.username|escapejs }}"
+                                data-subuser-name="{{ u.name|escapejs }}"
+                                data-subuser-role="{{ u.role|escapejs }}"
+                                data-subuser-active="{{ u.is_active|yesno:'true,false' }}"
+                                data-subuser-projects='{{ u.assigned_project_ids|safe }}'
+                                onclick="openEditSubUserFromBtn(this)"
+                                title="Edit Sub-User Details">
+                            <i class="fas fa-edit"></i>
+                        </button>
+
+                        <!-- Change Password -->
+                        <button type="button" 
+                                class="row-action-btn"
+                                onclick="openChangePasswordModal({{ u.id }}, '{{ u.username|escapejs }}')"
+                                title="Change Password">
+                            <i class="fas fa-key"></i>
+                        </button>
+
+                        <!-- Toggle Active / Inactive -->
+                        <button type="button" 
+                                id="toggle-active-btn-{{ u.id }}"
+                                class="row-action-btn {% if u.is_active %}danger{% else %}success{% endif %}"
+                                onclick="toggleSubUserActive({{ u.id }}, {{ u.is_active|yesno:'true,false' }}, '{{ u.username|escapejs }}')"
+                                title="{% if u.is_active %}Deactivate sub-user account{% else %}Activate sub-user account{% endif %}">
+                            <i class="fas fa-{% if u.is_active %}ban{% else %}check{% endif %}"></i>
+                        </button>
+
+                        <!-- Delete Sub-User -->
+                        <button type="button" 
+                                class="row-action-btn danger"
+                                onclick="deleteSubUser({{ u.id }}, '{{ u.username|escapejs }}')"
+                                title="Delete sub-user account permanently">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <!-- Empty State -->
+        <div style="text-align: center; padding: 64px 24px; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+            <div style="width: 64px; height: 64px; border-radius: 12px; background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.25); display: flex; align-items: center; justify-content: center; color: #60a5fa; font-size: 1.75rem;">
                 <i class="fas fa-user-plus"></i>
             </div>
-            <h3 style="margin: 0 0 6px 0; font-size: 1.1rem; color: #ffffff;">No Sub-Users Created Yet</h3>
-            <p style="margin: 0 auto 20px; font-size: 0.85rem; color: #a1a1aa; max-width: 420px;">
-                You can create up to 99 team sub-user accounts. Sub-users get their own username & password and can access the projects you assign to them.
+            <h3 style="margin: 0; font-size: 1.15rem; color: #ffffff; font-weight: 700;">No Sub-Users Created Yet</h3>
+            <p style="margin: 0; font-size: 0.85rem; color: #a1a1aa; max-width: 440px; line-height: 1.5;">
+                Create up to 99 sub-user accounts. Sub-users get their own username &amp; password and can collaborate on the projects you assign them.
             </p>
-            <button type="button" onclick="openSubUserModal()" class="btn-primary" style="padding: 10px 22px; border-radius: 8px; background: #2563eb; border: 1px solid #3b82f6; color: #ffffff; font-weight: 700; font-size: 0.88rem; cursor: pointer;">
+            <button type="button" onclick="openSubUserModal()" class="invite-btn" style="padding: 10px 22px; font-size: 0.88rem; display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-plus"></i> Create First Sub-User
             </button>
         </div>
-        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- ── Quick Change Password Modal ────────────────────────────────────── -->
+<div id="change-pwd-modal" style="display:none; position:fixed; inset:0; z-index:11000; align-items:center; justify-content:center; background:rgba(0,0,0,.8); backdrop-filter:blur(6px);">
+    <div style="background:#09090b; border:1px solid #27272a; border-radius:14px; padding:28px; width:100%; max-width:400px; position:relative; box-shadow:0 24px 60px rgba(0,0,0,.95);">
+        <button onclick="document.getElementById('change-pwd-modal').style.display='none'" style="position:absolute; top:14px; right:14px; background:transparent; border:none; color:#71717a; font-size:1.2rem; cursor:pointer;" aria-label="Close">&#x2715;</button>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:36px; height:36px; border-radius:8px; background:rgba(59,130,246,.15); border:1px solid rgba(59,130,246,.3); display:flex; align-items:center; justify-content:center; color:#60a5fa; font-size:1rem;">
+                <i class="fas fa-key"></i>
+            </div>
+            <div>
+                <h3 style="margin:0; font-size:1.05rem; color:#fff; font-weight:700;">Change Password</h3>
+                <p id="pwd-modal-subtitle" style="margin:2px 0 0; font-size:0.78rem; color:#71717a;"></p>
+            </div>
+        </div>
+        <input id="new-pwd-subuser-id" type="hidden">
+        <div style="margin: 16px 0;">
+            <label style="display:block; font-size:0.82rem; font-weight:600; color:#e4e4e7; margin-bottom:6px;">New Password *</label>
+            <input id="new-pwd-input" type="password" placeholder="Enter new password (min 4 chars)"
+                style="width:100%; padding:10px 14px; background:#121316; border:1px solid #27272a; border-radius:8px; color:#fff; font-size:0.9rem; box-sizing:border-box; outline:none;"
+                onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#27272a'">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button type="button" onclick="document.getElementById('change-pwd-modal').style.display='none'"
+                style="padding:8px 16px; border-radius:8px; background:#18181b; border:1px solid #27272a; color:#a1a1aa; font-weight:600; font-size:0.82rem; cursor:pointer;">
+                Cancel
+            </button>
+            <button type="button" onclick="submitNewPassword()"
+                style="padding:8px 18px; border-radius:8px; background:#2563eb; border:1px solid #3b82f6; color:#fff; font-weight:700; font-size:0.82rem; cursor:pointer;">
+                Update Password
+            </button>
+        </div>
     </div>
 </div>
 {% endblock content %}
+
+{% block scripts %}
+<script>
+    // Bridge helper: Opens Edit Sub-User Modal safely from button dataset
+    function openEditSubUserFromBtn(btn) {
+        if (!btn || !window.openEditSubUserModal) return;
+        try {
+            const projects = JSON.parse(btn.dataset.subuserProjects || '[]');
+            window.openEditSubUserModal({
+                id: parseInt(btn.dataset.subuserId),
+                username: btn.dataset.subuserUsername,
+                name: btn.dataset.subuserName,
+                role: btn.dataset.subuserRole,
+                is_active: btn.dataset.subuserActive === 'true',
+                assigned_project_ids: projects
+            });
+        } catch (e) {
+            console.error('Error opening edit subuser modal:', e);
+        }
+    }
+
+    // Quick Change Password Modal
+    function openChangePasswordModal(subuserId, username) {
+        const modal = document.getElementById('change-pwd-modal');
+        const idInput = document.getElementById('new-pwd-subuser-id');
+        const pwdInput = document.getElementById('new-pwd-input');
+        const sub = document.getElementById('pwd-modal-subtitle');
+        if (!modal) return;
+        if (idInput) idInput.value = subuserId;
+        if (pwdInput) { pwdInput.value = ''; pwdInput.focus(); }
+        if (sub) sub.textContent = 'Updating password for @' + username;
+        modal.style.display = 'flex';
+    }
+
+    function submitNewPassword() {
+        const subuserId = document.getElementById('new-pwd-subuser-id')?.value;
+        const newPwd = document.getElementById('new-pwd-input')?.value;
+        if (!subuserId || !newPwd || newPwd.length < 4) {
+            if (window.showToast) window.showToast('Password must be at least 4 characters.', 'error');
+            return;
+        }
+
+        const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        fetch(`/api/subusers/${subuserId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ password: newPwd })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('change-pwd-modal').style.display = 'none';
+                if (window.showToast) window.showToast('Password updated successfully!', 'success');
+            } else {
+                if (window.showToast) window.showToast(data.error || 'Failed to update password.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (window.showToast) window.showToast('An error occurred.', 'error');
+        });
+    }
+
+    // Toggle Sub-User Active / Inactive Status
+    function toggleSubUserActive(subuserId, currentActive, username) {
+        const nextState = !currentActive;
+        const actionLabel = nextState ? 'activate' : 'deactivate';
+        if (!confirm(`Are you sure you want to ${actionLabel} @${username}?`)) return;
+
+        const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        fetch(`/api/subusers/${subuserId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ is_active: nextState })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const cell = document.getElementById(`status-cell-${subuserId}`);
+                const btn = document.getElementById(`toggle-active-btn-${subuserId}`);
+                if (cell) {
+                    cell.innerHTML = nextState
+                        ? '<span class="status-active-pill"><i class="fas fa-circle" style="font-size:.45rem;"></i> Active</span>'
+                        : '<span class="status-inactive-pill"><i class="fas fa-circle" style="font-size:.45rem;"></i> Inactive</span>';
+                }
+                if (btn) {
+                    btn.className = `row-action-btn ${nextState ? 'danger' : 'success'}`;
+                    btn.title = nextState ? 'Deactivate sub-user account' : 'Activate sub-user account';
+                    btn.innerHTML = `<i class="fas fa-${nextState ? 'ban' : 'check'}"></i>`;
+                    btn.setAttribute('onclick', `toggleSubUserActive(${subuserId}, ${nextState}, '${username}')`);
+                }
+                if (window.showToast) window.showToast(`@${username} is now ${nextState ? 'active' : 'inactive'}.`, 'success');
+            } else {
+                if (window.showToast) window.showToast(data.error || 'Failed to update status.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (window.showToast) window.showToast('An error occurred.', 'error');
+        });
+    }
+
+    // Delete Sub-User with Row Animation
+    function deleteSubUser(subuserId, username) {
+        if (!confirm(`Are you sure you want to permanently delete @${username}? This action cannot be undone.`)) return;
+
+        const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        fetch(`/api/subusers/${subuserId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const row = document.getElementById(`subuser-card-${subuserId}`);
+                if (row) {
+                    row.style.transition = 'opacity .3s ease, transform .3s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(20px)';
+                    setTimeout(() => row.remove(), 320);
+                }
+                // Update quota
+                const quotaCount = document.getElementById('quota-count-text');
+                if (quotaCount) {
+                    const current = parseInt(quotaCount.textContent) || 1;
+                    quotaCount.textContent = Math.max(0, current - 1);
+                }
+                if (window.showToast) window.showToast(data.message || `@${username} deleted.`, 'success');
+            } else {
+                if (window.showToast) window.showToast(data.error || 'Failed to delete sub-user.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (window.showToast) window.showToast('An error occurred.', 'error');
+        });
+    }
+</script>
+{% endblock scripts %}
