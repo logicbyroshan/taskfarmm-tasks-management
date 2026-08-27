@@ -82,7 +82,7 @@
                     Assign Projects (Workspace Access)
                 </label>
                 <div id="subuser-projects-list" style="max-height: 120px; overflow-y: auto; background: #000000; border: 1px solid #27272a; border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px;">
-                    {% for p in categories %}
+                    {% for p in categories|default:projects %}
                     <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #d4d4d8; cursor: pointer; margin: 0; padding: 4px 0;">
                         <input type="checkbox" name="assigned_projects" value="{{ p.id }}" class="subuser-project-cb" style="accent-color: #3b82f6; width: 15px; height: 15px;">
                         <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ p.color }}; flex-shrink: 0;"></span>

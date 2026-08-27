@@ -1302,6 +1302,7 @@ def manage_subusers(request):
         'active_page': 'manage_subusers',
         'subusers': subusers,
         'projects': projects,
+        'categories': projects,
         'subuser_count': subuser_count,
         'max_subusers': SubUserService.MAX_SUBUSERS,
         'remaining_subusers': max(0, SubUserService.MAX_SUBUSERS - subuser_count),
