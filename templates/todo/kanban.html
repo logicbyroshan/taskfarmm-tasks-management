@@ -10,13 +10,14 @@
     overflow: hidden !important;
     height: 100% !important;
     max-height: 100% !important;
-    flex: 1 1 0 !important;
+    flex: 1 1 0% !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 10px !important;
+    gap: 12px !important;
     margin: 0 !important;
     padding: 0 !important;
     min-height: 0 !important;
+    box-sizing: border-box !important;
 }
 
 .kanban-header-bar {
@@ -24,7 +25,7 @@
     backdrop-filter: blur(12px);
     border: 1px solid #282e33;
     border-radius: 10px;
-    padding: 12px 12px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -39,19 +40,21 @@
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    flex: 1 1 0 !important;
+    flex: 1 1 0% !important;
     height: 100% !important;
     max-height: 100% !important;
     min-height: 0 !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    padding-bottom: 0px !important;
+    padding-bottom: 2px !important;
     margin: 0 !important;
     scrollbar-width: thin;
     scrollbar-color: #3b82f6 #121316;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
 }
 
 .kanban-board-scroll-wrapper::-webkit-scrollbar {
@@ -74,40 +77,50 @@
     background: #3b82f6;
 }
 
-/* Dynamic Column Flex Row — stretches 100% width if space available, scrollable if exceeds */
+/* Dynamic Column Flex Row — stretches 100% width and full viewport height */
 .kanban-board-6col {
     display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
     gap: 14px !important;
     width: 100% !important;
     min-width: 100% !important;
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     height: 100% !important;
     max-height: 100% !important;
     min-height: 0 !important;
     padding-right: 0px !important;
     box-sizing: border-box !important;
+    overflow-y: hidden !important;
 }
 
 .kanban-column {
     flex: 1 1 0px !important;
     min-width: 270px !important;
-    background: #101214;
-    border: 1px solid #1f2328;
-    border-radius: 10px;
+    max-width: none !important;
+    background: #09090b !important;
+    border: 1px solid #27272a !important;
+    border-radius: 12px !important;
     display: flex !important;
     flex-direction: column !important;
+    align-self: stretch !important;
     height: 100% !important;
     max-height: 100% !important;
     min-height: 0 !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
 }
 
 .column-header {
     padding: 12px 14px;
-    background: #0d0f11;
-    border-bottom: 1px solid #1a1e22;
+    background: #000000;
+    border-bottom: 1px solid #1f2328;
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
@@ -227,20 +240,29 @@
 .prio-moderate { background: rgba(245, 158, 11, 0.15); color: #facc15; border: 1px solid rgba(245, 158, 11, 0.3); }
 .prio-low { background: rgba(16, 185, 129, 0.15); color: #4ade80; border: 1px solid rgba(16, 185, 129, 0.3); }
 
+.column-footer {
+    padding: 6px 10px !important;
+    border-top: 1px solid #1f2328 !important;
+    background: #000000 !important;
+    flex-shrink: 0 !important;
+}
+
 .kanban-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 14px;
-    border: 1px dashed #282e33;
-    border-radius: 8px;
-    color: #596773;
-    text-align: center;
-    gap: 8px;
-    margin: 4px 0;
-    flex: 1 1 auto;
-    min-height: 140px;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 24px 14px !important;
+    border: 1px dashed #27272a !important;
+    border-radius: 8px !important;
+    color: #52525b !important;
+    text-align: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    min-height: 140px !important;
+    box-sizing: border-box !important;
 }
 </style>
 {% endblock styles %}
