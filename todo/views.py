@@ -95,9 +95,19 @@ def dashboard(request):
     stats = StatsService.get_stats(request.user)
     recent_tasks = TaskService.get_recent_tasks(request.user)
     recently_completed = TaskService.get_recently_completed(request.user)
-    recent_projects = CategoryService.get_recent_projects_for_dashboard(request.user, limit=8)
     category_stats = CategoryService.get_with_stats(request.user)
-    all_projects_progress = CategoryService.get_dashboard_project_progress(request.user)
+    recent_projects = category_stats[:8]
+    all_projects_progress = [
+        {
+            'id': cat.id,
+            'name': cat.name,
+            'color': cat.color,
+            'task_count': cat.task_count,
+            'completed_count': cat.completed_count,
+            'progress': cat.progress,
+        }
+        for cat in sorted(category_stats, key=lambda c: c.name)
+    ]
 
     # Sub-user team management data (owner only)
     is_owner = getattr(profile, 'is_owner', True)
@@ -449,6 +459,9 @@ def task_create(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'POST required.'}, status=405)
 
+    if not SubUserService.can_manage_tasks(request.user):
+        return JsonResponse({'success': False, 'message': 'Permission denied. Viewers cannot create tasks.'}, status=403)
+
     post_data = request.POST
     if request.content_type and 'application/json' in request.content_type:
         try:
@@ -491,6 +504,9 @@ def task_update(request, pk):
         return JsonResponse({'success': False, 'message': 'Ajax GET only.'}, status=400)
 
     if request.method == 'POST':
+        if not SubUserService.can_manage_tasks(request.user):
+            return JsonResponse({'success': False, 'message': 'Permission denied. Viewers cannot update tasks.'}, status=403)
+
         # JSON body from Trello modal live edits
         if request.content_type and 'application/json' in request.content_type:
             try:
@@ -533,6 +549,9 @@ def task_update(request, pk):
 @require_http_methods(['POST'])
 def task_add_comment(request, pk):
     """Adds a new activity comment to a task."""
+    if not SubUserService.can_manage_tasks(request.user):
+        return JsonResponse({'success': False, 'error': 'Permission denied. Viewers cannot post comments.'}, status=403)
+
     task = get_accessible_task(request.user, pk)
     try:
         data = json.loads(request.body)
@@ -608,6 +627,9 @@ def task_comment_delete(request, pk):
 @require_http_methods(['POST'])
 def task_update_checklist(request, pk):
     """Replaces task checklist."""
+    if not SubUserService.can_manage_tasks(request.user):
+        return JsonResponse({'success': False, 'message': 'Permission denied. Viewers cannot modify checklists.'}, status=403)
+
     task = get_accessible_task(request.user, pk)
     try:
         data = json.loads(request.body)
@@ -624,6 +646,9 @@ def task_upload_attachment(request, pk):
     """
     Uploads one or multiple files or pasted image (base64) to a task with strict validation.
     """
+    if not SubUserService.can_manage_tasks(request.user):
+        return JsonResponse({'success': False, 'error': 'Permission denied. Viewers cannot upload attachments.'}, status=403)
+
     task = get_accessible_task(request.user, pk)
     attachments_created = []
 
@@ -734,6 +759,9 @@ def task_delete_attachment(request, pk):
 @require_http_methods(['POST'])
 def task_toggle_status(request, pk):
     """Toggles task status between DONE and TO_DO."""
+    if not SubUserService.can_manage_tasks(request.user):
+        return JsonResponse({'success': False, 'message': 'Permission denied. Viewers cannot modify task status.'}, status=403)
+
     task = get_accessible_task(request.user, pk)
     TaskService.toggle_status(task)
     if request.headers.get('HX-Request'):
@@ -754,6 +782,12 @@ def task_toggle_status(request, pk):
 @login_required
 def task_delete(request, pk):
     """Deletes a task."""
+    if not SubUserService.can_manage_tasks(request.user):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Permission denied. Viewers cannot delete tasks.'}, status=403)
+        messages.error(request, 'Permission denied. Viewers cannot delete tasks.')
+        return redirect('manage_kanban')
+
     task = get_object_or_404(
         Task.objects.filter(Q(user=request.user) | Q(category__user=request.user)).distinct(),
         pk=pk
@@ -777,6 +811,12 @@ def task_delete(request, pk):
 @login_required
 def category_create(request):
     """Creates a new project/category."""
+    if not SubUserService.can_create_projects(request.user):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Permission denied. You do not have permission to create projects.'}, status=403)
+        messages.error(request, 'Permission denied. You do not have permission to create projects.')
+        return redirect('task_categories')
+
     if request.method == 'POST':
         post_data = request.POST
         if request.content_type and 'application/json' in request.content_type:
@@ -1297,6 +1337,13 @@ def api_notification_mark_all_read(request):
     return JsonResponse({'success': True, 'unread_count': 0})
 
 
+@login_required
+def api_notifications_unread_count(request):
+    """Returns unread notification count for current user."""
+    count = NotificationService.get_unread_count(request.user)
+    return JsonResponse({'unread_count': count})
+
+
 # ============================================================
 #  GLOBAL SEARCH API
 # ============================================================
@@ -1364,10 +1411,10 @@ def api_global_search(request):
     # Search projects
     proj_qs = Category.objects.filter(proj_scope).filter(
         Q(name__icontains=q) | Q(description__icontains=q)
-    ).distinct()[:8]
+    ).annotate(task_count=Count('tasks', distinct=True)).distinct()[:8]
 
     for proj in proj_qs:
-        t_count = proj.tasks.count()
+        t_count = getattr(proj, 'task_count', 0)
         results.append({
             'type': 'project',
             'id': proj.id,

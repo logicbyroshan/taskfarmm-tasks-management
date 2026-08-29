@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Task, Category, UserProfile, PreDefinedTask, TaskComment, TaskAttachment
+from .models import Task, Category, UserProfile, PreDefinedTask, TaskComment, TaskAttachment, Notification
 
 
 class TaskCommentInline(admin.TabularInline):
@@ -32,7 +32,9 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'theme', 'default_task_priority']
+    list_display = ['user', 'is_subuser', 'parent_user', 'role', 'can_manage_tasks', 'can_create_projects', 'theme', 'default_task_priority']
+    list_filter = ['is_subuser', 'role', 'theme']
+    search_fields = ['user__username', 'user__email', 'parent_user__username']
 
 
 @admin.register(PreDefinedTask)
@@ -54,3 +56,11 @@ class TaskAttachmentAdmin(admin.ModelAdmin):
     list_display = ['filename', 'task', 'user', 'file_size', 'created_at']
     search_fields = ['filename', 'task__title', 'user__username']
     list_filter = ['created_at']
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['title', 'user', 'event_type', 'status', 'is_read', 'retry_count', 'created_at']
+    list_filter = ['event_type', 'status', 'is_read', 'created_at']
+    search_fields = ['title', 'message', 'user__username', 'email']
+    ordering = ['-created_at']

@@ -33,6 +33,12 @@ class TaskForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super(TaskForm, self).__init__(*args, **kwargs)
+        if 'priority' in self.fields:
+            self.fields['priority'].required = False
+            self.fields['priority'].initial = Task.Priority.MODERATE
+        if 'status' in self.fields:
+            self.fields['status'].required = False
+            self.fields['status'].initial = Task.Status.TO_DO
         if user:
             self.fields['category'].queryset = Category.objects.filter(
                 Q(user=user) | Q(members=user)

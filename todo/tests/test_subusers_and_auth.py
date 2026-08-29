@@ -238,3 +238,114 @@ class ProjectInviteFlowTests(TestCase):
         resp = self.client.get(reverse('project_join', kwargs={'token': token}), follow=True)
         self.assertEqual(resp.status_code, 200)
         self.assertIn(self.member, self.project.members.all())
+
+
+class ViewerRolePermissionTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.owner = User.objects.create_user(username='firm_boss', password='Password123!')
+        self.project = Category.objects.create(user=self.owner, name='Client Alpha', color='#3b82f6')
+        self.task = Task.objects.create(user=self.owner, category=self.project, title='Secret Spec', status=Task.Status.TO_DO)
+        self.viewer = SubUserService.create_subuser(
+            owner=self.owner,
+            username='viewer_bob',
+            password='Password123!',
+            role='viewer',
+            assigned_project_ids=[self.project.id]
+        )
+
+    def test_viewer_cannot_create_task(self):
+        self.client.login(username='viewer_bob', password='Password123!')
+        resp = self.client.post(
+            reverse('task_create'),
+            data={'title': 'Viewer Task', 'category': self.project.id},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.assertFalse(Task.objects.filter(title='Viewer Task').exists())
+
+    def test_viewer_cannot_update_task(self):
+        self.client.login(username='viewer_bob', password='Password123!')
+        resp = self.client.post(
+            reverse('task_update', kwargs={'pk': self.task.id}),
+            data='{"title": "Hacked Title"}',
+            content_type='application/json',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.title, 'Secret Spec')
+
+    def test_viewer_cannot_delete_task(self):
+        self.client.login(username='viewer_bob', password='Password123!')
+        resp = self.client.post(
+            reverse('task_delete', kwargs={'pk': self.task.id}),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.assertTrue(Task.objects.filter(id=self.task.id).exists())
+
+    def test_viewer_cannot_create_project(self):
+        self.client.login(username='viewer_bob', password='Password123!')
+        resp = self.client.post(
+            reverse('category_create'),
+            data={'name': 'Unauthorized Project', 'color': '#ef4444'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.assertFalse(Category.objects.filter(name='Unauthorized Project').exists())
+
+
+class AdminSubuserRoleTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.owner = User.objects.create_user(username='lead_dev', password='Password123!')
+        self.admin_sub = SubUserService.create_subuser(
+            owner=self.owner,
+            username='admin_subuser',
+            password='Password123!',
+            role='admin'
+        )
+
+    def test_admin_subuser_can_create_project_and_task(self):
+        self.client.login(username='admin_subuser', password='Password123!')
+        
+        # Admin subuser creates project
+        p_resp = self.client.post(
+            reverse('category_create'),
+            data={'name': 'Admin Sub Project', 'color': '#10b981'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(p_resp.status_code, 200)
+        proj = Category.objects.get(name='Admin Sub Project')
+
+        # Admin subuser creates task
+        t_resp = self.client.post(
+            reverse('task_create'),
+            data={'title': 'Admin Sub Task', 'category': proj.id},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(t_resp.status_code, 200)
+        self.assertTrue(Task.objects.filter(title='Admin Sub Task').exists())
+
+
+class PerformanceAndOptimizationTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.owner = User.objects.create_user(username='perf_owner', password='Password123!')
+        self.project = Category.objects.create(user=self.owner, name='Search Project', color='#3b82f6')
+        for i in range(5):
+            sub = SubUserService.create_subuser(self.owner, f'sub_perf_{i}', 'pass1234')
+            Task.objects.create(user=self.owner, category=self.project, title=f'Task {i}')
+
+    def test_subuser_data_queries_constant(self):
+        with self.assertNumQueries(2):
+            data = SubUserService.get_subusers_data(self.owner)
+            self.assertEqual(len(data), 5)
+
+    def test_unread_count_named_endpoint(self):
+        self.client.login(username='perf_owner', password='Password123!')
+        resp = self.client.get(reverse('api_notifications_unread_count'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('unread_count', resp.json())
+

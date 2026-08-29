@@ -45,6 +45,11 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        if not self.share_token:
+            self.share_token = uuid.uuid4().hex
+        super().save(*args, **kwargs)
+
     def ensure_share_token(self):
         if not self.share_token:
             self.share_token = uuid.uuid4().hex

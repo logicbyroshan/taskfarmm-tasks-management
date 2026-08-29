@@ -84,7 +84,7 @@ urlpatterns = [
 
     # In-App Notifications API
     path('api/notifications/', views.api_notifications_list, name='api_notifications_list'),
-    path('api/notifications/unread-count/', lambda r: JsonResponse({'unread_count': views.NotificationService.get_unread_count(r.user)}), name='api_notifications_unread_count'),
+    path('api/notifications/unread-count/', views.api_notifications_unread_count, name='api_notifications_unread_count'),
     path('api/notifications/<int:pk>/read/', views.api_notification_mark_read, name='api_notification_mark_read'),
     path('api/notifications/read-all/', views.api_notification_mark_all_read, name='api_notification_mark_all_read'),
 ]

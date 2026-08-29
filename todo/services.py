@@ -61,47 +61,38 @@ class TaskService:
     @staticmethod
     def get_dashboard_stats(user):
         """
-        Returns aggregated dashboard statistics for a user.
-
-        Uses a single DB aggregation query instead of multiple .count() calls,
-        reducing round-trips from 8 → 1.
+        Returns aggregated dashboard statistics for a user in a single SQL pass.
         """
         tasks = TaskService.get_base_queryset(user)
         today = timezone.now().date()
 
-        # Single aggregation pass for all status counts
-        status_counts = dict(
-            tasks.values('status')
-                 .annotate(n=Count('id'))
-                 .values_list('status', 'n')
+        agg = tasks.aggregate(
+            total=Count('id'),
+            done=Count('id', filter=Q(status='completed')),
+            in_progress=Count('id', filter=Q(status='in-progress')),
+            backlog=Count('id', filter=Q(status='backlog')),
+            to_do=Count('id', filter=Q(status='not-started')),
+            on_hold=Count('id', filter=Q(status='on-hold')),
+            canceled=Count('id', filter=Q(status='canceled')),
+            overdue=Count('id', filter=Q(due_date__lt=today) & ~Q(status__in=['completed', 'canceled'])),
+            due_today=Count('id', filter=Q(due_date=today) & ~Q(status__in=['completed', 'canceled'])),
         )
 
-        total = sum(status_counts.values())
-        done = status_counts.get('completed', 0)
-        in_progress = status_counts.get('in-progress', 0)
-
-        overdue = tasks.filter(
-            due_date__lt=today
-        ).exclude(status__in=['completed', 'canceled']).count()
-
-        due_today = tasks.filter(
-            due_date=today
-        ).exclude(status__in=['completed', 'canceled']).count()
-
+        total = agg['total'] or 0
+        done = agg['done'] or 0
         completion_rate = int((done / total) * 100) if total > 0 else 0
-
         projects_count = CategoryService.get_categories(user).count()
 
         return {
             'total_count': total,
             'done_count': done,
-            'in_progress_count': in_progress,
-            'backlog_count': status_counts.get('backlog', 0),
-            'to_do_count': status_counts.get('not-started', 0),
-            'on_hold_count': status_counts.get('on-hold', 0),
-            'canceled_count': status_counts.get('canceled', 0),
-            'overdue_count': overdue,
-            'due_today_count': due_today,
+            'in_progress_count': agg['in_progress'] or 0,
+            'backlog_count': agg['backlog'] or 0,
+            'to_do_count': agg['to_do'] or 0,
+            'on_hold_count': agg['on_hold'] or 0,
+            'canceled_count': agg['canceled'] or 0,
+            'overdue_count': agg['overdue'] or 0,
+            'due_today_count': agg['due_today'] or 0,
             'completion_rate': completion_rate,
             'projects_count': projects_count,
         }
@@ -507,7 +498,8 @@ class CategoryService:
                 todo_count=Count('tasks', filter=Q(tasks__status='not-started'), distinct=True),
                 backlog_count=Count('tasks', filter=Q(tasks__status='backlog'), distinct=True),
             )
-            .prefetch_related('members', 'user')
+            .select_related('user')
+            .prefetch_related('members')
         )
         for cat in categories:
             cat.progress = (
@@ -604,7 +596,8 @@ class CategoryService:
                 todo_count=Count('tasks', filter=Q(tasks__status='not-started'), distinct=True),
                 backlog_count=Count('tasks', filter=Q(tasks__status='backlog'), distinct=True),
             )
-            .prefetch_related('members', 'user')
+            .select_related('user')
+            .prefetch_related('members')
             .order_by('-created_at')[:limit]
         )
         for cat in categories:
@@ -636,8 +629,32 @@ class SubUserService:
     MAX_SUBUSERS = 99
 
     @classmethod
+    def can_manage_tasks(cls, user):
+        """Returns True if user has permission to create, update, or delete tasks."""
+        if not user or not user.is_authenticated:
+            return False
+        profile = getattr(user, 'profile', None)
+        if not profile or not profile.is_subuser:
+            return True
+        if profile.role == UserProfile.Role.VIEWER:
+            return False
+        return bool(profile.can_manage_tasks)
+
+    @classmethod
+    def can_create_projects(cls, user):
+        """Returns True if user has permission to create projects."""
+        if not user or not user.is_authenticated:
+            return False
+        profile = getattr(user, 'profile', None)
+        if not profile or not profile.is_subuser:
+            return True
+        if profile.role == UserProfile.Role.ADMIN:
+            return True
+        return bool(profile.can_create_projects)
+
+    @classmethod
     def get_subusers(cls, owner):
-        """Returns all sub-users belonging to the owner account."""
+        """Returns all sub-users belonging to the owner account with task count annotated."""
         if hasattr(owner, 'profile') and owner.profile.is_subuser:
             return User.objects.none()
 
@@ -645,13 +662,14 @@ class SubUserService:
             User.objects
             .filter(profile__parent_user=owner, profile__is_subuser=True)
             .select_related('profile')
-            .prefetch_related('shared_categories', 'assigned_tasks')
+            .prefetch_related('shared_categories')
+            .annotate(assigned_tasks_count=Count('assigned_tasks', distinct=True))
             .order_by('-date_joined')
         )
 
     @classmethod
     def get_subusers_data(cls, owner):
-        """Returns detailed serializable data list of all sub-users."""
+        """Returns detailed serializable data list of all sub-users with zero N+1 queries."""
         subusers = cls.get_subusers(owner)
         data = []
         for u in subusers:
@@ -671,7 +689,7 @@ class SubUserService:
                 'is_active': u.is_active,
                 'assigned_projects': assigned_projects,
                 'assigned_project_ids': [p['id'] for p in assigned_projects],
-                'assigned_tasks_count': u.assigned_tasks.count(),
+                'assigned_tasks_count': getattr(u, 'assigned_tasks_count', 0),
                 'date_joined': u.date_joined.strftime('%d %b %Y, %H:%M'),
                 'last_login': u.last_login.strftime('%d %b %Y, %H:%M') if u.last_login else 'Never',
             })
@@ -716,11 +734,20 @@ class SubUserService:
             first_name=display_name.strip() if display_name else username
         )
 
+        target_role = role if role in UserProfile.Role.values else UserProfile.Role.MEMBER
         profile, _ = UserProfile.objects.get_or_create(user=subuser)
         profile.is_subuser = True
         profile.parent_user = owner
-        profile.role = role if role in UserProfile.Role.values else UserProfile.Role.MEMBER
-        profile.can_manage_tasks = True
+        profile.role = target_role
+        if target_role == UserProfile.Role.VIEWER:
+            profile.can_manage_tasks = False
+            profile.can_create_projects = False
+        elif target_role == UserProfile.Role.ADMIN:
+            profile.can_manage_tasks = True
+            profile.can_create_projects = True
+        else:  # MEMBER
+            profile.can_manage_tasks = True
+            profile.can_create_projects = False
         profile.save()
         subuser.profile = profile
 
@@ -763,7 +790,16 @@ class SubUserService:
         profile = getattr(subuser, 'profile', None)
         if profile and role and role in UserProfile.Role.values:
             profile.role = role
-            profile.save(update_fields=['role'])
+            if role == UserProfile.Role.VIEWER:
+                profile.can_manage_tasks = False
+                profile.can_create_projects = False
+            elif role == UserProfile.Role.ADMIN:
+                profile.can_manage_tasks = True
+                profile.can_create_projects = True
+            else:
+                profile.can_manage_tasks = True
+                profile.can_create_projects = False
+            profile.save(update_fields=['role', 'can_manage_tasks', 'can_create_projects'])
 
         if assigned_project_ids is not None:
             # Update member projects for this subuser

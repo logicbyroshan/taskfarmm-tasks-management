@@ -34,7 +34,7 @@ from ..serializers import (
     UserStatsSerializer, PreDefinedTaskSerializer, UserProfileSerializer,
 )
 from ..services import (
-    TaskService, CategoryService, ExportService,
+    TaskService, CategoryService, SubUserService, ExportService,
     PreDefinedTaskService, StatsService,
 )
 
@@ -89,7 +89,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         return TaskSerializer
 
     def perform_create(self, serializer):
-        """Attach the current user and handle category_id resolution."""
+        """Attach the current user and handle category_id resolution with permission checks."""
+        if not SubUserService.can_manage_tasks(self.request.user):
+            raise PermissionDenied('Permission denied. Viewers cannot create tasks.')
+
         data = serializer.validated_data.copy()
         category_id = data.pop('category_id', None)
         category = None
@@ -102,7 +105,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user, category=category)
 
     def perform_update(self, serializer):
-        """Handle category_id resolution on update."""
+        """Handle category_id resolution on update with permission checks."""
+        if not SubUserService.can_manage_tasks(self.request.user):
+            raise PermissionDenied('Permission denied. Viewers cannot update tasks.')
+
         data = serializer.validated_data.copy()
         category_id = data.pop('category_id', None)
 
@@ -117,6 +123,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             serializer.save(category=category)
         else:
             serializer.save()
+
+    def perform_destroy(self, instance):
+        if not SubUserService.can_manage_tasks(self.request.user):
+            raise PermissionDenied('Permission denied. Viewers cannot delete tasks.')
+        instance.delete()
 
     def get_object(self):
         """Ensure users can only access tasks they own, collaborate on, or are assigned to."""
@@ -134,6 +145,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='toggle')
     def toggle(self, request, pk=None):
         """Toggle a task between Done and To Do."""
+        if not SubUserService.can_manage_tasks(request.user):
+            raise PermissionDenied('Permission denied. Viewers cannot modify tasks.')
         task = self.get_object()
         task = TaskService.toggle_status(task)
         serializer = TaskSerializer(task, context={'request': request})
@@ -142,6 +155,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='comment')
     def comment(self, request, pk=None):
         """Post a new activity comment on a task."""
+        if not SubUserService.can_manage_tasks(request.user):
+            raise PermissionDenied('Permission denied. Viewers cannot post comments.')
         task = self.get_object()
         content = request.data.get('content', '')
         try:
@@ -155,6 +170,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='checklist')
     def checklist(self, request, pk=None):
         """Replace the task checklist with a new list of items."""
+        if not SubUserService.can_manage_tasks(request.user):
+            raise PermissionDenied('Permission denied. Viewers cannot modify checklists.')
         task = self.get_object()
         checklist = request.data.get('checklist', [])
         if not isinstance(checklist, list):
@@ -220,7 +237,20 @@ class CategoryViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
+        if not SubUserService.can_create_projects(self.request.user):
+            raise PermissionDenied('Permission denied. You do not have permission to create projects.')
         serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        obj = self.get_object()
+        if obj.user != self.request.user:
+            raise PermissionDenied('Only the project owner can update project settings.')
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.user != self.request.user:
+            raise PermissionDenied('Only the project owner can delete this project.')
+        instance.delete()
 
     def get_object(self):
         obj = super().get_object()
