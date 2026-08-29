@@ -395,37 +395,36 @@
                     <span class="task-count-pill" id="count-{{ col.key }}">{{ col.count }}</span>
                 </div>
                 <button class="column-add-btn" onclick="openInlineKanbanComposer('{{ col.key }}')" title="Add card to {{ col.title }}"><i class="fas fa-plus"></i></button>
-            </div>
-
-            <!-- Inline Card Composer (Opens directly when clicking +) -->
-            <div id="inline-composer-{{ col.key }}" class="kanban-inline-composer" style="display: none; padding: 0 4px 10px 4px;">
-                <div style="background: #1d2125; border: 1px solid #388bff; border-radius: 8px; padding: 8px 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.6);">
+            <div class="kanban-cards-container" data-status="{{ col.key }}" ondragover="handleDragOver(event)" ondrop="handleDrop(event, '{{ col.key }}')">
+                <!-- Inline Card Composer (Inside Cards Container, Hides Empty Placeholder) -->
+                <div id="inline-composer-{{ col.key }}" class="kanban-inline-composer kanban-card" style="display: none; background: #09090b; border: 1px solid #3b82f6; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.85); box-sizing: border-box; width: 100%;">
                     <textarea id="inline-input-{{ col.key }}" 
                               placeholder="Enter a title for this card..." 
                               rows="2" 
-                              style="width: 100%; box-sizing: border-box; background: transparent; border: none; color: #dee4ea; font-size: 0.88rem; resize: none; outline: none; font-family: inherit; line-height: 1.4; padding: 2px 0;"
+                              style="width: 100%; box-sizing: border-box; background: transparent; border: none; color: #ffffff; font-size: 0.9rem; font-weight: 500; resize: none; outline: none; font-family: inherit; line-height: 1.45; padding: 0; margin-bottom: 10px; display: block;"
                               onkeydown="handleInlineComposerKeydown(event, '{{ col.key }}')"></textarea>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding-top: 6px; border-top: 1px solid #282e33;">
-                        <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid #27272a;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
                             <button type="button" 
                                     class="btn-primary" 
                                     onclick="submitInlineKanbanTask('{{ col.key }}')" 
-                                    style="padding: 5px 14px; font-size: 0.82rem; font-weight: 600; border-radius: 6px; cursor: pointer;">
-                                Add card
+                                    style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; border-radius: 6px; background: #2563eb; color: #ffffff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(37,99,235,0.4); transition: background 0.15s ease;"
+                                    onmouseenter="this.style.background='#1d4ed8';"
+                                    onmouseleave="this.style.background='#2563eb';">
+                                <i class="fas fa-plus" style="font-size: 0.75rem;"></i> Add card
                             </button>
                             <button type="button" 
                                     onclick="closeInlineKanbanComposer('{{ col.key }}')" 
-                                    title="Cancel" 
-                                    style="background: transparent; border: none; color: #8c9bab; font-size: 1rem; cursor: pointer; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                    title="Cancel (Esc)" 
+                                    style="background: transparent; border: none; color: #71717a; font-size: 1rem; cursor: pointer; padding: 5px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;"
+                                    onmouseenter="this.style.color='#ef4444'; this.style.background='rgba(239, 68, 68, 0.12)';"
+                                    onmouseleave="this.style.color='#71717a'; this.style.background='transparent';">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
-                        <span style="font-size: 0.7rem; color: #626f7f;">Enter to save</span>
+                        <span style="font-size: 0.72rem; color: #52525b; font-weight: 500;">Press Enter ↵</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="kanban-cards-container" data-status="{{ col.key }}" ondragover="handleDragOver(event)" ondrop="handleDrop(event, '{{ col.key }}')">
                 {% for task in col.tasks %}
                     <div class="kanban-card {% if task.status == 'completed' %}is-completed{% endif %}" 
                          id="kanban-card-{{ task.id }}" 
@@ -648,10 +647,18 @@
 
     function openInlineKanbanComposer(statusKey) {
         document.querySelectorAll('.kanban-inline-composer').forEach(el => {
-            el.style.display = 'none';
+            const key = el.id.replace('inline-composer-', '');
+            closeInlineKanbanComposer(key);
         });
         const composer = document.getElementById(`inline-composer-${statusKey}`);
         if (!composer) return;
+
+        // Hide empty placeholder while composer is open
+        const emptyEl = document.getElementById(`empty-${statusKey}`);
+        if (emptyEl) {
+            emptyEl.style.display = 'none';
+        }
+
         composer.style.display = 'block';
         const input = document.getElementById(`inline-input-${statusKey}`);
         if (input) {
@@ -663,6 +670,16 @@
     function closeInlineKanbanComposer(statusKey) {
         const composer = document.getElementById(`inline-composer-${statusKey}`);
         if (composer) composer.style.display = 'none';
+
+        // Check if column has real task cards; if 0, restore empty placeholder
+        const container = document.querySelector(`.kanban-cards-container[data-status="${statusKey}"]`);
+        if (container) {
+            const cardCount = container.querySelectorAll('.kanban-card:not(.kanban-inline-composer)').length;
+            const emptyEl = document.getElementById(`empty-${statusKey}`);
+            if (emptyEl) {
+                emptyEl.style.display = cardCount === 0 ? 'flex' : 'none';
+            }
+        }
     }
 
     function handleInlineComposerKeydown(event, statusKey) {

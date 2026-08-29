@@ -193,7 +193,15 @@ function insertTaskCardToKanban(task) {
         this.style.opacity = '1';
     });
 
-    container.insertBefore(cardDiv, container.firstChild);
+    const composer = document.getElementById(`inline-composer-${status}`);
+    if (composer && composer.parentElement === container && composer.nextSibling) {
+        container.insertBefore(cardDiv, composer.nextSibling);
+    } else if (composer && composer.parentElement === container) {
+        container.appendChild(cardDiv);
+    } else {
+        container.insertBefore(cardDiv, container.firstChild);
+    }
+
     requestAnimationFrame(() => {
         cardDiv.style.opacity = '1';
         cardDiv.style.transform = 'translateY(0)';
