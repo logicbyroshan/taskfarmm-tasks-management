@@ -395,6 +395,8 @@
                     <span class="task-count-pill" id="count-{{ col.key }}">{{ col.count }}</span>
                 </div>
                 <button class="column-add-btn" onclick="openInlineKanbanComposer('{{ col.key }}')" title="Add card to {{ col.title }}"><i class="fas fa-plus"></i></button>
+            </div>
+
             <div class="kanban-cards-container" data-status="{{ col.key }}" ondragover="handleDragOver(event)" ondrop="handleDrop(event, '{{ col.key }}')">
                 <!-- Inline Card Composer (Inside Cards Container, Hides Empty Placeholder) -->
                 <div id="inline-composer-{{ col.key }}" class="kanban-inline-composer kanban-card" style="display: none; background: #09090b; border: 1px solid #3b82f6; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.85); box-sizing: border-box; width: 100%;">
