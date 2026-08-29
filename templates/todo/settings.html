@@ -1,7 +1,7 @@
 {% extends 'todo/base.html' %}
 {% load static %}
 
-{% block title %}Settings - TaskFlixx{% endblock title %}
+{% block title %}Settings - TaskFarmm{% endblock title %}
 
 {% block styles %}
     <link rel="stylesheet" href="{% static 'todo/css/settings.css' %}?v=99">
@@ -374,7 +374,7 @@
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = 'taskflixx_tasks_export.json';
+                        a.download = 'taskfarmm_tasks_export.json';
                         a.click();
                         URL.revokeObjectURL(url);
                     }
@@ -385,12 +385,12 @@
     // Initialize Auto-Correct Setting Switch
     const autoCorrectSwitch = document.getElementById('autocorrect-toggle-switch');
     if (autoCorrectSwitch) {
-        const isEnabled = localStorage.getItem('taskflixx_autocorrect_enabled') !== 'false';
+        const isEnabled = localStorage.getItem('taskfarmm_autocorrect_enabled') !== 'false';
         autoCorrectSwitch.checked = isEnabled;
     }
 
     function toggleAutoCorrectSetting(checked) {
-        localStorage.setItem('taskflixx_autocorrect_enabled', checked ? 'true' : 'false');
+        localStorage.setItem('taskfarmm_autocorrect_enabled', checked ? 'true' : 'false');
         if (window.showToast) {
             window.showToast(checked ? '✨ Intelligent Auto-Correct enabled' : 'Auto-Correct turned off', checked ? 'success' : 'info');
         }

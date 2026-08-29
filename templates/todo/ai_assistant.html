@@ -1,7 +1,7 @@
 {% extends 'todo/base.html' %}
 {% load static %}
 
-{% block title %}AI Assistant - TaskFlixx{% endblock %}
+{% block title %}AI Assistant - TaskFarmm{% endblock %}
 
 {% block styles %}
 <style>
@@ -469,7 +469,7 @@
             <div class="chat-msg assistant">
                 <div class="chat-avatar"><i class="fas fa-robot"></i></div>
                 <div class="chat-bubble">
-                    <strong>Hello! I'm your TaskFlixx AI Assistant.</strong><br>
+                    <strong>Hello! I'm your TaskFarmm AI Assistant.</strong><br>
                     How can I help you today? Click <strong>Templates</strong> inside the input bar or type your custom request!
                 </div>
             </div>
@@ -539,7 +539,7 @@
 
 {% block scripts %}
 <script>
-let recentChats = JSON.parse(localStorage.getItem('taskflixx_recent_chats') || '[]');
+let recentChats = JSON.parse(localStorage.getItem('taskfarmm_recent_chats') || '[]');
 
 document.addEventListener('DOMContentLoaded', () => {
     renderRecentChats();
@@ -612,7 +612,7 @@ function addRecentChat(promptText) {
     recentChats = recentChats.filter(c => c.prompt !== promptText);
     recentChats.unshift({ prompt: promptText, timestamp: new Date().toLocaleTimeString() });
     if (recentChats.length > 15) recentChats.pop();
-    localStorage.setItem('taskflixx_recent_chats', JSON.stringify(recentChats));
+    localStorage.setItem('taskfarmm_recent_chats', JSON.stringify(recentChats));
     renderRecentChats();
 }
 
@@ -729,7 +729,7 @@ function createTasksFromChat(title, lines) {
     );
 
     Promise.all(promises).then(() => {
-        showToast(`✅ Created ${created} task(s) in TaskFlixx!`, 'success');
+        showToast(`✅ Created ${created} task(s) in TaskFarmm!`, 'success');
     });
 }
 

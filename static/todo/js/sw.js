@@ -1,5 +1,5 @@
-// TaskFlixx Service Worker
-const CACHE_NAME = 'taskflixx-v1.0.2';
+// TaskFarmm Service Worker
+const CACHE_NAME = 'taskfarmm-v1.0.2';
 const STATIC_ASSETS = [
     '/',
     '/static/todo/css/base.css',

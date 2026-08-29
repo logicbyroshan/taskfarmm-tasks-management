@@ -8,7 +8,7 @@ logger = logging.getLogger('todo')
 
 class DemoAuthMiddleware:
     """
-    Authentication Middleware for TaskFlixx.
+    Authentication Middleware for TaskFarmm.
     All pages strictly enforce authentication via @login_required.
     """
     def __init__(self, get_response):

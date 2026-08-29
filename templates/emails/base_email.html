@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title|default:"TaskFlixx Notification" }}</title>
+    <title>{{ title|default:"TaskFarmm Notification" }}</title>
     <style>
         body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
@@ -28,7 +28,7 @@
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
                                     <td align="center" style="font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
-                                        ⚡ Task<span style="color: #60a5fa;">Flixx</span>
+                                        ⚡ Task<span style="color: #60a5fa;">Farmm</span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -57,7 +57,7 @@
                                 <tr>
                                     <td align="center" style="border-radius: 8px; background: #2563eb;">
                                         <a href="{{ action_url }}" target="_blank" style="font-size: 0.9rem; font-weight: 700; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 1px solid #3b82f6; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
-                                            {{ action_text|default:"Open in TaskFlixx" }} &rarr;
+                                            {{ action_text|default:"Open in TaskFarmm" }} &rarr;
                                         </a>
                                     </td>
                                 </tr>
@@ -70,7 +70,7 @@
                     <tr>
                         <td style="padding: 20px 30px; background: #0b0d10; border-top: 1px solid #1c2027; text-align: center; font-size: 0.75rem; color: #71717a; line-height: 1.5;">
                             <p style="margin: 0 0 6px 0;">
-                                Sent automatically by <strong>TaskFlixx</strong> to {{ recipient_email|default:"you" }}.
+                                Sent automatically by <strong>TaskFarmm</strong> to {{ recipient_email|default:"you" }}.
                             </p>
                             <p style="margin: 0;">
                                 Manage your preferences in <a href="{{ preferences_url|default:'http://127.0.0.1:8000/settings/' }}" style="color: #60a5fa; text-decoration: underline;">Settings</a>.

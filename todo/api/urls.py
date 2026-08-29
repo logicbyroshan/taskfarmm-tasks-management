@@ -1,7 +1,7 @@
 """
 todo/api/urls.py
 
-URL routing for the TaskFlixx REST API v1.
+URL routing for the TaskFarmm REST API v1.
 
 All routes are under the /api/v1/ prefix (set in config/urls.py).
 

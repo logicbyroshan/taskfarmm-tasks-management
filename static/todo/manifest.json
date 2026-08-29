@@ -1,6 +1,6 @@
 {
-  "name": "TaskFlixx - Smart Task & Project Management",
-  "short_name": "TaskFlixx",
+  "name": "TaskFarmm - Smart Task & Project Management",
+  "short_name": "TaskFarmm",
   "description": "Ultra-fast, OLED pitch-black task and project orchestration platform with 6-column Kanban and AI assistant.",
   "start_url": "/",
   "display": "standalone",

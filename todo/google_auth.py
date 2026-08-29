@@ -1,7 +1,7 @@
 """
 todo/google_auth.py
 
-Production-ready Google Single Sign-On (SSO) & OAuth 2.0 Integration for TaskFlixx.
+Production-ready Google Single Sign-On (SSO) & OAuth 2.0 Integration for TaskFarmm.
 Supports:
   1. Standard Google OAuth2 Authorization Code Flow (/auth/google/login/ -> /auth/google/callback/)
   2. Google Identity Services (GIS) One-Tap / JWT Credential Verification (/auth/google/credential/)

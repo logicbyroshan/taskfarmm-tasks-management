@@ -145,7 +145,7 @@ elif DB_ENGINE == 'mysql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'taskflixx_db'),
+            'NAME': os.environ.get('DB_NAME', 'taskfarmm_db'),
             'USER': os.environ.get('DB_USER', 'root'),
             'PASSWORD': os.environ.get('DB_PASSWORD', ''),
             'HOST': os.environ.get('DB_HOST', 'localhost'),
@@ -288,7 +288,7 @@ EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True').lower() in ['true', '1']
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False').lower() in ['true', '1']
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'noreply@roshandamor.me')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'TaskFlixx <noreply@roshandamor.me>')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'TaskFarmm <noreply@roshandamor.me>')
 
 # ============================================================
 #  LOGGING

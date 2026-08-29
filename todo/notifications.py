@@ -1,7 +1,7 @@
 """
 todo/notifications.py
 
-Enterprise Notification & Outbound Email Delivery Queue Service for TaskFlixx.
+Enterprise Notification & Outbound Email Delivery Queue Service for TaskFarmm.
 Provides:
   1. In-App Notifications (Bell alert + real-time activity stream)
   2. Queue & Exponential Backoff Retry Engine (30s, 2m, 8m, 30m)
@@ -114,10 +114,10 @@ class NotificationService:
             notif.save(update_fields=['status'])
 
             plain_text = strip_tags(notif.html_content) or notif.message
-            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'TaskFlixx <noreply@taskflixx.com>')
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'TaskFarmm <noreply@taskfarmm.com>')
 
             email_msg = EmailMultiAlternatives(
-                subject=f"[TaskFlixx] {notif.title}",
+                subject=f"[TaskFarmm] {notif.title}",
                 body=plain_text,
                 from_email=from_email,
                 to=[notif.email],

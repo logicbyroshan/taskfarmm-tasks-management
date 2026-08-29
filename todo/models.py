@@ -314,7 +314,7 @@ class Notification(models.Model):
         TASK_DUE_SOON = 'task_due_soon', 'Task Due Soon'
         TASK_COMPLETED = 'task_completed', 'Task Completed'
         PROJECT_SHARED = 'project_shared', 'Project Shared'
-        WELCOME = 'welcome', 'Welcome to TaskFlixx'
+        WELCOME = 'welcome', 'Welcome to TaskFarmm'
         SYSTEM = 'system', 'System Notification'
 
     class Status(models.TextChoices):

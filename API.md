@@ -1,6 +1,6 @@
-# 📡 TaskFlixx API Documentation
+# 📡 TaskFarmm API Documentation
 
-TaskFlixx provides a dual API surface:
+TaskFarmm provides a dual API surface:
 1. **REST API v1 (`/api/v1/`)**: Production-ready RESTful API powered by Django REST Framework (DRF) with JWT Bearer Token authentication, filtering, pagination, search, and throttling.
 2. **Internal Session / AJAX Endpoints**: High-performance JSON/HTMX endpoints optimized for web frontend interactions.
 

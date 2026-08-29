@@ -1,7 +1,7 @@
 """
 todo/serializers.py
 
-DRF serializers for all TaskFlixx models.
+DRF serializers for all TaskFarmm models.
 
 Kept thin — no business logic here. Validation and object creation are
 delegated to the services layer where appropriate.

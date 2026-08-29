@@ -1,7 +1,7 @@
 """
 todo/views.py
 
-Template-rendering views for the TaskFlixx web application.
+Template-rendering views for the TaskFarmm web application.
 
 This file is intentionally thin — all business logic lives in services.py.
 Views here are responsible only for:
@@ -273,7 +273,7 @@ def settings_page(request):
 
 def login_view(request):
     """
-    Dedicated TaskFlixx Authentication Page.
+    Dedicated TaskFarmm Authentication Page.
     Handles user login with showcase of platform features and instant demo logins.
     """
     if request.user.is_authenticated:
@@ -321,7 +321,7 @@ def login_view(request):
 
 def register_view(request):
     """
-    Dedicated TaskFlixx Registration Page.
+    Dedicated TaskFarmm Registration Page.
     Creates a new user account with default setup, automatic login, and dashboard redirect.
     """
     if request.user.is_authenticated:
@@ -347,7 +347,7 @@ def register_view(request):
         )
 
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        messages.success(request, f'Welcome to TaskFlixx, {user.first_name or user.username}! Your workspace is ready.')
+        messages.success(request, f'Welcome to TaskFarmm, {user.first_name or user.username}! Your workspace is ready.')
         return redirect('dashboard')
 
     context = {
@@ -401,7 +401,7 @@ def switch_user(request):
             defaults={
                 'first_name': first_name,
                 'last_name': last_name,
-                'email': f'{username}@taskflix.com'
+                'email': f'{username}@taskfarm.com'
             }
         )
 
@@ -1111,7 +1111,7 @@ def tasks_export_api(request):
     if fmt == 'csv':
         header, rows = ExportService.tasks_to_csv_rows(request.user)
         response = HttpResponse(content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; filename="taskflixx_export.csv"'
+        response['Content-Disposition'] = 'attachment; filename="taskfarmm_export.csv"'
         writer = csv.writer(response)
         writer.writerow(header)
         writer.writerows(rows)

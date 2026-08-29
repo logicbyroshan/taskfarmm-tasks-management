@@ -1,7 +1,7 @@
 """
 todo/tests/test_notifications.py
 
-Comprehensive tests for TaskFlixx Enterprise Notification & Email Delivery System:
+Comprehensive tests for TaskFarmm Enterprise Notification & Email Delivery System:
 - Model properties & state machine
 - Service queuing & email template rendering
 - Exponential backoff & retry mechanics
@@ -27,13 +27,13 @@ class NotificationSystemTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(
             username='alex_coder',
-            email='alex@taskflixx.dev',
+            email='alex@taskfarmm.dev',
             password='TestPassword123!',
             first_name='Alex'
         )
         self.teammate = User.objects.create_user(
             username='sarah_pm',
-            email='sarah@taskflixx.dev',
+            email='sarah@taskfarmm.dev',
             password='TestPassword123!',
             first_name='Sarah'
         )
@@ -58,7 +58,7 @@ class NotificationSystemTests(TestCase):
         self.assertIn('Sprint 12', notif.html_content)
         self.assertEqual(notif.status, Notification.Status.SENT)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn('[TaskFlixx] Assigned to Sprint 12', mail.outbox[0].subject)
+        self.assertIn('[TaskFarmm] Assigned to Sprint 12', mail.outbox[0].subject)
 
     def test_email_delivery_failure_triggers_exponential_backoff(self):
         with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=Exception('SMTP connection timeout')):
@@ -82,7 +82,7 @@ class NotificationSystemTests(TestCase):
             event_type=Notification.EventType.TASK_COMMENT,
             title='New comment on Task',
             message='Great progress!',
-            email='alex@taskflixx.dev',
+            email='alex@taskfarmm.dev',
             html_content='<p>Great progress!</p>',
             status=Notification.Status.FAILED,
             retry_count=1,

@@ -30,7 +30,7 @@ class Command(BaseCommand):
         is_daemon = options['daemon']
         interval = options['interval']
 
-        self.stdout.write(self.style.SUCCESS('Starting TaskFlixx Notification Queue Processor...'))
+        self.stdout.write(self.style.SUCCESS('Starting TaskFarmm Notification Queue Processor...'))
 
         if is_daemon:
             self.stdout.write(f'Running as daemon (polling every {interval} seconds). Press Ctrl+C to stop.')

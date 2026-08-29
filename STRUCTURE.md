@@ -1,13 +1,13 @@
-# 🏛️ TaskFlixx Codebase Architecture & Structure
+# 🏛️ TaskFarmm Codebase Architecture & Structure
 
-This document provides a detailed structural breakdown of the **TaskFlixx** repository.
+This document provides a detailed structural breakdown of the **TaskFarmm** repository.
 
 ---
 
 ## 📁 Repository Overview
 
 ```
-TaskFlixx/
+TaskFarmm/
 ├── .github/                         # GitHub community templates
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md           # Bug report template
@@ -31,7 +31,7 @@ TaskFlixx/
 │       │   ├── script.js            # 60fps Wave canvas, modals, search, toasts
 │       │   └── sw.js                # Service worker for offline caching
 │       └── images/
-│           └── logo.png             # Official TaskFlixx brand mark
+│           └── logo.png             # Official TaskFarmm brand mark
 ├── templates/                       # Semantic HTML5 Django Templates
 │   └── todo/
 │       ├── base.html                # Master layout, navbar, ambient canvas, drawer
@@ -67,7 +67,7 @@ TaskFlixx/
 │   ├── urls.py                      # Internal session/AJAX routes
 │   ├── api/                         # REST API v1 Package (DRF ViewSets & Views)
 │   ├── management/commands/         # Management CLI tools (process_notifications)
-│   └── tests/                       # Comprehensive test suite (63 tests)
+│   └── tests/                       # Comprehensive test suite (89 tests)
 │       ├── test_models.py           # Model tests
 │       ├── test_services.py         # Service layer tests
 │       ├── test_views.py            # View & HTMX tests

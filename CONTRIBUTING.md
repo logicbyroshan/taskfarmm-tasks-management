@@ -1,6 +1,6 @@
-# 🤝 Contributing to TaskFlixx
+# 🤝 Contributing to TaskFarmm
 
-Thank you for your interest in contributing to **TaskFlixx**! We love pull requests, feature suggestions, bug reports, and code reviews from the community.
+Thank you for your interest in contributing to **TaskFarmm**! We love pull requests, feature suggestions, bug reports, and code reviews from the community.
 
 ---
 
@@ -32,7 +32,7 @@ Before submitting an issue, please search existing issues to avoid duplicates. W
 - Screenshots or console logs if applicable.
 
 ### 💡 Suggesting Enhancements
-We welcome ideas to make TaskFlixx even better! Use the [Feature Request Template](.github/ISSUE_TEMPLATE/feature_request.md) and explain:
+We welcome ideas to make TaskFarmm even better! Use the [Feature Request Template](.github/ISSUE_TEMPLATE/feature_request.md) and explain:
 - The problem you want to solve.
 - Your proposed solution or user workflow.
 - Any alternative solutions considered.
@@ -41,8 +41,8 @@ We welcome ideas to make TaskFlixx even better! Use the [Feature Request Templat
 1. **Fork the repository** on GitHub.
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/taskflixx-tasks-management.git
-   cd taskflixx-tasks-management
+   git clone https://github.com/YOUR_USERNAME/taskfarmm-tasks-management.git
+   cd taskfarmm-tasks-management
    ```
 3. **Create a new branch** with a descriptive name:
    ```bash
@@ -118,4 +118,4 @@ We recommend [Conventional Commits](https://www.conventionalcommits.org/):
 
 ---
 
-Thank you for making TaskFlixx better for everyone! 🚀
+Thank you for making TaskFarmm better for everyone! 🚀

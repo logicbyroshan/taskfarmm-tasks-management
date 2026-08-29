@@ -1,6 +1,6 @@
 # todo/api_auth.py
 """
-API Authentication for TaskFlixx
+API Authentication for TaskFarmm
 Handles token/session-based authentication and bridges JWT auth with Django session login.
 """
 
@@ -40,7 +40,7 @@ def api_verify_token(request):
             user = User.objects.get(id=user_id)
         except (InvalidToken, TokenError, User.DoesNotExist) as e:
             if settings.DEBUG and getattr(settings, 'ENABLE_DEMO_AUTH', False) and token_str == 'demo-token':
-                user, _ = User.objects.get_or_create(username='demo_user', defaults={'email': 'demo@taskflix.com'})
+                user, _ = User.objects.get_or_create(username='demo_user', defaults={'email': 'demo@taskfarm.com'})
             else:
                 return JsonResponse({'success': False, 'error': 'Invalid or expired token'}, status=401)
 
@@ -194,6 +194,6 @@ def api_health_check(request):
     """Health check endpoint for monitoring."""
     return JsonResponse({
         'status': 'healthy',
-        'app': 'TaskFlixx',
+        'app': 'TaskFarmm',
         'version': '2.0.0',
     })

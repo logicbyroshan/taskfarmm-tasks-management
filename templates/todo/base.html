@@ -6,24 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     
-    <title>{% block title %}TaskFlixx - Smart Task & Project Management{% endblock title %}</title>
+    <title>{% block title %}TaskFarmm - Smart Task & Project Management{% endblock title %}</title>
     
     <!-- Anti-FOUC Synchronous Sidebar State Check (Zero Flash/Jerk on Page Switch) -->
     <script>
         try {
-            if (localStorage.getItem('taskflixx_sidebar_collapsed') === '1') {
+            if (localStorage.getItem('taskfarmm_sidebar_collapsed') === '1') {
                 document.documentElement.classList.add('sidebar-collapsed-mode');
             }
         } catch (e) {}
     </script>
     
-    <meta name="description" content="TaskFlixx - Next-generation OLED pitch-black task and project orchestration platform with 6-column Kanban and AI assistant.">
-    <meta name="author" content="TaskFlixx">
+    <meta name="description" content="TaskFarmm - Next-generation OLED pitch-black task and project orchestration platform with 6-column Kanban and AI assistant.">
+    <meta name="author" content="TaskFarmm">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="http://127.0.0.1:8000/">
     
     <!-- Open Graph & Social Cards -->
-    <meta property="og:title" content="TaskFlixx - Smart Task & Project Management">
+    <meta property="og:title" content="TaskFarmm - Smart Task & Project Management">
     <meta property="og:description" content="Ultra-fast, OLED pitch-black task and project orchestration platform with 6-column Kanban and AI assistant.">
     <meta property="og:image" content="{% static 'todo/images/logo.png' %}">
     <meta property="og:type" content="website">
@@ -77,8 +77,8 @@
                         onclick="toggleSidebarCollapse()" 
                         title="Toggle Sidebar (Collapse to icons / Expand)"
                         style="background: transparent; border: none; padding: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; outline: none;">
-                    <img src="{% static 'todo/images/logo.png' %}" alt="TaskFlixx Logo" class="logo-img" width="36" height="36" fetchpriority="high">
-                    <h1 class="logo" style="margin: 0; user-select: none;">Task<span>Flixx</span></h1>
+                    <img src="{% static 'todo/images/logo.png' %}" alt="TaskFarmm Logo" class="logo-img" width="36" height="36" fetchpriority="high">
+                    <h1 class="logo" style="margin: 0; user-select: none;">Task<span>Farmm</span></h1>
                 </button>
             </div>
             <div class="navbar-right">
@@ -179,7 +179,7 @@
     </script>
     {% endif %}
 
-    <!-- TaskFlixx AI Side Drawer -->
+    <!-- TaskFarmm AI Side Drawer -->
     <div id="ai-drawer-overlay" class="ai-drawer-overlay" onclick="closeAiDrawer()"></div>
 
     <!-- AI Side Drawer Panel -->
@@ -188,7 +188,7 @@
             <div class="ai-drawer-title">
                 <span class="ai-drawer-icon"><i class="fas fa-robot" aria-hidden="true"></i></span>
                 <div>
-                    <h2 style="font-size: 1.1rem; margin: 0; font-weight: 700; color: #ffffff;">TaskFlixx AI</h2>
+                    <h2 style="font-size: 1.1rem; margin: 0; font-weight: 700; color: #ffffff;">TaskFarmm AI</h2>
                     <span style="font-size: 0.75rem; color: #a1a1aa;">Intelligent task assistant</span>
                 </div>
             </div>

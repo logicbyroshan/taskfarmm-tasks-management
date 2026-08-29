@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ TaskFlixx
+# ⚡ TaskFarmm
 
 ### *Next-Generation Smart Task & Project Management Platform*
 
@@ -14,7 +14,7 @@
 <br>
 
 <p align="center">
-  <b>TaskFlixx</b> is an ultra-fast, visually stunning, OLED pure-black task and project orchestration platform built with <b>Django 5</b>, <b>OpenHinglish</b>, <b>Vanilla Modern CSS</b>, and <b>HTML5 Canvas</b>. Engineered for high productivity, real-time client-side updates, and zero clutter.
+  <b>TaskFarmm</b> is an ultra-fast, visually stunning, OLED pure-black task and project orchestration platform built with <b>Django 5</b>, <b>OpenHinglish</b>, <b>Vanilla Modern CSS</b>, and <b>HTML5 Canvas</b>. Engineered for high productivity, real-time client-side updates, and zero clutter.
 </p>
 
 [✨ Live Features](#-key-features) • [🚀 Quick Start](#-quick-start) • [🚢 Deployment Guide](#-production-deployment) • [📡 API Reference](API.md)
@@ -61,7 +61,7 @@
 - **Asynchronous Delivery Queue**: High-performance database queue (`Notification` model) for task assignments, comments, deadlines, and project invites.
 - **Exponential Backoff Retries**: Automatic error recovery (`30s`, `2m`, `8m`, `30m`) for network/SMTP failures.
 - **In-App Notification Bell**: Topbar alert hub with unread badge counter, relative timestamps, and one-click read actions.
-- **Responsive OLED Email Templates**: 6 pitch-black email templates with glowing sapphire CTAs matching TaskFlixx aesthetics.
+- **Responsive OLED Email Templates**: 6 pitch-black email templates with glowing sapphire CTAs matching TaskFarmm aesthetics.
 
 ### 🤖 Intelligent AI Assistant & Side Drawer
 - **ChatGPT-Style AI Workspace**: Interactive AI assistant that suggests comprehensive task breakdowns and one-click creates tasks and structured projects.
@@ -71,14 +71,14 @@
 ## 🏗️ Architecture & Tech Stack
 
 ```
-TaskFlixx/
+TaskFarmm/
 ├── config/             # Django root configuration & WSGI/ASGI handlers
 ├── todo/               # Core application (models, views, forms, services)
 │   ├── autocorrect.py  # OpenHinglish text normalization & spell check pipeline
 │   ├── models.py       # Task, TaskAttachment, TaskComment, Category, UserProfile
 │   ├── views.py        # Dashboard, Kanban, Projects, Attachments, Comments, AI & Auto-Correct APIs
 │   ├── forms.py        # TaskForm, CategoryForm, UserUpdateForm, Preferences
-│   └── tests/          # Comprehensive test suite (49+ tests)
+│   └── tests/          # Comprehensive test suite (89 tests)
 ├── templates/todo/     # Django HTML5 semantic templates
 │   ├── base.html       # Global navigation, cool wave canvas, AI drawer, modals
 │   ├── index.html      # Dashboard with live metrics & project toggle
@@ -105,8 +105,8 @@ TaskFlixx/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/logicbyroshan/taskflixx-tasks-management.git
-cd taskflixx-tasks-management
+git clone https://github.com/logicbyroshan/taskfarmm-tasks-management.git
+cd taskfarmm-tasks-management
 ```
 
 ### 2. Create and Activate a Virtual Environment
@@ -144,12 +144,12 @@ Navigate to [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
 
 ## 🧪 Testing & Quality Assurance
 
-TaskFlixx includes a comprehensive automated test suite covering models, views, API endpoints, OpenHinglish autocorrect, and security permissions.
+TaskFarmm includes a comprehensive automated test suite covering models, views, API endpoints, OpenHinglish autocorrect, and security permissions.
 
 ```bash
 python manage.py test
 ```
-*Output: `Ran 36 tests in 33s ... OK`*
+*Output: `Ran 89 tests in 114s ... OK`*
 
 ---
 

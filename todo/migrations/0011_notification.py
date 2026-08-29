@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name='Notification',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_type', models.CharField(choices=[('task_assigned', 'Task Assigned'), ('task_comment', 'Task Comment Added'), ('task_due_soon', 'Task Due Soon'), ('task_completed', 'Task Completed'), ('project_shared', 'Project Shared'), ('welcome', 'Welcome to TaskFlixx'), ('system', 'System Notification')], db_index=True, default='system', max_length=30)),
+                ('event_type', models.CharField(choices=[('task_assigned', 'Task Assigned'), ('task_comment', 'Task Comment Added'), ('task_due_soon', 'Task Due Soon'), ('task_completed', 'Task Completed'), ('project_shared', 'Project Shared'), ('welcome', 'Welcome to TaskFarmm'), ('system', 'System Notification')], db_index=True, default='system', max_length=30)),
                 ('title', models.CharField(max_length=255)),
                 ('message', models.TextField()),
                 ('email', models.EmailField(blank=True, max_length=254)),

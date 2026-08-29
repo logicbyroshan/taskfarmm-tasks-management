@@ -1,6 +1,6 @@
-# ℹ️ About TaskFlixx
+# ℹ️ About TaskFarmm
 
-**TaskFlixx** is an open-source task orchestration and project management platform built to solve common pain points in task productivity tools: sluggish performance, bloated layouts, and distracting UI clutter.
+**TaskFarmm** is an open-source task orchestration and project management platform built to solve common pain points in task productivity tools: sluggish performance, bloated layouts, and distracting UI clutter.
 
 ---
 

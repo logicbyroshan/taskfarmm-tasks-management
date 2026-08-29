@@ -1,6 +1,6 @@
-# 🚀 TaskFlixx Setup & Production Deployment Guide
+# 🚀 TaskFarmm Setup & Production Deployment Guide
 
-This guide covers local environment setup, configuration parameters, and step-by-step production deployment instructions for **TaskFlixx**.
+This guide covers local environment setup, configuration parameters, and step-by-step production deployment instructions for **TaskFarmm**.
 
 ---
 
@@ -15,8 +15,8 @@ This guide covers local environment setup, configuration parameters, and step-by
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/logicbyroshan/taskflixx-tasks-management.git
-   cd taskflixx-tasks-management
+   git clone https://github.com/logicbyroshan/taskfarmm-tasks-management.git
+   cd taskfarmm-tasks-management
    ```
 
 2. **Create & Activate Virtual Environment**:
@@ -104,10 +104,10 @@ sudo apt install python3-pip python3-venv nginx git ufw -y
 
 ### 2. Project Directory & Permissions
 ```bash
-sudo mkdir -p /var/www/taskflixx
-sudo chown -R $USER:$USER /var/www/taskflixx
-cd /var/www/taskflixx
-git clone https://github.com/logicbyroshan/taskflixx-tasks-management.git .
+sudo mkdir -p /var/www/taskfarmm
+sudo chown -R $USER:$USER /var/www/taskfarmm
+cd /var/www/taskfarmm
+git clone https://github.com/logicbyroshan/taskfarmm-tasks-management.git .
 ```
 
 ### 3. Environment & Dependencies
@@ -122,17 +122,17 @@ python manage.py collectstatic --noinput
 ```
 
 ### 4. Configure Gunicorn Systemd Service
-Create service file `/etc/systemd/system/taskflixx.service`:
+Create service file `/etc/systemd/system/taskfarmm.service`:
 ```ini
 [Unit]
-Description=TaskFlixx Gunicorn Daemon
+Description=TaskFarmm Gunicorn Daemon
 After=network.target
 
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/var/www/taskflixx
-ExecStart=/var/www/taskflixx/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/var/www/taskflixx/taskflixx.sock config.wsgi:application
+WorkingDirectory=/var/www/taskfarmm
+ExecStart=/var/www/taskfarmm/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/var/www/taskfarmm/taskfarmm.sock config.wsgi:application
 
 [Install]
 WantedBy=multi-user.target
@@ -140,12 +140,12 @@ WantedBy=multi-user.target
 
 Enable and start the service:
 ```bash
-sudo systemctl start taskflixx
-sudo systemctl enable taskflixx
+sudo systemctl start taskfarmm
+sudo systemctl enable taskfarmm
 ```
 
 ### 5. Configure Nginx Reverse Proxy
-Create `/etc/nginx/sites-available/taskflixx`:
+Create `/etc/nginx/sites-available/taskfarmm`:
 ```nginx
 server {
     listen 80;
@@ -154,23 +154,23 @@ server {
     location = /favicon.ico { access_log off; log_not_found off; }
 
     location /static/ {
-        alias /var/www/taskflixx/staticfiles/;
+        alias /var/www/taskfarmm/staticfiles/;
     }
 
     location /media/ {
-        alias /var/www/taskflixx/media/;
+        alias /var/www/taskfarmm/media/;
     }
 
     location / {
         include proxy_params;
-        proxy_pass http://unix:/var/www/taskflixx/taskflixx.sock;
+        proxy_pass http://unix:/var/www/taskfarmm/taskfarmm.sock;
     }
 }
 ```
 
 Enable site and restart Nginx:
 ```bash
-sudo ln -s /etc/nginx/sites-available/taskflixx /etc/nginx/sites-enabled
+sudo ln -s /etc/nginx/sites-available/taskfarmm /etc/nginx/sites-enabled
 sudo nginx -t
 sudo systemctl restart nginx
 ```

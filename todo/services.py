@@ -1,7 +1,7 @@
 """
 todo/services.py
 
-Business logic layer for TaskFlixx.
+Business logic layer for TaskFarmm.
 
 All database queries and domain logic live here — views and API viewsets
 stay thin by delegating to these service functions. This prevents duplication,
@@ -725,7 +725,7 @@ class SubUserService:
             raise ValueError(f'Username "{username}" is already taken. Please choose another username.')
 
         # Dummy email scoped to parent account so uniqueness isn't required
-        dummy_email = f"{username}@{owner.username}.taskflixx.local"
+        dummy_email = f"{username}@{owner.username}.taskfarmm.local"
 
         subuser = User.objects.create_user(
             username=username,

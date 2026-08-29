@@ -1,7 +1,7 @@
 """
 todo/api/views.py
 
-DRF ViewSets and API Views for the TaskFlixx REST API (v1).
+DRF ViewSets and API Views for the TaskFarmm REST API (v1).
 
 Authentication:
   - Session auth for browser-based users (same Django session cookie)
@@ -192,7 +192,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         if fmt == 'csv':
             header, rows = ExportService.tasks_to_csv_rows(request.user)
             response = HttpResponse(content_type='text/csv; charset=utf-8')
-            response['Content-Disposition'] = 'attachment; filename="taskflixx_export.csv"'
+            response['Content-Disposition'] = 'attachment; filename="taskfarmm_export.csv"'
             writer = csv.writer(response)
             writer.writerow(header)
             writer.writerows(rows)

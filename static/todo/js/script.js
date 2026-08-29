@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupSidebarCollapse() {
-    const isCollapsed = localStorage.getItem('taskflixx_sidebar_collapsed') === '1';
+    const isCollapsed = localStorage.getItem('taskfarmm_sidebar_collapsed') === '1';
     const sidebar = document.getElementById('sidebar') || document.querySelector('.sidebar');
     if (isCollapsed) {
         document.documentElement.classList.add('sidebar-collapsed-mode');
@@ -44,7 +44,7 @@ window.toggleSidebarCollapse = function() {
     } else {
         document.documentElement.classList.remove('sidebar-collapsed-mode');
     }
-    localStorage.setItem('taskflixx_sidebar_collapsed', isCollapsed ? '1' : '0');
+    localStorage.setItem('taskfarmm_sidebar_collapsed', isCollapsed ? '1' : '0');
 };
 
 // Global expose so onclick="openAddTaskModal()" and "openAddProjectModal()" work from HTML
@@ -413,7 +413,7 @@ window.selectEditTemplate = function(template) {
  * Corrects spelling in English, Hindi & Hinglish with subtle animation & toast.
  */
 window.autoCorrectInput = function(inputElementOrId, silent = false) {
-    if (localStorage.getItem('taskflixx_autocorrect_enabled') === 'false') return;
+    if (localStorage.getItem('taskfarmm_autocorrect_enabled') === 'false') return;
     const el = typeof inputElementOrId === 'string' ? document.getElementById(inputElementOrId) : inputElementOrId;
     if (!el) return;
     const originalText = el.value;
@@ -2491,7 +2491,7 @@ function setupPWA() {
 }
 
 /* ==============================================================================
- *  TASKFLIXX AI SIDE DRAWER
+ *  TASKFARMM AI SIDE DRAWER
  * ============================================================================== */
 
 function openAiDrawer() {
@@ -2599,7 +2599,7 @@ function generateAiResponse() {
 
     const query = input.value.trim();
     if (responseBox) responseBox.style.display = 'block';
-    if (responseText) responseText.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#60a5fa;"></i> Analyzing request with TaskFlix AI Engine...';
+    if (responseText) responseText.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#60a5fa;"></i> Analyzing request with TaskFarmm AI Engine...';
 
     // Call AI Backend endpoint or simulate intelligent AI response
     fetch('/api/ai/suggest/', {
