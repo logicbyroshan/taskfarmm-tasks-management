@@ -4,45 +4,12 @@
 {% block title %}Dashboard - TaskFlixx{% endblock title %}
 
 {% block styles %}
+<link rel="stylesheet" href="{% static 'todo/css/task-categories.css' %}?v=151">
 <style>
 .projects-grid-dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 20px;
-    margin-top: 12px;
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-.dash-project-card {
-    background: #09090b;
-    border: 1px solid #27272a;
-    border-radius: 12px;
-    padding: 16px 16px 16px 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    text-decoration: none;
-    color: inherit;
-    position: relative;
-    overflow: hidden;
-    min-height: 160px;
-}
-.dash-project-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--project-accent, #3b82f6);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--project-accent, rgba(59,130,246,.3));
-}
-.dash-project-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: var(--project-accent, #3b82f6);
+    padding-bottom: 16px;
 }
 .team-widget-card {
     background: #09090b;
@@ -70,73 +37,47 @@
 
 {% block content %}
 <div class="dash-grid">
-    <!-- Left: Stats Row + Recent Projects -->
+    <!-- Left: Recent Projects (Header + Cards directly on canvas) -->
     <section class="dash-left">
-        <!-- Stats Row -->
-        <div class="stats-row">
-            <div class="stat-card stat-total">
-                <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
-                <div class="stat-info">
-                    <span class="stat-num">{{ total_count }}</span>
-                    <span class="stat-label">Total Tasks</span>
-                </div>
+        <!-- Page Header Bar matching Manage Projects -->
+        <div class="page-header-bar">
+            <div class="page-header-left">
+                <h2><i class="fas fa-folder-open" style="color: var(--accent-color);"></i> Recent Projects</h2>
+                <p class="page-header-subtitle">{{ recent_projects|length }} project{{ recent_projects|length|pluralize }} · Track progress & Kanban workflows</p>
             </div>
-            <div class="stat-card stat-progress">
-                <div class="stat-icon"><i class="fas fa-spinner"></i></div>
-                <div class="stat-info">
-                    <span class="stat-num">{{ in_progress_count }}</span>
-                    <span class="stat-label">In Progress</span>
-                </div>
-            </div>
-            <div class="stat-card stat-done">
-                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                <div class="stat-info">
-                    <span class="stat-num">{{ done_count }}</span>
-                    <span class="stat-label">Completed</span>
-                </div>
-            </div>
-            <div class="stat-card stat-overdue">
-                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                <div class="stat-info">
-                    <span class="stat-num">{{ overdue_count }}</span>
-                    <span class="stat-label">Overdue</span>
-                </div>
+            <div class="page-header-right">
+                <button class="invite-btn" type="button" aria-label="Add new project" onclick="openAddProjectModal()">
+                    <i class="fas fa-plus"></i> Add Project
+                </button>
+                <a href="{% url 'task_categories' %}" class="icon-btn" title="Manage All Projects">
+                    <i class="fas fa-folder-open"></i>
+                </a>
+                <a href="{% url 'manage_kanban' %}" class="icon-btn" title="Open Kanban Board">
+                    <i class="fas fa-columns"></i>
+                </a>
+                <button class="icon-btn" type="button" title="Add new task" onclick="openAddTaskModal()">
+                    <i class="fas fa-tasks"></i>
+                </button>
             </div>
         </div>
-
-        <!-- Recent Projects Section (Replaces Recent Tasks) -->
-        <section class="to-do-section" aria-labelledby="projects-main-heading">
-            <div class="todo-header">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; color: #60a5fa; font-size: 0.9rem;">
-                        <i class="fas fa-folder"></i>
-                    </div>
-                    <h2 id="projects-main-heading" style="font-size: 1.1rem; margin: 0; font-weight: 700; color: #ffffff;">
-                        Recent Projects
-                    </h2>
+        
+        <!-- Project Cards Grid (No extra enclosing box) -->
+        <div class="projects-grid-dashboard">
+            {% for project in recent_projects %}
+            {% include 'todo/components/project_card.html' with category=project %}
+            {% empty %}
+            <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px; background: #000000; border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+                <div class="empty-icon" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 12px;">
+                    <i class="fas fa-folder-plus"></i>
                 </div>
-                <div class="filter-options">
-                    <a href="{% url 'manage_kanban' %}" class="view-all-link">Kanban Board <i class="fas fa-arrow-right"></i></a>
-                    <button class="invite-btn" type="button" onclick="openAddProjectModal()">
-                        <i class="fas fa-plus" aria-hidden="true"></i> New Project
-                    </button>
-                </div>
+                <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--highlight-color);">No Projects Yet</h4>
+                <p style="margin: 0 0 16px 0; color: var(--text-muted);">Click "Add Project" to start organizing your tasks into dedicated project boards.</p>
+                <button class="invite-btn" onclick="openAddProjectModal()" type="button">
+                    <i class="fas fa-plus"></i> Create First Project
+                </button>
             </div>
-            
-            <div class="projects-grid-dashboard">
-                {% for project in recent_projects %}
-                {% include 'todo/components/project_card.html' with category=project %}
-                {% empty %}
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: #09090b; border: 1px dashed #27272a; border-radius: 12px;">
-                    <i class="fas fa-folder-open" style="font-size: 2rem; color: #52525b; margin-bottom: 10px; display: block;"></i>
-                    <p style="margin: 0 0 12px 0; color: #a1a1aa; font-size: 0.9rem;">No projects found. Create your first project workspace to get started!</p>
-                    <button type="button" onclick="openAddProjectModal()" class="btn-primary" style="padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">
-                        <i class="fas fa-plus"></i> Create Project
-                    </button>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
+            {% endfor %}
+        </div>
     </section>
 
     <!-- Right Sidebar Content -->
@@ -234,7 +175,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:8px 0;">No projects yet. <a href="{% url 'project_create' %}" style="color:var(--accent-color);">Create one</a></p>
+                <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:8px 0;">No projects yet. <a href="javascript:void(0)" onclick="openAddProjectModal()" style="color:var(--accent-color); cursor:pointer;">Create one</a></p>
                 {% endif %}
             </div>
         </div>

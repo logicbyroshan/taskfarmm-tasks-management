@@ -573,6 +573,21 @@
                 const container = document.querySelector(`.kanban-cards-container[data-status="${targetStatus}"]`);
                 if (container && card) {
                     container.appendChild(card);
+                    if (targetStatus === 'completed') {
+                        card.classList.add('is-completed');
+                        const titleEl = card.querySelector('.kanban-card-title');
+                        if (titleEl) {
+                            titleEl.style.textDecoration = 'line-through';
+                            titleEl.style.color = '#8c9bab';
+                        }
+                    } else {
+                        card.classList.remove('is-completed');
+                        const titleEl = card.querySelector('.kanban-card-title');
+                        if (titleEl) {
+                            titleEl.style.textDecoration = 'none';
+                            titleEl.style.color = '#dee4ea';
+                        }
+                    }
                     updateKanbanColumnCounts();
                     if (window.showToast) {
                         window.showToast('Card moved to ' + targetStatus, 'success', 1000);

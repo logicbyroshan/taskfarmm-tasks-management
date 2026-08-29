@@ -4,7 +4,7 @@
 {% block title %}Manage Projects - TaskFlixx{% endblock title %}
 
 {% block styles %}
-    <link rel="stylesheet" href="{% static 'todo/css/task-categories.css' %}?v=120">
+    <link rel="stylesheet" href="{% static 'todo/css/task-categories.css' %}?v=150">
 {% endblock styles %}
 
 {% block content %}
@@ -50,70 +50,5 @@
     function navigateToProjectKanban(projectId) {
         window.location.href = "{% url 'manage_kanban' %}?project=" + projectId;
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Wire edit project trigger buttons
-        document.querySelectorAll('.edit-project-trigger-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const id = this.dataset.id;
-                const name = this.dataset.name;
-                const color = this.dataset.color || '#3b82f6';
-                const template = this.dataset.template || 'smart';
-                
-                const editModal = document.getElementById('edit-category-modal');
-                const editForm = document.getElementById('edit-category-form');
-                const editName = document.getElementById('edit_project_name');
-                const editColor = document.getElementById('edit_project_color');
-                const editId = document.getElementById('edit_project_id');
-                const tplSmart = document.getElementById('edit_tpl_smart');
-                const tplSuper = document.getElementById('edit_tpl_super');
-
-                if (editForm) editForm.action = '/category/' + id + '/update/';
-                if (editId) editId.value = id;
-                if (editName) editName.value = name;
-                if (editColor) editColor.value = color;
-                if (template === 'super') {
-                    if (tplSuper) tplSuper.checked = true;
-                } else {
-                    if (tplSmart) tplSmart.checked = true;
-                }
-                if (editModal) editModal.style.display = 'flex';
-            });
-        });
-
-        // Wire delete button inside edit project modal
-        const deleteProjectBtn = document.getElementById('edit-project-delete-btn');
-        if (deleteProjectBtn) {
-            deleteProjectBtn.addEventListener('click', function() {
-                const id = document.getElementById('edit_project_id')?.value;
-                const name = document.getElementById('edit_project_name')?.value || 'this project';
-                if (!id) return;
-                if (!confirm(`Are you sure you want to delete project "${name}"? All assigned tasks will become unassigned.`)) return;
-
-                const csrfToken = getCsrfToken() || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-                const formData = new FormData();
-                formData.append('csrfmiddlewaretoken', csrfToken);
-
-                fetch(`/category/${id}/delete/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
-                    body: formData
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        const modal = document.getElementById('edit-category-modal');
-                        if (modal) modal.style.display = 'none';
-                        if (window.showToast) window.showToast(data.message || 'Project deleted', 'success');
-                        setTimeout(() => window.location.reload(), 300);
-                    }
-                })
-                .catch(() => {
-                    window.location.reload();
-                });
-            });
-        }
-    });
 </script>
 {% endblock scripts %}

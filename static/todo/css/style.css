@@ -493,7 +493,7 @@ html.sidebar-collapsed-mode .sidebar .sidebar-divider {
 }
 
 /* GLASSMORPHISM MODERN UI EFFECT — Pitch Black Theme */
-.sidebar, .navbar, .kanban-header, .kanban-column, .task-card, .task-status-cards, .completed-tasks-section, .category-card, .to-do-section, .modal-content, .filter-bar, .my-task-card, .settings-card {
+.sidebar, .navbar, .kanban-header, .kanban-column, .task-card, .task-status-cards, .completed-tasks-section, .to-do-section, .modal-content, .filter-bar, .my-task-card, .settings-card {
     background: #000000 !important;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -506,7 +506,7 @@ html.sidebar-collapsed-mode .sidebar .sidebar-divider {
 }
 
 /* Subtle dark depth shadows */
-.kanban-column, .task-status-cards, .completed-tasks-section, .category-card, .modal-content, .filter-bar, .settings-card {
+.kanban-column, .task-status-cards, .completed-tasks-section, .modal-content, .filter-bar, .settings-card {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
@@ -1400,22 +1400,8 @@ select option {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    overflow: hidden;
-    min-height: 0;
-}
-
-/* Recent Tasks section fills remaining height */
-.dash-left .to-do-section {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.dash-left .to-do-section .task-list-container {
-    flex: 1;
-    min-height: 0;
     overflow-y: auto;
+    min-height: 0;
 }
 
 .dash-right {

@@ -6,10 +6,10 @@
          x-data="{ dropdownOpen: false }">
     
     <!-- Card Color Accent Top Bar -->
-    <div style="height: 4px; background: linear-gradient(90deg, {{ category.color }}, {{ category.color }}60); margin: -22px -22px 18px; border-radius: 14px 14px 0 0;"></div>
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, {{ category.color }}, {{ category.color }}60); border-top-left-radius: 13px; border-top-right-radius: 13px; z-index: 2;"></div>
 
     <!-- Header Section: Square Badge, Title, Template Badge, 3-Dot Options -->
-    <div>
+    <div style="flex: 1; display: flex; flex-direction: column;">
         <div class="category-header" style="align-items: flex-start; gap: 14px; margin-bottom: 12px;">
             <!-- Square color badge (not circle) -->
             <div class="category-icon" style="background: {{ category.color }}18; color: {{ category.color }}; border: 1px solid {{ category.color }}45; border-radius: 9px; width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
@@ -112,24 +112,27 @@
 
     <!-- Footer: Member Avatars & Quick Navigation -->
     <div style="padding-top: 12px; border-top: 1px solid #18181b; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-        <!-- Member Avatars -->
-        <div style="display: flex; align-items: center; gap: 4px;" onclick="event.stopPropagation();">
+        <!-- Member Avatars & Add Box -->
+        <div class="project-members-group" onclick="event.stopPropagation();">
             {% for m in category.member_list|slice:":3" %}
-            <div style="width: 26px; height: 26px; border-radius: 6px; background: #1c1d22; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; color: #ffffff;" title="{{ m.name }}">
+            <div class="project-member-avatar-box" title="{{ m.name }}{% if m.is_owner %} (Owner){% endif %}">
                 {{ m.initials }}
             </div>
             {% empty %}
-            <span style="font-size: 0.72rem; color: #52525b;">Owner only</span>
+            <div class="project-member-avatar-box" title="Owner">
+                {{ user.username|slice:":2"|upper }}
+            </div>
             {% endfor %}
             {% if category.member_list|length > 3 %}
-            <span style="font-size: 0.7rem; color: #71717a; margin-left: 2px;">+{{ category.member_list|length|add:"-3" }}</span>
+            <div class="project-member-more-box" title="+{{ category.member_list|length|add:'-3' }} more members">
+                +{{ category.member_list|length|add:"-3" }}
+            </div>
             {% endif %}
             <button type="button" 
+                    class="project-member-add-box"
                     onclick="openShareProjectModal({{ category.id }})" 
                     title="Invite member to project"
-                    style="width: 26px; height: 26px; border-radius: 6px; background: #121316; border: 1px dashed #3f3f46; color: #a1a1aa; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; cursor: pointer; margin-left: 2px; transition: border-color 0.15s ease;"
-                    onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#60a5fa';"
-                    onmouseout="this.style.borderColor='#3f3f46'; this.style.color='#a1a1aa';">
+                    aria-label="Invite member to project">
                 <i class="fas fa-plus"></i>
             </button>
         </div>

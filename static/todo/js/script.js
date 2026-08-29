@@ -279,6 +279,37 @@ window.closeEditProjectModal = function() {
     if (editModal) editModal.style.display = 'none';
 };
 
+window.deleteCurrentEditProject = function() {
+    const id = document.getElementById('edit_project_id')?.value;
+    const name = document.getElementById('edit_project_name')?.value || 'this project';
+    if (!id) return;
+    if (!confirm(`Are you sure you want to delete project "${name}"? All assigned tasks will become unassigned.`)) return;
+
+    const csrfToken = (window.getCsrfToken ? window.getCsrfToken() : null) || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const formData = new FormData();
+    if (csrfToken) formData.append('csrfmiddlewaretoken', csrfToken);
+
+    fetch(`/category/${id}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            window.closeEditProjectModal();
+            if (window.showToast) window.showToast(data.message || 'Project deleted', 'success');
+            setTimeout(() => window.location.reload(), 300);
+        } else {
+            if (window.showToast) window.showToast(data.error || 'Failed to delete project', 'error');
+            else alert(data.error || 'Failed to delete project');
+        }
+    })
+    .catch(() => {
+        window.location.reload();
+    });
+};
+
 window.selectAddProjectColor = function(color) {
     const colorInput = document.getElementById('new_project_color');
     if (colorInput) colorInput.value = color;
@@ -1465,11 +1496,39 @@ window.closeTrelloModal = function() {
 window.toggleTrelloComplete = function() {
     if (!currentTrelloTask) return;
     const newStatus = (currentTrelloTask.status === 'completed') ? 'not-started' : 'completed';
+    currentTrelloTask.status = newStatus;
     saveTrelloTaskField('status', newStatus);
     const statusSelect = document.getElementById('trello-status-select');
     if (statusSelect) statusSelect.value = newStatus;
     updateTrelloCompleteIcon(newStatus === 'completed');
     updateTrelloStatusBadge(newStatus);
+
+    // Update Kanban card if on Kanban board
+    const kanbanCard = document.getElementById(`kanban-card-${currentTrelloTask.id}`);
+    if (kanbanCard) {
+        const targetContainer = document.querySelector(`.kanban-cards-container[data-status="${newStatus}"]`);
+        if (targetContainer && kanbanCard.parentElement !== targetContainer) {
+            targetContainer.appendChild(kanbanCard);
+        }
+        if (newStatus === 'completed') {
+            kanbanCard.classList.add('is-completed');
+            const titleEl = kanbanCard.querySelector('.kanban-card-title');
+            if (titleEl) {
+                titleEl.style.textDecoration = 'line-through';
+                titleEl.style.color = '#8c9bab';
+            }
+        } else {
+            kanbanCard.classList.remove('is-completed');
+            const titleEl = kanbanCard.querySelector('.kanban-card-title');
+            if (titleEl) {
+                titleEl.style.textDecoration = 'none';
+                titleEl.style.color = '#dee4ea';
+            }
+        }
+        if (window.updateKanbanColumnCounts) updateKanbanColumnCounts();
+    }
+
+    if (window.showToast) window.showToast(`Task marked as ${newStatus === 'completed' ? 'Done' : 'To Do'}!`, 'success');
 };
 
 window.focusTrelloChecklist = function() {
@@ -2354,15 +2413,6 @@ window.submitTrelloComment = function() {
                 if (window.showToast) window.showToast('Full task summary copied to clipboard!', 'success');
             });
         }
-    };
-
-    window.toggleTrelloComplete = function() {
-        if (!currentTrelloTask) return;
-        const newStatus = currentTrelloTask.status === 'completed' ? 'not-started' : 'completed';
-        saveTrelloTaskField('status', newStatus);
-        const sel = document.getElementById('trello-status-select');
-        if (sel) sel.value = newStatus;
-        if (window.showToast) window.showToast(`Task marked as ${newStatus === 'completed' ? 'Done' : 'To Do'}!`, 'success');
     };
 
     window.deleteTrelloTask = function() {
