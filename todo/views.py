@@ -482,6 +482,11 @@ def task_create(request):
                 'title': task.title,
                 'status': task.status,
                 'priority': task.priority,
+                'category_id': task.category_id,
+                'description': task.description or '',
+                'user': task.user.username,
+                'due_date': task.due_date.isoformat() if task.due_date else None,
+                'checklist': task.checklist or [],
             }
         })
     return JsonResponse({'success': False, 'errors': form.errors}, status=400)

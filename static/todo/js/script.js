@@ -189,6 +189,10 @@ function insertTaskCardToKanban(task) {
         </div>
     `;
 
+    cardDiv.addEventListener('dragend', function() {
+        this.style.opacity = '1';
+    });
+
     container.insertBefore(cardDiv, container.firstChild);
     requestAnimationFrame(() => {
         cardDiv.style.opacity = '1';
